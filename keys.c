@@ -3,11 +3,11 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "ui.h"
 #include "keys.h"
 #include "ncurses.h"
 #include "mem.h"
 #include "cmds.h"
-#include "ui.h"
 
 #include "list.h"
 #include "buffer.h"
@@ -16,9 +16,7 @@
 
 #include "config.h"
 
-#define key_esc '\x1b'
-
-void k_cmd()
+void k_cmd(KeyArg *arg)
 {
 	int y, x;
 
@@ -26,6 +24,8 @@ void k_cmd()
 	int i = 0;
 	int len = 10;
 	char *cmd = umalloc(len);
+
+	(void)arg;
 
 	nc_get_yx(&y, &x);
 
@@ -80,48 +80,45 @@ cancel:
 	nc_set_yx(y, x);
 }
 
-void k_ins()
+void k_down(KeyArg *a)
 {
-	int ch;
-	int y, x;
-
-	nc_get_yx(&y, &x);
-
-	while((ch = nc_getch()) != key_esc){
-		buffer_inschar(buffers_cur(), x, y, ch);
-		nc_addch(ch);
-		x++;
-	}
-
-	ui_redraw();
+	(void)a;
+	ui_y++;
+	ui_cur_changed();
 }
 
-void k_down()
-{ ui_y++; ui_cur_changed(); }
-
-void k_up()
+void k_up(KeyArg *a)
 {
+	(void)a;
 	if(ui_y > 0){
 		ui_y--;
 		ui_cur_changed();
 	}
 }
 
-void k_right()
+void k_right(KeyArg *a)
 {
+	(void)a;
 	ui_x++;
 	ui_cur_changed();
 }
 
-void k_left()
+void k_left(KeyArg *a)
 {
+	(void)a;
 	if(ui_x > 0){
 		ui_x--;
 		ui_cur_changed();
 	}
 }
 
-void k_redraw()
+void k_redraw(KeyArg *a)
 {
+	(void)a;
 	ui_redraw();
+}
+
+void k_set_mode(KeyArg *a)
+{
+	ui_mode = a->i;
 }

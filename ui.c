@@ -9,11 +9,13 @@
 #include "buffer.h"
 #include "buffers.h"
 
+enum ui_mode ui_mode;
 int ui_running = 1;
 int ui_x, ui_y;
 
 void ui_init()
 {
+	ui_mode = UI_NORMAL;
 	nc_init();
 }
 
@@ -42,15 +44,24 @@ void ui_main()
 	while(ui_running){
 		int ch = nc_getch();
 		int i;
+		int found;
 
-		for(i = 0; keys[i].ch; i++)
-			if(keys[i].ch == ch){
-				keys[i].func();
-				break;
+		for(i = found = 0; keys[i].ch; i++)
+			if(keys[i].mode & ui_mode && keys[i].ch == ch){
+				keys[i].func(&keys[i].arg);
+				found = 1;
 			}
 
-		if(!keys[i].ch)
-			ui_status("unknown key %d", ch);
+
+		if(!found){
+			if(ui_mode == UI_INSERT){
+				buffer_inschar(buffers_cur(), ui_x, ui_y, ch);
+				ui_x++;
+				ui_redraw();
+			}else{
+				ui_status("unknown key %d", ch);
+			}
+		}
 	}
 }
 
@@ -87,4 +98,6 @@ void ui_redraw()
 		nc_set_yx(y, 0);
 		nc_addch('~');
 	}
+
+	nc_set_yx(ui_y, ui_x);
 }
