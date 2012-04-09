@@ -39,15 +39,12 @@ void ui_inschar(char ch)
 		case CTRL_AND('?'):
 		case CTRL_AND('H'):
 		case 127:
-			if(ui_x > 0){
-				buffer_delchar(buffers_cur(), ui_x - 1, ui_y);
-				ui_x--;
-			}
+			if(ui_x > 0)
+				buffer_delchar(buffers_cur(), &ui_x, &ui_y);
 			break;
 
 		default:
-			buffer_inschar(buffers_cur(), ui_x, ui_y, ch);
-			ui_x++;
+			buffer_inschar(buffers_cur(), &ui_x, &ui_y, ch);
 			break;
 	}
 
@@ -96,16 +93,15 @@ void ui_cur_changed()
 
 void ui_redraw()
 {
-	const int nl = nc_LINES();
+	const int nl = nc_LINES() - 1;
 	list_t *l;
 	int y = 0;
-
-	nc_cls();
 
 	for(l = buffers_cur()->head; l && y < nl; l = l->next, y++){
 		int i;
 
 		nc_set_yx(y, 0);
+		nc_clrtoeol();
 
 		for(i = 0; i < l->len_line; i++)
 			nc_addch(l->line[i]);
@@ -115,6 +111,7 @@ void ui_redraw()
 	for(; y < nl; y++){
 		nc_set_yx(y, 0);
 		nc_addch('~');
+		nc_clrtoeol();
 	}
 
 	nc_set_yx(ui_y, ui_x);

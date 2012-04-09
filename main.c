@@ -7,9 +7,10 @@
 
 int main(int argc, char **argv)
 {
+	ui_init();
+
 	buffers_init(argc - 1, argv + 1);
 
-	ui_init();
 	ui_main();
 	ui_term();
 
