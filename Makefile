@@ -1,6 +1,6 @@
-CFLAGS = -Wall -Wextra -pedantic
+CFLAGS = -Wall -Wextra -pedantic -g
 
-OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o
+OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o list.o buffers.o
 
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses

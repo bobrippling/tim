@@ -7,6 +7,8 @@ typedef struct Cmd
 	void (*func)(void);
 } Cmd;
 
-void c_q(void);
+typedef void cmd_func(void);
+
+cmd_func c_q, c_w;
 
 #endif

@@ -42,9 +42,15 @@ void nc_term()
 	endwin();
 }
 
+void nc_cls()
+{
+	erase();
+}
+
 void nc_vstatus(const char *fmt, va_list l)
 {
 	move(LINES - 1, 0);
+	clrtoeol();
 	vwprintw(stdscr, fmt, l);
 }
 
@@ -67,6 +73,11 @@ int nc_getch()
 void nc_addch(char c)
 {
 	addch(c);
+}
+
+void nc_addstr(char *s)
+{
+	addstr(s);
 }
 
 int nc_LINES(void)

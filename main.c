@@ -1,13 +1,13 @@
 #include <stdio.h>
 
 #include "ui.h"
+#include "list.h"
+#include "buffer.h"
+#include "buffers.h"
 
 int main(int argc, char **argv)
 {
-	if(argc != 1){
-		fprintf(stderr, "Usage: %s\n", *argv);
-		return 1;
-	}
+	buffers_init(argc - 1, argv + 1);
 
 	ui_init();
 	ui_main();

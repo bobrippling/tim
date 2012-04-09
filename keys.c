@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -8,9 +9,13 @@
 #include "cmds.h"
 #include "ui.h"
 
+#include "list.h"
+#include "buffer.h"
+
+#include "buffers.h"
+
 #include "config.h"
 
-#define CTRL_AND(c)  ((c) & 037)
 #define key_esc '\x1b'
 
 void k_cmd()
@@ -73,4 +78,50 @@ void k_cmd()
 cancel:
 	free(cmd);
 	nc_set_yx(y, x);
+}
+
+void k_ins()
+{
+	int ch;
+	int y, x;
+
+	nc_get_yx(&y, &x);
+
+	while((ch = nc_getch()) != key_esc){
+		buffer_inschar(buffers_cur(), x, y, ch);
+		nc_addch(ch);
+		x++;
+	}
+
+	ui_redraw();
+}
+
+void k_down()
+{ ui_y++; ui_cur_changed(); }
+
+void k_up()
+{
+	if(ui_y > 0){
+		ui_y--;
+		ui_cur_changed();
+	}
+}
+
+void k_right()
+{
+	ui_x++;
+	ui_cur_changed();
+}
+
+void k_left()
+{
+	if(ui_x > 0){
+		ui_x--;
+		ui_cur_changed();
+	}
+}
+
+void k_redraw()
+{
+	ui_redraw();
 }
