@@ -10,6 +10,8 @@ typedef struct list
 } list_t;
 
 list_t *list_new(void);
+
 void    list_inschar(list_t *, int x, int y, char ch);
+void    list_delchar(list_t *, int x, int y);
 
 #endif

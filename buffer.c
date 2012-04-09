@@ -16,3 +16,8 @@ void buffer_inschar(buffer_t *buf, int x, int y, char ch)
 {
 	list_inschar(buf->head, x, y, ch);
 }
+
+void buffer_delchar(buffer_t *buf, int x, int y)
+{
+	list_delchar(buf->head, x, y);
+}

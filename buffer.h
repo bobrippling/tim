@@ -11,5 +11,6 @@ buffer_t *buffer_new_fname(const char *);
 buffer_t *buffer_new_file(FILE *);
 
 void buffer_inschar(buffer_t *, int x, int y, char ch);
+void buffer_delchar(buffer_t *, int x, int y);
 
 #endif

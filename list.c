@@ -10,10 +10,8 @@ list_t *list_new()
 	return l;
 }
 
-void list_inschar(list_t *l, int x, int y, char ch)
+list_t *list_seek(list_t *l, int y)
 {
-	int i;
-
 	while(y > 0){
 		if(!l->next)
 			l->next = list_new();
@@ -21,6 +19,15 @@ void list_inschar(list_t *l, int x, int y, char ch)
 		l = l->next;
 		y--;
 	}
+
+	return l;
+}
+
+void list_inschar(list_t *l, int x, int y, char ch)
+{
+	int i;
+
+	l = list_seek(l, y);
 
 	if(x >= l->len_malloc){
 		const int old_len = l->len_malloc;
@@ -43,4 +50,16 @@ void list_inschar(list_t *l, int x, int y, char ch)
 	l->line[x] = ch;
 
 	l->len_line++;
+}
+
+void list_delchar(list_t *l, int x, int y)
+{
+	l = list_seek(l, y);
+
+	if(x >= l->len_line)
+		return;
+
+	memmove(l->line + x, l->line + x + 1, l->len_line - x);
+
+	l->len_line--;
 }

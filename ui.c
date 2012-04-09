@@ -33,6 +33,27 @@ void ui_status(const char *fmt, ...)
 	nc_set_yx(y, x);
 }
 
+void ui_inschar(char ch)
+{
+	switch(ch){
+		case CTRL_AND('?'):
+		case CTRL_AND('H'):
+		case 127:
+			if(ui_x > 0){
+				buffer_delchar(buffers_cur(), ui_x - 1, ui_y);
+				ui_x--;
+			}
+			break;
+
+		default:
+			buffer_inschar(buffers_cur(), ui_x, ui_y, ch);
+			ui_x++;
+			break;
+	}
+
+	ui_redraw();
+}
+
 void ui_main()
 {
 	extern Key keys[];
@@ -54,13 +75,10 @@ void ui_main()
 
 
 		if(!found){
-			if(ui_mode == UI_INSERT){
-				buffer_inschar(buffers_cur(), ui_x, ui_y, ch);
-				ui_x++;
-				ui_redraw();
-			}else{
+			if(ui_mode == UI_INSERT)
+				ui_inschar(ch);
+			else
 				ui_status("unknown key %d", ch);
-			}
 		}
 	}
 }
