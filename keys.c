@@ -122,3 +122,31 @@ void k_set_mode(KeyArg *a)
 {
 	ui_mode = a->i;
 }
+
+void k_sol(KeyArg *a)
+{
+	(void)a;
+	ui_x = 0;
+	ui_cur_changed();
+}
+
+void k_eol(KeyArg *a)
+{
+	(void)a;
+	ui_x = nc_COLS() - 1; /* TODO */
+	ui_cur_changed();
+}
+
+void k_sof(KeyArg *a)
+{
+	(void)a;
+	ui_y = 0;
+	ui_cur_changed();
+}
+
+void k_eof(KeyArg *a)
+{
+	(void)a;
+	ui_y = nc_LINES() - 1; /* TODO */
+	ui_cur_changed();
+}

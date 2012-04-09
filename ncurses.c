@@ -85,6 +85,11 @@ int nc_LINES(void)
 	return LINES;
 }
 
+int nc_COLS(void)
+{
+	return COLS;
+}
+
 void nc_clrtoeol()
 {
 	clrtoeol();

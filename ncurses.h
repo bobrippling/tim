@@ -14,6 +14,7 @@ void nc_get_yx(int *y, int *x);
 void nc_set_yx(int y, int x);
 
 int nc_LINES(void);
+int nc_COLS(void);
 void nc_clrtoeol(void);
 
 #endif
