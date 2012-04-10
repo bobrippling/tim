@@ -12,6 +12,7 @@
 enum ui_mode ui_mode;
 int ui_running = 1;
 int ui_x, ui_y;
+int ui_top;
 
 void ui_init()
 {
@@ -55,7 +56,7 @@ void ui_main()
 {
 	extern Key keys[];
 
-	ui_x = ui_y = 0;
+	ui_x = ui_y = ui_top = 0;
 
 	ui_redraw();
 
@@ -87,7 +88,11 @@ void ui_term()
 
 void ui_cur_changed()
 {
-	/* TODO: scroll, etc */
+	const int nl = nc_LINES();
+
+	if(ui_y > ui_top + nl - 1)
+		ui_top = ui_y - nl - 1; /* TODO */
+
 	nc_set_yx(ui_y, ui_x);
 }
 
@@ -97,7 +102,7 @@ void ui_redraw()
 	list_t *l;
 	int y = 0;
 
-	for(l = buffers_cur()->head; l && y < nl; l = l->next, y++){
+	for(l = list_seek(buffers_cur()->head, ui_top); l && y < nl; l = l->next, y++){
 		int i;
 
 		nc_set_yx(y, 0);

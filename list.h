@@ -12,6 +12,8 @@ typedef struct list
 list_t *list_new(void);
 list_t *list_new_file(FILE *);
 
+list_t *list_seek(list_t *l, int y);
+
 void    list_free(list_t *);
 
 void    list_inschar(list_t *, int *x, int *y, char ch);
