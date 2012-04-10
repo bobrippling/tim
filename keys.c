@@ -80,36 +80,18 @@ cancel:
 	nc_set_yx(y, x);
 }
 
-void k_down(KeyArg *a)
+void k_move(KeyArg *a)
 {
-	(void)a;
-	ui_y++;
+	if(a->pos.x == 0 && a->pos.y == 0)
+		return;
+
+	ui_x += a->pos.x;
+	ui_y += a->pos.y;
+
+	if(ui_x < 0) ui_x = 0;
+	if(ui_y < 0) ui_y = 0;
+
 	ui_cur_changed();
-}
-
-void k_up(KeyArg *a)
-{
-	(void)a;
-	if(ui_y > 0){
-		ui_y--;
-		ui_cur_changed();
-	}
-}
-
-void k_right(KeyArg *a)
-{
-	(void)a;
-	ui_x++;
-	ui_cur_changed();
-}
-
-void k_left(KeyArg *a)
-{
-	(void)a;
-	if(ui_x > 0){
-		ui_x--;
-		ui_cur_changed();
-	}
 }
 
 void k_redraw(KeyArg *a)

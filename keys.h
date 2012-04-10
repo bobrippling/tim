@@ -6,6 +6,10 @@
 typedef union KeyArg
 {
 	int i;
+	struct
+	{
+		int x, y;
+	} pos;
 } KeyArg;
 
 typedef struct Key
@@ -20,7 +24,7 @@ typedef void key_func(KeyArg *);
 
 key_func k_cmd, k_set_mode;
 
-key_func k_down, k_up, k_right, k_left;
+key_func k_move; /* l, r, u, d */
 key_func k_sol, k_eol, k_sof, k_eof;
 
 key_func k_redraw;
