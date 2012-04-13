@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "ui.h"
+#include "motion.h"
 #include "keys.h"
 #include "ncurses.h"
 #include "mem.h"
@@ -80,20 +82,6 @@ cancel:
 	nc_set_yx(y, x);
 }
 
-void k_move(KeyArg *a)
-{
-	if(a->pos.x == 0 && a->pos.y == 0)
-		return;
-
-	ui_x += a->pos.x;
-	ui_y += a->pos.y;
-
-	if(ui_x < 0) ui_x = 0;
-	if(ui_y < 0) ui_y = 0;
-
-	ui_cur_changed();
-}
-
 void k_redraw(KeyArg *a)
 {
 	(void)a;
@@ -105,30 +93,20 @@ void k_set_mode(KeyArg *a)
 	ui_mode = a->i;
 }
 
-void k_sol(KeyArg *a)
+void k_scroll(KeyArg *a)
 {
-	(void)a;
-	ui_x = 0;
-	ui_cur_changed();
-}
+	const int nl = nc_LINES();
 
-void k_eol(KeyArg *a)
-{
-	(void)a;
-	ui_x = nc_COLS() - 1; /* TODO */
-	ui_cur_changed();
-}
+	ui_top += a->pos.y;
 
-void k_sof(KeyArg *a)
-{
-	(void)a;
-	ui_y = 0;
-	ui_cur_changed();
-}
+	if(ui_top < 0)
+		ui_top = 0;
 
-void k_eof(KeyArg *a)
-{
-	(void)a;
-	ui_y = nc_LINES() - 1; /* TODO */
+	if(ui_y < ui_top)
+		ui_y = ui_top;
+	else if(ui_y >= ui_top + nl)
+		ui_y = ui_top + nl - 2;
+
+	ui_redraw();
 	ui_cur_changed();
 }

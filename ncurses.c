@@ -72,6 +72,8 @@ int nc_getch()
 
 void nc_addch(char c)
 {
+	if(c == '\t')
+		c = ' ';
 	addch(c);
 }
 

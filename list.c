@@ -145,3 +145,10 @@ void list_delchar(list_t *l, int *x, int *y)
 
 	l->len_line--;
 }
+
+int list_count(list_t *l)
+{
+	int i;
+	for(i = 0; l->next; l = l->next, i++);
+	return i;
+}

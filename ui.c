@@ -4,6 +4,7 @@
 
 #include "ui.h"
 #include "ncurses.h"
+#include "motion.h"
 #include "keys.h"
 #include "list.h"
 #include "buffer.h"
@@ -49,12 +50,14 @@ void ui_inschar(char ch)
 			break;
 	}
 
+	ui_cur_changed();
 	ui_redraw();
 }
 
 void ui_main()
 {
 	extern Key keys[];
+	extern MotionKey motion_keys[];
 
 	ui_x = ui_y = ui_top = 0;
 
@@ -65,12 +68,17 @@ void ui_main()
 		int i;
 		int found;
 
-		for(i = found = 0; keys[i].ch; i++)
+		for(found = i = 0; motion_keys[i].ch; i++)
+			if(motion_keys[i].mode & ui_mode && motion_keys[i].ch == ch){
+				motion_keys[i].func(&motion_keys[i].motion);
+				found = 1;
+			}
+
+		for(i = 0; keys[i].ch; i++)
 			if(keys[i].mode & ui_mode && keys[i].ch == ch){
 				keys[i].func(&keys[i].arg);
 				found = 1;
 			}
-
 
 		if(!found){
 			if(ui_mode == UI_INSERT)
@@ -86,23 +94,43 @@ void ui_term()
 	nc_term();
 }
 
+struct list *ui_current_line()
+{
+	return list_seek(buffers_cur()->head, ui_y);
+}
+
 void ui_cur_changed()
 {
 	const int nl = nc_LINES();
+	int need_redraw = 0;
 
-	if(ui_y > ui_top + nl - 1)
-		ui_top = ui_y - nl - 1; /* TODO */
+	if(ui_y > ui_top + nl - 2){
+		ui_top = ui_y - nl + 2;
+		need_redraw = 1;
+	}else if(ui_y < ui_top){
+		ui_top = ui_y;
+		need_redraw = 1;
+	}
 
-	nc_set_yx(ui_y, ui_x);
+	if(ui_x < 0)
+		ui_x = 0;
+
+	nc_set_yx(ui_y - ui_top, ui_x);
+
+	if(need_redraw)
+		ui_redraw();
 }
 
 void ui_redraw()
 {
 	const int nl = nc_LINES() - 1;
 	list_t *l;
-	int y = 0;
+	int save_y, save_x;
+	int y;
 
-	for(l = list_seek(buffers_cur()->head, ui_top); l && y < nl; l = l->next, y++){
+	nc_get_yx(&save_y, &save_x);
+
+	for(y = 0, l = list_seek(buffers_cur()->head, ui_top); l && y < nl; l = l->next, y++){
 		int i;
 
 		nc_set_yx(y, 0);
@@ -112,12 +140,11 @@ void ui_redraw()
 			nc_addch(l->line[i]);
 	}
 
-	nc_set_yx(y, 0);
 	for(; y < nl; y++){
 		nc_set_yx(y, 0);
 		nc_addch('~');
 		nc_clrtoeol();
 	}
 
-	nc_set_yx(ui_y, ui_x);
+	nc_set_yx(save_y, save_x);
 }

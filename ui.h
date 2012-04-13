@@ -16,8 +16,10 @@ void ui_cur_changed(void);
 
 void ui_status(const char *fmt, ...);
 
+struct list *ui_current_line(void);
+
 extern int ui_running;
-extern int ui_y, ui_x;
+extern int ui_y, ui_x, ui_top;
 
 extern enum ui_mode ui_mode;
 
