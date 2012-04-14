@@ -102,12 +102,12 @@ list_t *ui_current_line()
 
 void ui_cur_changed()
 {
-	const int nl = nc_LINES();
 	int need_redraw = 0;
 	buffer_t *buf = buffers_cur();
+	const int nl = buf->screen_coord.h;
 
-	if(buf->ui_pos.y > buf->ui_start.y + nl - 2){
-		buf->ui_start.y = buf->ui_pos.y - nl + 2;
+	if(buf->ui_pos.y > buf->ui_start.y + nl - 1){
+		buf->ui_start.y = buf->ui_pos.y - nl + 1;
 		need_redraw = 1;
 	}else if(buf->ui_pos.y < buf->ui_start.y){
 		buf->ui_start.y = buf->ui_pos.y;
@@ -125,17 +125,19 @@ void ui_cur_changed()
 
 }
 
-void ui_draw_buf_1(buffer_t *buf, rect_t *r)
+void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 {
 	list_t *l;
 	int y;
 
 	buf->screen_coord = *r;
 
+	fprintf(stderr, "buf \"%s\" at %d\n", buf->head->line, r->y);
+
 	for(y = 0, l = list_seek(buf->head, buf->ui_start.y); l && y < r->h; l = l->next, y++){
 		int i;
 
-		nc_set_yx(y, r->x);
+		nc_set_yx(r->y + y, r->x);
 		nc_clrtoeol();
 
 		for(i = 0; i < l->len_line; i++)
@@ -143,13 +145,13 @@ void ui_draw_buf_1(buffer_t *buf, rect_t *r)
 	}
 
 	for(; y < r->h; y++){
-		nc_set_yx(y, r->x);
+		nc_set_yx(r->y + y, r->x);
 		nc_addch('~');
 		nc_clrtoeol();
 	}
 }
 
-void ui_draw_buf_col(buffer_t *buf, rect_t *r_col)
+void ui_draw_buf_col(buffer_t *buf, const rect_t *r_col)
 {
 	buffer_t *bi;
 	int i;
@@ -162,9 +164,9 @@ void ui_draw_buf_col(buffer_t *buf, rect_t *r_col)
 
 	h = nc_LINES() / nrows;
 
-	for(i = 0; buf; buf = buf->neighbours[BUF_DOWN]){
+	for(i = 0; buf; i++, buf = buf->neighbours[BUF_DOWN]){
 		rect_t r = *r_col;
-		r.y = i * nrows;
+		r.y = i * h;
 		r.h = h;
 		ui_draw_buf_1(buf, &r);
 	}

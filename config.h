@@ -52,7 +52,7 @@ Key keys[] = {
 	{ CTRL_AND('e'),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL },
 	{ CTRL_AND('y'),  k_scroll,     { .pos = { 0, -2 } },     UI_NORMAL },
 
-	{ CTRL_AND('w'),  k_winsel,     { .pos = { 1, 0 } },      UI_NORMAL },
+	{ CTRL_AND('w'),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL },
 
 
 	{ 0, NULL, KEY_ARG_NONE, UI_NORMAL }

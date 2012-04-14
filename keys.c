@@ -137,19 +137,32 @@ void k_scroll(const KeyArg *a)
 
 void k_winsel(const KeyArg *a)
 {
-	KeyArg cpy = *a;
-	buffer_t *buf = buffers_cur();
+	buffer_t *buf;
+	char dir;
 
-	while(cpy.pos.x && buf)
-		buf = buf->neighbours[cpy.pos.x-- > 0 ? BUF_RIGHT : BUF_LEFT];
-	//while(cpy.pos.y && buf)
-		//buf = buf->neighbours[cpy.pos.y > 0 ? BUF_DOWN  : BUF_UP];
+	(void)a;
+
+	buf = buffers_cur();
+	dir = nc_getch();
+
+	switch(dir){
+#define DIR(c, n) case c: buf = buf->neighbours[n]; break
+
+		DIR('j', BUF_DOWN);
+		DIR('k', BUF_UP);
+		DIR('h', BUF_LEFT);
+		DIR('l', BUF_RIGHT);
+
+		default:
+			return;
+	}
+
 
 	if(buf){
 		buffers_set_cur(buf);
 		ui_redraw();
 		ui_cur_changed();
 	}else{
-		ui_status(":C");
+		ui_status("no buffer");
 	}
 }
