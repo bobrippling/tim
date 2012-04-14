@@ -1,14 +1,14 @@
 #ifndef CMDS_H
 #define CMDS_H
 
+typedef void cmd_func(int argc, char **argv);
+
 typedef struct Cmd
 {
 	const char *cmd;
-	void (*func)(void);
+	cmd_func *func;
 } Cmd;
 
-typedef void cmd_func(void);
-
-cmd_func c_q, c_w, c_vs;
+cmd_func c_q, c_w, c_vs, c_sp;
 
 #endif

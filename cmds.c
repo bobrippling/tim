@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 #include "cmds.h"
 #include "ui.h"
@@ -8,12 +10,12 @@
 #include "buffer.h"
 #include "buffers.h"
 
-void c_q(void)
+void c_q(int argc, char **argv)
 {
 	ui_running = 0;
 }
 
-void c_w(void)
+void c_w(int argc, char **argv)
 {
 	FILE *f = fopen("out", "w");
 	if(f){
@@ -28,12 +30,32 @@ void c_w(void)
 	}
 }
 
-void c_vs(void)
+void c_split(enum buffer_neighbour ne, int argc, char **argv)
 {
-	buffer_t *b = buffer_new_fname("buffer.h");
+	buffer_t *b;
 
-	if(b){
-		buffer_add_neighbour(buffers_cur(), BUF_RIGHT, b);
-		ui_redraw();
+	if(argc != 2){
+		ui_status("usage: %s filename", *argv);
+		return;
 	}
+
+	b = buffer_new_fname(argv[1]);
+
+	if(!b){
+		ui_status("%s: %s", argv[1], strerror(errno));
+		return;
+	}
+
+	buffer_add_neighbour(buffers_cur(), ne, b);
+	ui_redraw();
+}
+
+void c_vs(int argc, char **argv)
+{
+	c_split(BUF_RIGHT, argc, argv);
+}
+
+void c_sp(int argc, char **argv)
+{
+	c_split(BUF_DOWN, argc, argv);
 }

@@ -61,7 +61,9 @@ Key keys[] = {
 Cmd cmds[] = {
 	{ "q",   c_q     },
 	{ "w",   c_w     },
+
 	{ "vs",  c_vs    },
+	{ "sp",  c_sp    },
 
 	{ NULL, NULL },
 };

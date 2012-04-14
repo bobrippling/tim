@@ -19,6 +19,18 @@
 
 #include "config.h"
 
+void parse_cmd(char *cmd, int *argc, char ***argv)
+{
+	char *p;
+
+	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
+		*argv = urealloc(*argv, (*argc + 2) * sizeof **argv);
+		(*argv)[*argc] = ustrdup(p);
+		++*argc;
+	}
+	(*argv)[*argc] = NULL;
+}
+
 void k_cmd(const KeyArg *arg)
 {
 	int y, x;
@@ -27,6 +39,8 @@ void k_cmd(const KeyArg *arg)
 	int i = 0;
 	int len = 10;
 	char *cmd = umalloc(len);
+	char **argv;
+	int argc;
 
 	(void)arg;
 
@@ -35,6 +49,9 @@ void k_cmd(const KeyArg *arg)
 	nc_set_yx(nc_LINES() - 1, 0);
 	nc_addch(':');
 	nc_clrtoeol();
+
+	argv = NULL;
+	argc = 0;
 
 	while(reading){
 		int ch = nc_getch();
@@ -69,9 +86,11 @@ void k_cmd(const KeyArg *arg)
 		}
 	}
 
+	parse_cmd(cmd, &argc, &argv);
+
 	for(i = 0; cmds[i].cmd; i++)
 		if(!strcmp(cmds[i].cmd, cmd)){
-			cmds[i].func();
+			cmds[i].func(argc, argv);
 			break;
 		}
 
@@ -80,6 +99,9 @@ void k_cmd(const KeyArg *arg)
 
 cancel:
 	free(cmd);
+	for(i = 0; i < argc; i++)
+		free(argv[i]);
+	free(argv);
 	nc_set_yx(y, x);
 }
 
@@ -126,7 +148,7 @@ void k_winsel(const KeyArg *a)
 	if(buf){
 		buffers_set_cur(buf);
 		ui_redraw();
-		ui_status("switched buf");
+		ui_cur_changed();
 	}else{
 		ui_status(":C");
 	}
