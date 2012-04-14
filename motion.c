@@ -43,18 +43,20 @@ void m_sos(Motion *m)
 
 void m_eos(Motion *m)
 {
+	buffer_t *buf = buffers_cur();
 	(void)m;
 
-	ui_y = ui_top + nc_LINES() - 2;
+	ui_y = ui_top + buf->screen_coord.h - 1;
 
 	ui_cur_changed();
 }
 
 void m_mos(Motion *m)
 {
+	buffer_t *buf = buffers_cur();
 	(void)m;
 
-	ui_y = ui_top + nc_LINES() / 2 - 1;
+	ui_y = ui_top + buf->screen_coord.h / 2 - 1;
 
 	ui_cur_changed();
 }

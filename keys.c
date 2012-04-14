@@ -118,7 +118,6 @@ void k_set_mode(const KeyArg *a)
 
 void k_scroll(const KeyArg *a)
 {
-	const int nl = nc_LINES();
 	buffer_t *buf = buffers_cur();
 
 	buf->ui_start.y += a->pos.y;
@@ -128,8 +127,8 @@ void k_scroll(const KeyArg *a)
 
 	if(buf->ui_pos.y < buf->ui_start.y)
 		buf->ui_pos.y = buf->ui_start.y;
-	else if(buf->ui_pos.y >= buf->ui_start.y + nl)
-		buf->ui_pos.y = buf->ui_start.y + nl - 2;
+	else if(buf->ui_pos.y >= buf->ui_start.y + buf->screen_coord.h)
+		buf->ui_pos.y = buf->ui_start.y + buf->screen_coord.h - 1;
 
 	ui_redraw();
 	ui_cur_changed();
