@@ -22,7 +22,7 @@ void *urealloc(void *p, size_t l)
 
 char *ustrdup(const char *s)
 {
-	char *r = umalloc(strlen(s));
+	char *r = umalloc(strlen(s) + 1);
 	strcpy(r, s);
 	return r;
 }

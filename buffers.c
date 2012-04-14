@@ -10,7 +10,6 @@
 #include "ui.h"
 
 static buffer_t   *buf_sel;
-static buffer_t  **buf_vis;
 
 static char      **buf_list;
 static int         buf_c;
@@ -42,13 +41,4 @@ void buffers_init(int argc, char **argv)
 
 	if(!buf_sel)
 		buf_sel = buffer_new();
-
-	buf_vis = umalloc(2);
-	buf_vis[0] = buf_sel;
-	buf_vis[1] = NULL;
-}
-
-buffer_t **buffers_vis()
-{
-	return buf_vis;
 }

@@ -106,8 +106,11 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 		list_t *next;
 
 		if(l->line){
-			cut = ustrdup(l->line + *x);
 			cut_len = l->len_line - *x;
+
+			cut = umalloc(cut_len);
+			memcpy(cut, l->line + *x, cut_len);
+
 			l->len_line = *x;
 		}else{
 			cut = NULL;
