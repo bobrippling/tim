@@ -10,9 +10,9 @@
 #include "ui.h"
 #include "ncurses.h"
 
-#define ui_x   buffers_cur()->pos_ui.x
-#define ui_y   buffers_cur()->pos_ui.y
-#define ui_top buffers_cur()->off_ui.y
+#define ui_x   buffers_cur()->ui_pos.x
+#define ui_y   buffers_cur()->ui_pos.y
+#define ui_top buffers_cur()->ui_start.y
 
 void m_eof(Motion *m)
 {

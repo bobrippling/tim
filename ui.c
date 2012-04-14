@@ -43,12 +43,12 @@ void ui_inschar(char ch)
 		case CTRL_AND('?'):
 		case CTRL_AND('H'):
 		case 127:
-			if(buf->pos_ui.x > 0)
-				buffer_delchar(buffers_cur(), &buf->pos_ui.x, &buf->pos_ui.y);
+			if(buf->ui_pos.x > 0)
+				buffer_delchar(buffers_cur(), &buf->ui_pos.x, &buf->ui_pos.y);
 			break;
 
 		default:
-			buffer_inschar(buffers_cur(), &buf->pos_ui.x, &buf->pos_ui.y, ch);
+			buffer_inschar(buffers_cur(), &buf->ui_pos.x, &buf->ui_pos.y, ch);
 			break;
 	}
 
@@ -97,7 +97,7 @@ void ui_term()
 list_t *ui_current_line()
 {
 	buffer_t *buf = buffers_cur();
-	return list_seek(buf->head, buf->pos_ui.y);
+	return list_seek(buf->head, buf->ui_pos.y);
 }
 
 void ui_cur_changed()
@@ -106,19 +106,19 @@ void ui_cur_changed()
 	int need_redraw = 0;
 	buffer_t *buf = buffers_cur();
 
-	if(buf->pos_ui.y > buf->off_ui.y + nl - 2){
-		buf->off_ui.y = buf->pos_ui.y - nl + 2;
+	if(buf->ui_pos.y > buf->ui_start.y + nl - 2){
+		buf->ui_start.y = buf->ui_pos.y - nl + 2;
 		need_redraw = 1;
-	}else if(buf->pos_ui.y < buf->off_ui.y){
-		buf->off_ui.y = buf->pos_ui.y;
+	}else if(buf->ui_pos.y < buf->ui_start.y){
+		buf->ui_start.y = buf->ui_pos.y;
 		need_redraw = 1;
 	}
 
-	if(buf->pos_ui.x < 0)
-		buf->pos_ui.x = 0;
+	if(buf->ui_pos.x < 0)
+		buf->ui_pos.x = 0;
 
-	nc_set_yx(buf->pos_screen.y + buf->pos_ui.y - buf->off_ui.y,
-			      buf->pos_screen.x + buf->pos_ui.x - buf->off_ui.x);
+	nc_set_yx(buf->screen_coord.y + buf->ui_pos.y - buf->ui_start.y,
+			      buf->screen_coord.x + buf->ui_pos.x - buf->ui_start.x);
 
 	if(need_redraw)
 		ui_redraw();
@@ -130,10 +130,9 @@ void ui_draw_buf_1(buffer_t *buf, rect_t *r)
 	list_t *l;
 	int y;
 
-	buf->pos_screen.x = r->x;
-	buf->pos_screen.y = r->y;
+	buf->screen_coord = *r;
 
-	for(y = 0, l = list_seek(buf->head, buf->off_ui.y); l && y < r->h; l = l->next, y++){
+	for(y = 0, l = list_seek(buf->head, buf->ui_start.y); l && y < r->h; l = l->next, y++){
 		int i;
 
 		nc_set_yx(y, r->x);

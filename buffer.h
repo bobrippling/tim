@@ -15,9 +15,9 @@ struct buffer
 {
 	list_t *head;
 
-	point_t off_ui; /* offset into buffer */
-	point_t pos_ui; /* cursor pos in buffer */
-	point_t pos_screen; /* buffer pos in screen */
+	point_t ui_pos;       /* cursor pos in buffer */
+	point_t ui_start;     /* offset into buffer */
+	rect_t  screen_coord; /* buffer pos in screen */
 
 	buffer_t *neighbours[4];
 };

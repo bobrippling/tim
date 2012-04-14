@@ -121,15 +121,15 @@ void k_scroll(const KeyArg *a)
 	const int nl = nc_LINES();
 	buffer_t *buf = buffers_cur();
 
-	buf->off_ui.y += a->pos.y;
+	buf->ui_start.y += a->pos.y;
 
-	if(buf->off_ui.y < 0)
-		buf->off_ui.y = 0;
+	if(buf->ui_start.y < 0)
+		buf->ui_start.y = 0;
 
-	if(buf->pos_ui.y < buf->off_ui.y)
-		buf->pos_ui.y = buf->off_ui.y;
-	else if(buf->pos_ui.y >= buf->off_ui.y + nl)
-		buf->pos_ui.y = buf->off_ui.y + nl - 2;
+	if(buf->ui_pos.y < buf->ui_start.y)
+		buf->ui_pos.y = buf->ui_start.y;
+	else if(buf->ui_pos.y >= buf->ui_start.y + nl)
+		buf->ui_pos.y = buf->ui_start.y + nl - 2;
 
 	ui_redraw();
 	ui_cur_changed();
