@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "list.h"
+#include "pos.h"
 #include "buffer.h"
 #include "mem.h"
 
@@ -58,4 +59,32 @@ void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
 void buffer_delchar(buffer_t *buf, int *x, int *y)
 {
 	list_delchar(buf->head, x, y);
+}
+
+buffer_t *buffer_topleftmost(buffer_t *b)
+{
+	for(; b->neighbours[BUF_LEFT]; b = b->neighbours[BUF_LEFT]);
+	for(; b->neighbours[BUF_UP];   b = b->neighbours[BUF_UP]);
+
+	return b;
+}
+
+void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new)
+{
+	/* TODO; leaks, etc */
+	//buffer_t *sav = to->neighbours[loc];
+	enum buffer_neighbour rloc;
+
+#define OPPOSITE(a, b) case a: rloc = b; break
+
+	switch(loc){
+		OPPOSITE(BUF_LEFT,  BUF_RIGHT);
+		OPPOSITE(BUF_RIGHT, BUF_LEFT);
+		OPPOSITE(BUF_DOWN,  BUF_UP);
+		OPPOSITE(BUF_UP,    BUF_DOWN);
+	}
+
+
+	to->neighbours[loc] = new;
+	new->neighbours[rloc] = to;
 }

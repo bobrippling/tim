@@ -12,13 +12,14 @@
 #include "cmds.h"
 
 #include "list.h"
+#include "pos.h"
 #include "buffer.h"
 
 #include "buffers.h"
 
 #include "config.h"
 
-void k_cmd(KeyArg *arg)
+void k_cmd(const KeyArg *arg)
 {
 	int y, x;
 
@@ -82,31 +83,51 @@ cancel:
 	nc_set_yx(y, x);
 }
 
-void k_redraw(KeyArg *a)
+void k_redraw(const KeyArg *a)
 {
 	(void)a;
 	ui_redraw();
 }
 
-void k_set_mode(KeyArg *a)
+void k_set_mode(const KeyArg *a)
 {
 	ui_mode = a->i;
 }
 
-void k_scroll(KeyArg *a)
+void k_scroll(const KeyArg *a)
 {
 	const int nl = nc_LINES();
+	buffer_t *buf = buffers_cur();
 
-	ui_top += a->pos.y;
+	buf->off_ui.y += a->pos.y;
 
-	if(ui_top < 0)
-		ui_top = 0;
+	if(buf->off_ui.y < 0)
+		buf->off_ui.y = 0;
 
-	if(ui_y < ui_top)
-		ui_y = ui_top;
-	else if(ui_y >= ui_top + nl)
-		ui_y = ui_top + nl - 2;
+	if(buf->pos_ui.y < buf->off_ui.y)
+		buf->pos_ui.y = buf->off_ui.y;
+	else if(buf->pos_ui.y >= buf->off_ui.y + nl)
+		buf->pos_ui.y = buf->off_ui.y + nl - 2;
 
 	ui_redraw();
 	ui_cur_changed();
+}
+
+void k_winsel(const KeyArg *a)
+{
+	KeyArg cpy = *a;
+	buffer_t *buf = buffers_cur();
+
+	while(cpy.pos.x && buf)
+		buf = buf->neighbours[cpy.pos.x-- > 0 ? BUF_RIGHT : BUF_LEFT];
+	//while(cpy.pos.y && buf)
+		//buf = buf->neighbours[cpy.pos.y > 0 ? BUF_DOWN  : BUF_UP];
+
+	if(buf){
+		buffers_set_cur(buf);
+		ui_redraw();
+		ui_status("switched buf");
+	}else{
+		ui_status(":C");
+	}
 }

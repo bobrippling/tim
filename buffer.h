@@ -1,10 +1,26 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-typedef struct buffer
+typedef struct buffer buffer_t;
+
+enum buffer_neighbour
+{
+	BUF_LEFT,
+	BUF_RIGHT,
+	BUF_UP,
+	BUF_DOWN
+};
+
+struct buffer
 {
 	list_t *head;
-} buffer_t;
+
+	point_t off_ui; /* offset into buffer */
+	point_t pos_ui; /* cursor pos in buffer */
+	point_t pos_screen; /* buffer pos in screen */
+
+	buffer_t *neighbours[4];
+};
 
 buffer_t *buffer_new(void);
 buffer_t *buffer_new_fname(const char *);
@@ -14,5 +30,9 @@ void buffer_free(buffer_t *);
 
 void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
+
+/* positioning */
+buffer_t *buffer_topleftmost(buffer_t *b);
+void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
 
 #endif

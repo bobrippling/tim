@@ -2,6 +2,7 @@
 
 #include "ui.h"
 #include "list.h"
+#include "pos.h"
 #include "buffer.h"
 #include "buffers.h"
 

@@ -6,7 +6,7 @@
 
 typedef union KeyArg KeyArg;
 
-typedef void key_func(KeyArg *);
+typedef void key_func(const KeyArg *);
 
 union KeyArg
 {
@@ -36,5 +36,6 @@ typedef struct MotionKey
 key_func k_cmd, k_set_mode;
 key_func k_redraw;
 key_func k_scroll;
+key_func k_winsel;
 
 #endif

@@ -3,11 +3,16 @@
 #include <ctype.h>
 
 #include "list.h"
+#include "pos.h"
 #include "buffer.h"
 #include "buffers.h"
 #include "motion.h"
 #include "ui.h"
 #include "ncurses.h"
+
+#define ui_x   buffers_cur()->pos_ui.x
+#define ui_y   buffers_cur()->pos_ui.y
+#define ui_top buffers_cur()->off_ui.y
 
 void m_eof(Motion *m)
 {

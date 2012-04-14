@@ -9,6 +9,6 @@ typedef struct Cmd
 
 typedef void cmd_func(void);
 
-cmd_func c_q, c_w;
+cmd_func c_q, c_w, c_vs;
 
 #endif
