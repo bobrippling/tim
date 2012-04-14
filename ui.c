@@ -132,8 +132,6 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 
 	buf->screen_coord = *r;
 
-	fprintf(stderr, "buf \"%s\" at %d\n", buf->head->line, r->y);
-
 	for(y = 0, l = list_seek(buf->head, buf->ui_start.y); l && y < r->h; l = l->next, y++){
 		int i;
 
