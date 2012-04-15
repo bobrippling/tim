@@ -97,7 +97,7 @@ void ui_term()
 list_t *ui_current_line()
 {
 	buffer_t *buf = buffers_cur();
-	return list_seek(buf->head, buf->ui_pos.y);
+	return list_seek(buf->head, buf->ui_pos.y, 0);
 }
 
 void ui_cur_changed()
@@ -105,6 +105,12 @@ void ui_cur_changed()
 	int need_redraw = 0;
 	buffer_t *buf = buffers_cur();
 	const int nl = buf->screen_coord.h;
+
+	if(buf->ui_pos.x < 0)
+		buf->ui_pos.x = 0;
+
+	if(buf->ui_pos.y < 0)
+		buf->ui_pos.y = 0;
 
 	if(buf->ui_pos.y > buf->ui_start.y + nl - 1){
 		buf->ui_start.y = buf->ui_pos.y - nl + 1;
@@ -114,16 +120,28 @@ void ui_cur_changed()
 		need_redraw = 1;
 	}
 
-	if(buf->ui_pos.x < 0)
-		buf->ui_pos.x = 0;
-
 	nc_set_yx(buf->screen_coord.y + buf->ui_pos.y - buf->ui_start.y,
 			      buf->screen_coord.x + buf->ui_pos.x - buf->ui_start.x);
 
 	if(need_redraw)
 		ui_redraw();
-
 }
+
+void ui_draw_hline(int y, int x, int w)
+{
+	nc_set_yx(y, x);
+	while(w --> 0)
+		nc_addch('-');
+}
+
+void ui_draw_vline(int x, int y, int h)
+{
+	while(h --> 0){
+		nc_set_yx(y++, x);
+		nc_addch('|');
+	}
+}
+
 
 void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 {
@@ -132,13 +150,14 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 
 	buf->screen_coord = *r;
 
-	for(y = 0, l = list_seek(buf->head, buf->ui_start.y); l && y < r->h; l = l->next, y++){
+	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0); l && y < r->h; l = l->next, y++){
+		const int lim = l->len_line < (unsigned)r->w ? l->len_line : (unsigned)r->w;
 		int i;
 
 		nc_set_yx(r->y + y, r->x);
 		nc_clrtoeol();
 
-		for(i = 0; i < l->len_line; i++)
+		for(i = 0; i < lim; i++)
 			nc_addch(l->line[i]);
 	}
 
@@ -160,12 +179,20 @@ void ui_draw_buf_col(buffer_t *buf, const rect_t *r_col)
 			bi->neighbours[BUF_DOWN];
 			bi = bi->neighbours[BUF_DOWN], nrows++);
 
-	h = nc_LINES() / nrows;
+	h = r_col->h / nrows;
 
 	for(i = 0; buf; i++, buf = buf->neighbours[BUF_DOWN]){
 		rect_t r = *r_col;
 		r.y = i * h;
 		r.h = h;
+
+		if(i){
+			ui_draw_hline(r.y, r.x, r.w - 1);
+			r.y++;
+			if(buf->neighbours[BUF_DOWN])
+				r.h--;
+		}
+
 		ui_draw_buf_1(buf, &r);
 	}
 }
@@ -185,7 +212,7 @@ void ui_redraw()
 			bi->neighbours[BUF_RIGHT];
 			bi = bi->neighbours[BUF_RIGHT], ncols++);
 
-	w = nc_COLS() / ncols;
+	w = nc_COLS() / ncols - (ncols + 1);
 
 	for(i = 0; buf; i++, buf = buf->neighbours[BUF_RIGHT]){
 		rect_t r;
@@ -193,7 +220,14 @@ void ui_redraw()
 		r.x = i * w;
 		r.y = 0;
 		r.w = w;
-		r.h = nc_LINES();
+		r.h = nc_LINES() - 1;
+
+		if(i){
+			ui_draw_vline(r.x, r.y, r.h - 1);
+			r.x++;
+			if(buf->neighbours[BUF_RIGHT])
+				r.w--;
+		}
 
 		ui_draw_buf_col(buf, &r);
 	}while(buf);

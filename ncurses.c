@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <signal.h>
 
 #include "ncurses.h"
 
@@ -67,7 +68,14 @@ void nc_set_yx(int y, int x)
 int nc_getch()
 {
 	/* TODO: interrupts, winch */
-	return getch();
+	int ch;
+restart:
+	ch = getch();
+	if(ch == CTRL_AND('z')){
+		raise(SIGTSTP);
+		goto restart;
+	}
+	return ch;
 }
 
 void nc_addch(char c)

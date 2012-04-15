@@ -63,11 +63,15 @@ void list_free(list_t *l)
 	}
 }
 
-list_t *list_seek(list_t *l, int y)
+list_t *list_seek(list_t *l, int y, int creat)
 {
 	while(y > 0){
-		if(!l->next)
-			l->next = list_new();
+		if(!l->next){
+			if(creat)
+				l->next = list_new();
+			else
+				return NULL;
+		}
 
 		l = l->next;
 		y--;
@@ -80,9 +84,9 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 {
 	int i;
 
-	l = list_seek(l, *y);
+	l = list_seek(l, *y, 1);
 
-	if(*x >= l->len_malloc){
+	if((unsigned)*x >= l->len_malloc){
 		const int old_len = l->len_malloc;
 
 		l->len_malloc = *x + 1;
@@ -137,12 +141,15 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 
 void list_delchar(list_t *l, int *x, int *y)
 {
-	l = list_seek(l, *y);
-
-	if(*x > l->len_line)
-		return;
+	l = list_seek(l, *y, 0);
 
 	--*x;
+
+	if(!l)
+		return;
+
+	if((unsigned)*x > l->len_line)
+		return;
 
 	memmove(l->line + *x, l->line + *x + 1, l->len_line - *x);
 

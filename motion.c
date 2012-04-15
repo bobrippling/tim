@@ -27,7 +27,7 @@ void m_eol(Motion *m)
 
 	(void)m;
 
-	ui_x = l->len_line - 1;
+	ui_x = l ? l->len_line - 1 : 0;
 
 	ui_cur_changed();
 }
@@ -94,13 +94,17 @@ void m_sof(Motion *m)
 void m_sol(Motion *m)
 {
 	list_t *l = ui_current_line();
-	int i;
+	unsigned int i;
 
 	(void)m;
 
-	for(i = 0; i < l->len_line && isspace(l->line[i]); i++);
+	if(l){
+		for(i = 0; i < l->len_line && isspace(l->line[i]); i++);
 
-	ui_x = i < l->len_line ? i : 0;
+		ui_x = i < l->len_line ? i : 0;
+	}else{
+		ui_x = 0;
+	}
 
 	ui_cur_changed();
 }

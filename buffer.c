@@ -63,8 +63,13 @@ void buffer_delchar(buffer_t *buf, int *x, int *y)
 
 buffer_t *buffer_topleftmost(buffer_t *b)
 {
-	for(; b->neighbours[BUF_LEFT]; b = b->neighbours[BUF_LEFT]);
-	for(; b->neighbours[BUF_UP];   b = b->neighbours[BUF_UP]);
+	for(;;){
+		int changed = 0;
+		for(; b->neighbours[BUF_LEFT]; changed = 1, b = b->neighbours[BUF_LEFT]);
+		for(; b->neighbours[BUF_UP];   changed = 1, b = b->neighbours[BUF_UP]);
+		if(!changed)
+			break;
+	}
 
 	return b;
 }

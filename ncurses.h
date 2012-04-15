@@ -1,6 +1,8 @@
 #ifndef NCURSES_H
 #define NCURSES_H
 
+#define CTRL_AND(c)  ((c) & 037)
+
 void nc_init(void);
 void nc_term(void);
 void nc_cls(void);

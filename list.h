@@ -4,7 +4,7 @@
 typedef struct list
 {
 	char *line;
-	int len_line, len_malloc;
+	size_t len_line, len_malloc;
 
 	struct list *next;
 } list_t;
@@ -12,7 +12,7 @@ typedef struct list
 list_t *list_new(void);
 list_t *list_new_file(FILE *);
 
-list_t *list_seek(list_t *l, int y);
+list_t *list_seek(list_t *l, int y, int creat);
 
 void    list_free(list_t *);
 
