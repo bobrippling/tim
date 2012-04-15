@@ -54,6 +54,8 @@ Key keys[] = {
 
 	{ CTRL_AND('w'),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL },
 
+	{ CTRL_AND('g'),  k_show,       KEY_ARG_NONE,             UI_NORMAL },
+
 
 	{ 0, NULL, KEY_ARG_NONE, UI_NORMAL }
 };

@@ -165,3 +165,10 @@ void k_winsel(const KeyArg *a)
 		ui_status("no buffer");
 	}
 }
+
+void k_show(const KeyArg *a)
+{
+	buffer_t *buf = buffers_cur();
+	(void)a;
+	ui_status("x=%d y=%d", buf->ui_pos.x, buf->ui_pos.y);
+}

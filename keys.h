@@ -1,7 +1,6 @@
 #ifndef KEYS_H
 #define KEYS_H
 
-#define CTRL_AND(c)  ((c) & 037)
 #define key_esc '\x1b'
 
 typedef union KeyArg KeyArg;
@@ -37,5 +36,6 @@ key_func k_cmd, k_set_mode;
 key_func k_redraw;
 key_func k_scroll;
 key_func k_winsel;
+key_func k_show;
 
 #endif
