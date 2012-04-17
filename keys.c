@@ -28,7 +28,8 @@ void parse_cmd(char *cmd, int *argc, char ***argv)
 		(*argv)[*argc] = ustrdup(p);
 		++*argc;
 	}
-	(*argv)[*argc] = NULL;
+	if(*argc)
+		(*argv)[*argc] = NULL;
 }
 
 void k_cmd(const KeyArg *arg)
@@ -87,6 +88,9 @@ void k_cmd(const KeyArg *arg)
 	}
 
 	parse_cmd(cmd, &argc, &argv);
+
+	if(!argc)
+		goto cancel;
 
 	for(i = 0; cmds[i].cmd; i++)
 		if(!strcmp(cmds[i].cmd, cmd)){
