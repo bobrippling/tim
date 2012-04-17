@@ -148,12 +148,37 @@ void list_delchar(list_t *l, int *x, int *y)
 	if(!l)
 		return;
 
-	if((unsigned)*x > l->len_line)
+	if((unsigned)*x >= l->len_line)
 		return;
 
 	memmove(l->line + *x, l->line + *x + 1, l->len_line - *x);
 
 	l->len_line--;
+}
+
+void list_insline(list_t **pl, int *x, int *y, int dir)
+{
+	list_t *l, *save;
+
+	*x = 0;
+
+	if(dir < 0 && *y == 0){
+		/* special case */
+		l = *pl;
+		(*pl = list_new())->next = l;
+		return;
+	}
+
+	if(dir < 0)
+		--*y;
+
+	l = list_seek(*pl, *y, 1);
+
+	save = l->next;
+	l->next = list_new();
+	l->next->next = save;
+
+	++*y;
 }
 
 int list_count(list_t *l)

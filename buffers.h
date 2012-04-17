@@ -3,6 +3,7 @@
 
 enum buffer_init_args
 {
+	BUF_NONE = 0,
 	BUF_VALL,
 	BUF_HALL
 };

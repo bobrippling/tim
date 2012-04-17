@@ -172,3 +172,10 @@ void k_show(const KeyArg *a)
 	(void)a;
 	ui_status("x=%d y=%d", buf->ui_pos.x, buf->ui_pos.y);
 }
+
+void k_open(const KeyArg *a)
+{
+	buffer_insline(buffers_cur(), a->i);
+	ui_redraw();
+	ui_cur_changed();
+}

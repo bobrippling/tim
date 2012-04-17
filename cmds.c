@@ -21,17 +21,26 @@ void c_w(int argc, char **argv)
 {
 	FILE *f;
 	list_t *l;
+	const char *fname;
 
-	if(argc != 2){
+	if(argc == 2){
+		buffer_set_fname(buffers_cur(), argv[1]);
+	}else if(argc != 1){
 		ui_status("usage: %s filename", *argv);
 		return;
 	}
 
-	f = fopen(argv[1], "w");
+	fname = buffer_fname(buffers_cur());
+	if(!fname){
+		ui_status("no filename");
+		return;
+	}
+
+	f = fopen(fname, "w");
 
 	if(!f){
 got_err:
-		ui_status("%s: %s", argv[1], strerror(errno));
+		ui_status("%s: %s", fname, strerror(errno));
 		if(f)
 			fclose(f);
 		return;
@@ -45,7 +54,25 @@ got_err:
 	if(fclose(f))
 		goto got_err;
 	else
-		ui_status("written to \"%s\"", argv[1]);
+		ui_status("written to \"%s\"", fname);
+}
+
+void c_e(int argc, char **argv)
+{
+	if(argc != 2){
+		ui_status("usage: %s filename", *argv);
+		return;
+	}
+
+	if(!buffer_replace_fname(buffers_cur(), argv[1])){
+		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
+		buffers_set_cur(b);
+		buffer_set_fname(b, argv[1]);
+		ui_status("%s: %s", argv[1], strerror(errno));
+	}
+
+	ui_redraw();
+	ui_cur_changed();
 }
 
 void c_split(enum buffer_neighbour ne, int argc, char **argv)
@@ -53,17 +80,16 @@ void c_split(enum buffer_neighbour ne, int argc, char **argv)
 	buffer_t *b;
 
 	if(argc > 2){
-		ui_status("usage: %s filename", *argv);
+		ui_status("usage: %s [filename]", *argv);
 		return;
 	}
 
 	if(argc > 1){
-		b = buffer_new_fname(argv[1]);
+		int err;
+		buffer_new_fname(&b, argv[1], &err);
 
-		if(!b){
+		if(err)
 			ui_status("%s: %s", argv[1], strerror(errno));
-			return;
-		}
 	}else{
 		b = buffer_new();
 	}
@@ -82,3 +108,4 @@ void c_sp(int argc, char **argv)
 {
 	c_split(BUF_DOWN, argc, argv);
 }
+

@@ -10,6 +10,7 @@ typedef void key_func(const KeyArg *);
 union KeyArg
 {
 	int i;
+	char *s;
 	struct
 	{
 		int x, y;
@@ -37,5 +38,6 @@ key_func k_redraw;
 key_func k_scroll;
 key_func k_winsel;
 key_func k_show;
+key_func k_open;
 
 #endif

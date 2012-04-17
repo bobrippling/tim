@@ -10,9 +10,7 @@
 int main(int argc, char **argv)
 {
 	int i;
-	enum buffer_init_args initargs;
-
-	initargs = 0;
+	enum buffer_init_args initargs = BUF_NONE;
 
 	for(i = 1; i < argc; i++){
 		if(!strcmp(argv[i], "-O")){

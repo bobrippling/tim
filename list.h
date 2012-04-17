@@ -19,6 +19,8 @@ void    list_free(list_t *);
 void    list_inschar(list_t *, int *x, int *y, char ch);
 void    list_delchar(list_t *, int *x, int *y);
 
+void    list_insline(list_t **, int *x, int *y, int dir);
+
 int list_count(list_t *);
 
 #endif

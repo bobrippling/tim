@@ -36,19 +36,68 @@ buffer_t *buffer_new_file(FILE *f)
 	return b;
 }
 
-buffer_t *buffer_new_fname(const char *fname)
+void buffer_new_fname(buffer_t **pb, const char *fname, int *err)
 {
 	buffer_t *b;
 	FILE *f;
 
 	f = fopen(fname, "r");
-	if(!f)
-		return NULL;
+	if(!f){
+got_err:
+		*err = 1;
+		b = buffer_new();
+		goto fin;
+	}
 
 	b = buffer_new_file(f);
 	fclose(f);
 
-	return b;
+	if(!b)
+		goto got_err;
+
+	*err = 0;
+
+fin:
+	buffer_set_fname(b, fname);
+	*pb = b;
+}
+
+int buffer_replace_file(buffer_t *b, FILE *f)
+{
+	list_t *l = list_new_file(f);
+
+	if(!l)
+		return 0;
+
+	list_free(b->head);
+	b->head = l;
+
+	return 1;
+}
+
+int buffer_replace_fname(buffer_t *b, const char *fname)
+{
+	FILE *f = fopen(fname, "r");
+	int r;
+
+	if(!f)
+		return 0;
+
+	r = buffer_replace_file(b, f);
+	fclose(f);
+
+	return r;
+}
+
+void buffer_set_fname(buffer_t *b, const char *s)
+{
+	free(b->fname);
+	b->fname = ustrdup(s);
+}
+
+const char *buffer_fname(buffer_t *b)
+{
+	return b->fname;
 }
 
 void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
@@ -59,6 +108,11 @@ void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
 void buffer_delchar(buffer_t *buf, int *x, int *y)
 {
 	list_delchar(buf->head, x, y);
+}
+
+void buffer_insline(buffer_t *buf, int dir)
+{
+	list_insline(&buf->head, &buf->ui_pos.x, &buf->ui_pos.y, dir);
 }
 
 buffer_t *buffer_topleftmost(buffer_t *b)

@@ -31,17 +31,16 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a)
 	if(argc){
 		enum buffer_neighbour dir;
 		buffer_t *prev_buf;
+		int err;
 
 		buf_c = argc;
 		buf_list = umalloc(argc * sizeof *buf_list);
 		for(i = 0; i < argc; i++)
 			buf_list[i] = ustrdup(argv[i]);
 
-		buf_sel = buffer_new_fname(argv[0]);
-		if(!buf_sel){
+		buffer_new_fname(&buf_sel, argv[0], &err);
+		if(err)
 			ui_status("\"%s\": %s", argv[0], strerror(errno));
-			buf_sel = buffer_new();
-		}
 
 		switch(a){
 			case BUF_VALL: dir = BUF_RIGHT; break;
@@ -53,9 +52,11 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a)
 		prev_buf = buf_sel;
 
 		for(i = 1; i < argc; i++){
-			buffer_t *b = buffer_new_fname(argv[i]);
-			if(!b)
-				b = buffer_new();
+			buffer_t *b;
+			int err;
+
+			buffer_new_fname(&b, argv[i], &err);
+			/* ignore errors? */
 
 			buffer_add_neighbour(prev_buf, dir, b);
 

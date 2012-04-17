@@ -40,10 +40,15 @@ Key keys[] = {
 	/* order is important */
 	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_NORMAL | UI_INSERT },
 
+	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
+	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
+
 	INS_KEY('i'),
 	INS_KEY('I'),
 	INS_KEY('a'),
 	INS_KEY('A'),
+	INS_KEY('o'),
+	INS_KEY('O'),
 
 	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL }, /* k_set_mode instead? */
 
@@ -63,6 +68,7 @@ Key keys[] = {
 Cmd cmds[] = {
 	{ "q",   c_q     },
 	{ "w",   c_w     },
+	{ "e",   c_e     },
 
 	{ "vs",  c_vs    },
 	{ "sp",  c_sp    },
@@ -71,3 +77,4 @@ Cmd cmds[] = {
 };
 
 #endif
+
