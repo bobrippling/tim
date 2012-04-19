@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "cmds.h"
 #include "ui.h"
@@ -9,6 +10,8 @@
 #include "pos.h"
 #include "buffer.h"
 #include "buffers.h"
+#include "external.h"
+#include "mem.h"
 
 void c_q(int argc, char **argv)
 {
@@ -109,3 +112,25 @@ void c_sp(int argc, char **argv)
 	c_split(BUF_DOWN, argc, argv);
 }
 
+void c_run(int argc, char **argv)
+{
+	if(argc == 1){
+		shellout(NULL);
+	}else{
+		char *cmd, *p;
+		int len, i;
+
+		for(len = 0, i = 1; i < argc; i++)
+			len += strlen(argv[i]) + 1;
+
+		p = cmd = umalloc(len + 1);
+		*cmd = '\0';
+
+		for(len = 0, i = 1; i < argc; i++)
+			p += sprintf(p, "%s ", argv[i]);
+
+		shellout(cmd);
+
+		free(cmd);
+	}
+}

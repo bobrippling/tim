@@ -9,7 +9,7 @@ typedef struct Cmd
 	cmd_func *func;
 } Cmd;
 
-cmd_func c_q, c_w, c_vs, c_sp, c_e;
+cmd_func c_q, c_w, c_vs, c_sp, c_e, c_run;
 
 #endif
 

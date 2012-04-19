@@ -73,6 +73,8 @@ Cmd cmds[] = {
 	{ "vs",  c_vs    },
 	{ "sp",  c_sp    },
 
+	{ "!",   c_run   },
+
 	{ NULL, NULL },
 };
 

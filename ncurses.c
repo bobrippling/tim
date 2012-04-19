@@ -5,36 +5,44 @@
 
 void nc_init()
 {
-	initscr();
-	noecho();
-	cbreak();
-	raw();
-	scrollok(stdscr, 1);
+	static int init = 0;
 
-	nonl();
-	intrflush(stdscr, 0);
+	if(!init){
+		init = 1;
 
-	if(has_colors()){
-		start_color();
-		use_default_colors();
+		initscr();
+		noecho();
+		cbreak();
+		raw();
+		scrollok(stdscr, 1);
 
-		init_pair(1 + COLOR_BLACK,   COLOR_BLACK,   -1);
-		init_pair(1 + COLOR_GREEN,   COLOR_GREEN,   -1);
-		init_pair(1 + COLOR_WHITE,   COLOR_WHITE,   -1);
-		init_pair(1 + COLOR_RED,     COLOR_RED,     -1);
-		init_pair(1 + COLOR_CYAN,    COLOR_CYAN,    -1);
-		init_pair(1 + COLOR_MAGENTA, COLOR_MAGENTA, -1);
-		init_pair(1 + COLOR_BLUE,    COLOR_BLUE,    -1);
-		init_pair(1 + COLOR_YELLOW,  COLOR_YELLOW,  -1);
+		nonl();
+		intrflush(stdscr, 0);
 
-		init_pair(9 + COLOR_BLACK,   -1, COLOR_BLACK);
-		init_pair(9 + COLOR_GREEN,   -1, COLOR_GREEN);
-		init_pair(9 + COLOR_WHITE,   -1, COLOR_WHITE);
-		init_pair(9 + COLOR_RED,     -1, COLOR_RED);
-		init_pair(9 + COLOR_CYAN,    -1, COLOR_CYAN);
-		init_pair(9 + COLOR_MAGENTA, -1, COLOR_MAGENTA);
-		init_pair(9 + COLOR_BLUE,    -1, COLOR_BLUE);
-		init_pair(9 + COLOR_YELLOW,  -1, COLOR_YELLOW);
+		if(has_colors()){
+			start_color();
+			use_default_colors();
+
+			init_pair(1 + COLOR_BLACK,   COLOR_BLACK,   -1);
+			init_pair(1 + COLOR_GREEN,   COLOR_GREEN,   -1);
+			init_pair(1 + COLOR_WHITE,   COLOR_WHITE,   -1);
+			init_pair(1 + COLOR_RED,     COLOR_RED,     -1);
+			init_pair(1 + COLOR_CYAN,    COLOR_CYAN,    -1);
+			init_pair(1 + COLOR_MAGENTA, COLOR_MAGENTA, -1);
+			init_pair(1 + COLOR_BLUE,    COLOR_BLUE,    -1);
+			init_pair(1 + COLOR_YELLOW,  COLOR_YELLOW,  -1);
+
+			init_pair(9 + COLOR_BLACK,   -1, COLOR_BLACK);
+			init_pair(9 + COLOR_GREEN,   -1, COLOR_GREEN);
+			init_pair(9 + COLOR_WHITE,   -1, COLOR_WHITE);
+			init_pair(9 + COLOR_RED,     -1, COLOR_RED);
+			init_pair(9 + COLOR_CYAN,    -1, COLOR_CYAN);
+			init_pair(9 + COLOR_MAGENTA, -1, COLOR_MAGENTA);
+			init_pair(9 + COLOR_BLUE,    -1, COLOR_BLUE);
+			init_pair(9 + COLOR_YELLOW,  -1, COLOR_YELLOW);
+		}
+	}else{
+		refresh();
 	}
 }
 
