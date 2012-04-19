@@ -174,7 +174,11 @@ void k_show(const KeyArg *a)
 {
 	buffer_t *buf = buffers_cur();
 	(void)a;
-	ui_status("x=%d y=%d", buf->ui_pos.x, buf->ui_pos.y);
+	ui_status("%s%s%s, x=%d y=%d",
+			buf->fname ? "\"" : "",
+			buf->fname ? buf->fname : "<no name>",
+			buf->fname ? "\"" : "",
+			buf->ui_pos.x, buf->ui_pos.y);
 }
 
 void k_open(const KeyArg *a)
