@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "list.h"
 #include "pos.h"
@@ -80,8 +81,14 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 	FILE *f = fopen(fname, "r");
 	int r;
 
-	if(!f)
+	if(!f){
+		if(errno == ENOENT){
+			list_free(b->head);
+			b->head = list_new();
+			return 1;
+		}
 		return 0;
+	}
 
 	r = buffer_replace_file(b, f);
 	fclose(f);
