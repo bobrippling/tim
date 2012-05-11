@@ -50,7 +50,7 @@ got_err:
 	}
 
 	for(l = buffers_cur()->head; l; l = l->next){
-		if(fwrite(l->line, 1, l->len_line, f) != l->len_line || fputc('\n', f) == EOF)
+		if(fwrite(l->line, 1, l->len_line, f) != l->len_line || (l->next ? fputc('\n', f) == EOF : 0))
 			goto got_err;
 	}
 
