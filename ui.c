@@ -60,20 +60,19 @@ void ui_inschar(char ch)
 void ui_main()
 {
 	extern Key keys[];
-	extern MotionKey motion_keys[];
 
 	ui_redraw();
 
 	while(ui_running){
 		int ch = nc_getch();
-		int i;
+		int i = 0;
 		int found;
+		MotionKey *motion;
 
-		for(found = i = 0; motion_keys[i].ch; i++)
-			if(motion_keys[i].mode & ui_mode && motion_keys[i].ch == ch){
-				motion_keys[i].func(&motion_keys[i].motion);
-				found = 1;
-			}
+		while((motion = motion_next(ui_mode, ch, i++))){
+			motion->func(&motion->motion);
+			found = 1;
+		}
 
 		for(i = 0; keys[i].ch; i++)
 			if(keys[i].mode & ui_mode && keys[i].ch == ch){

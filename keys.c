@@ -19,6 +19,23 @@
 
 #include "config.h"
 
+MotionKey *motion_next(enum ui_mode mode, int ch, int count)
+{
+	extern MotionKey motion_keys[];
+	int i;
+
+	for(i = 0; motion_keys[i].ch; i++){
+		if(motion_keys[i].mode & mode
+		&& motion_keys[i].ch == ch
+		&& count-- < 0)
+		{
+			return &motion_keys[i];
+		}
+	}
+
+	return NULL;
+}
+
 static
 void parse_cmd(char *cmd, int *argc, char ***argv)
 {
@@ -150,12 +167,12 @@ void k_winsel(const KeyArg *a)
 	dir = nc_getch();
 
 	switch(dir){
-#define DIR(c, n) case c: buf = buf->neighbours[n]; break
+#define DIRECT(c, n) case c: buf = buf->neighbours[n]; break
 
-		DIR('j', BUF_DOWN);
-		DIR('k', BUF_UP);
-		DIR('h', BUF_LEFT);
-		DIR('l', BUF_RIGHT);
+		DIRECT('j', BUF_DOWN);
+		DIRECT('k', BUF_UP);
+		DIRECT('h', BUF_LEFT);
+		DIRECT('l', BUF_RIGHT);
 
 		default:
 			return;
@@ -187,4 +204,19 @@ void k_open(const KeyArg *a)
 	buffer_insline(buffers_cur(), a->i);
 	ui_redraw();
 	ui_cur_changed();
+}
+
+void k_del(const KeyArg *a)
+{
+	Motion *m = motion_next(ui_mode, nc_getch(), 0);
+
+	if(m){
+		Pos current = {
+			ui_x(), ui_y()
+		};
+
+		Pos to;
+
+		motion_apply(m, buffer, ...);
+	}
 }

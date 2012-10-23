@@ -30,7 +30,7 @@ MotionKey motion_keys[] = {
 	{ 'M',            m_mos,        MOTION_ARG_NONE,                   UI_NORMAL },
 	{ 'L',            m_eos,        MOTION_ARG_NONE,                   UI_NORMAL },
 
-	{ 0, NULL, MOTION_ARG_NONE, 0 }
+	{ 0 }
 };
 
 #define INS_KEY(k) \

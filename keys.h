@@ -11,7 +11,7 @@ union KeyArg
 {
 	int i;
 	char *s;
-	struct
+	struct Pos
 	{
 		int x, y;
 	} pos;
@@ -33,11 +33,14 @@ typedef struct MotionKey
 	enum ui_mode mode;
 } MotionKey;
 
+MotionKey *motion_next(enum ui_mode mode, int ch, int count);
+
 key_func k_cmd, k_set_mode;
 key_func k_redraw;
 key_func k_scroll;
 key_func k_winsel;
 key_func k_show;
 key_func k_open;
+key_func k_del;
 
 #endif
