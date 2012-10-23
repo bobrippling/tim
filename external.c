@@ -4,6 +4,7 @@
 
 #include "mem.h"
 #include "ui.h"
+#include "external.h"
 
 int shellout(const char *cmd)
 {

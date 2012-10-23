@@ -35,6 +35,7 @@ void ui_status(const char *fmt, ...)
 	nc_set_yx(y, x);
 }
 
+static
 void ui_inschar(char ch)
 {
 	buffer_t *buf = buffers_cur();
@@ -127,6 +128,7 @@ void ui_cur_changed()
 		ui_redraw();
 }
 
+static
 void ui_draw_hline(int y, int x, int w)
 {
 	nc_set_yx(y, x);
@@ -134,6 +136,7 @@ void ui_draw_hline(int y, int x, int w)
 		nc_addch('-');
 }
 
+static
 void ui_draw_vline(int x, int y, int h)
 {
 	while(h --> 0){
@@ -142,7 +145,7 @@ void ui_draw_vline(int x, int y, int h)
 	}
 }
 
-
+static
 void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 {
 	list_t *l;
@@ -168,6 +171,7 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 	}
 }
 
+static
 void ui_draw_buf_col(buffer_t *buf, const rect_t *r_col)
 {
 	buffer_t *bi;

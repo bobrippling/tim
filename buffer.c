@@ -20,6 +20,7 @@ buffer_t *buffer_new()
 	return b;
 }
 
+static
 buffer_t *buffer_new_file(FILE *f)
 {
 	/* TODO: mmap() */

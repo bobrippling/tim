@@ -19,6 +19,7 @@
 
 #include "config.h"
 
+static
 void parse_cmd(char *cmd, int *argc, char ***argv)
 {
 	char *p;

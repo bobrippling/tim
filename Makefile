@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -pedantic -g -std=c99
+CFLAGS = -Wall -Wextra -pedantic -g -std=c99 -Wmissing-prototypes
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o buffers.o motion.o external.o

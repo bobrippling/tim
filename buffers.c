@@ -56,7 +56,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a)
 			int err;
 
 			buffer_new_fname(&b, argv[i], &err);
-			/* ignore errors? */
+			/* FIXME: ignore errors? */
 
 			buffer_add_neighbour(prev_buf, dir, b);
 

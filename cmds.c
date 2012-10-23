@@ -78,6 +78,7 @@ void c_e(int argc, char **argv)
 	ui_cur_changed();
 }
 
+static
 void c_split(enum buffer_neighbour ne, int argc, char **argv)
 {
 	buffer_t *b;
