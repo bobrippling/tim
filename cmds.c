@@ -49,15 +49,16 @@ got_err:
 		return;
 	}
 
-	for(l = buffers_cur()->head; l; l = l->next){
+	for(l = buffers_cur()->head; l; l = l->next)
 		if(fwrite(l->line, 1, l->len_line, f) != l->len_line || (l->next ? fputc('\n', f) == EOF : 0))
 			goto got_err;
+
+	if(fclose(f)){
+		f = NULL;
+		goto got_err;
 	}
 
-	if(fclose(f))
-		goto got_err;
-	else
-		ui_status("written to \"%s\"", fname);
+	ui_status("written to \"%s\"", fname);
 }
 
 void c_e(int argc, char **argv)
