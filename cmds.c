@@ -71,9 +71,12 @@ void c_e(int argc, char **argv)
 	if(!buffer_replace_fname(buffers_cur(), argv[1])){
 		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
 		buffers_set_cur(b);
-		buffer_set_fname(b, argv[1]);
 		ui_status("%s: %s", argv[1], strerror(errno));
+	}else{
+		ui_status("%s: loaded");
 	}
+
+	buffer_set_fname(buffers_cur(), argv[1]);
 
 	ui_redraw();
 	ui_cur_changed();
