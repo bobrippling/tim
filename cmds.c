@@ -73,7 +73,7 @@ void c_e(int argc, char **argv)
 		buffers_set_cur(b);
 		ui_status("%s: %s", argv[1], strerror(errno));
 	}else{
-		ui_status("%s: loaded");
+		ui_status("%s: loaded", argv[1]);
 	}
 
 	buffer_set_fname(buffers_cur(), argv[1]);
