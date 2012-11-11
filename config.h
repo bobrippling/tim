@@ -4,7 +4,7 @@
 #define KEY_ARG_NONE    { 0 }
 #define MOTION_ARG_NONE { 0 }
 
-MotionKey motion_keys[] = {
+motionkey_t motion_keys[] = {
 	{ '\033',         m_move,       { .pos = { -1, 0 } },              UI_INSERT },
 
 	{ 'I',            m_sol,        MOTION_ARG_NONE,                   UI_NORMAL },
@@ -36,7 +36,7 @@ MotionKey motion_keys[] = {
 #define INS_KEY(k) \
 	{ k, k_set_mode, { UI_INSERT }, UI_NORMAL }
 
-Key keys[] = {
+key_t keys[] = {
 	/* order is important */
 	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_NORMAL | UI_INSERT },
 
@@ -65,7 +65,7 @@ Key keys[] = {
 	{ 0, NULL, KEY_ARG_NONE, UI_NORMAL }
 };
 
-Cmd cmds[] = {
+cmd_t cmds[] = {
 	{ "q",   c_q     },
 	{ "w",   c_w     },
 	{ "e",   c_e     },

@@ -41,6 +41,8 @@ void buffer_delchar(buffer_t *, int *x, int *y);
 
 void buffer_insline(buffer_t *, int dir);
 
+struct list *buffer_current_line(buffer_t *);
+
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);
 void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);

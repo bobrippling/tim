@@ -5,106 +5,91 @@
 #include "list.h"
 #include "pos.h"
 #include "buffer.h"
-#include "buffers.h"
 #include "motion.h"
 #include "ui.h"
-#include "ncurses.h"
 
-#define ui_x   buffers_cur()->ui_pos.x
-#define ui_y   buffers_cur()->ui_pos.y
-#define ui_top buffers_cur()->ui_start.y
+#define UI_X   buf->ui_pos.x
+#define UI_Y   buf->ui_pos.y
+#define UI_TOP buf->ui_start.y
 
-void m_eof(Motion *m)
+
+void m_eof(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	(void)m;
-	ui_y = list_count(buffers_cur()->head);
-	ui_cur_changed();
+	to->y = list_count(buf->head);
 }
 
-void m_eol(Motion *m)
+void m_eol(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	list_t *l = ui_current_line();
+	list_t *l = buffer_current_line(buf);
 
-	(void)m;
-
-	ui_x = l ? l->len_line - 1 : 0;
-
-	ui_cur_changed();
+	to->x = l ? l->len_line - 1 : 0;
 }
 
-void m_sos(Motion *m)
+void m_sos(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	(void)m;
-
-	ui_y = ui_top;
-
-	ui_cur_changed();
+	to->y = UI_TOP;
 }
 
-void m_eos(Motion *m)
+void m_eos(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	buffer_t *buf = buffers_cur();
-	(void)m;
-
-	ui_y = ui_top + buf->screen_coord.h - 1;
-
-	ui_cur_changed();
+	to->y = UI_TOP + buf->screen_coord.h - 1;
 }
 
-void m_mos(Motion *m)
+void m_mos(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	buffer_t *buf = buffers_cur();
-	(void)m;
-
-	ui_y = ui_top + buf->screen_coord.h / 2 - 1;
-
-	ui_cur_changed();
+	to->y = UI_TOP + buf->screen_coord.h / 2 - 1;
 }
 
-void m_goto(Motion *m)
+void m_goto(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
 	if(m->pos.y > -1)
-		ui_y = m->pos.y;
+		to->y = m->pos.y;
 
 	if(m->pos.x > -1)
-		ui_x = m->pos.x;
-
-	ui_cur_changed();
+		to->x = m->pos.x;
 }
 
-void m_move(Motion *m)
+void m_move(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	(void)m;
-
-	ui_y += m->pos.y;
-	ui_x += m->pos.x;
-
-	ui_cur_changed();
+	to->y += m->pos.y;
+	to->x += m->pos.x;
 }
 
-void m_sof(Motion *m)
+void m_sof(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	(void)m;
-
-	ui_y = 0;
-
-	ui_cur_changed();
+	to->y = 0;
 }
 
-void m_sol(Motion *m)
+void m_sol(motion_arg *m, buffer_t *buf, point_t const *from, point_t *to)
 {
-	list_t *l = ui_current_line();
+	list_t *l = buffer_current_line(buf);
 	unsigned int i;
-
-	(void)m;
 
 	if(l){
 		for(i = 0; i < l->len_line && isspace(l->line[i]); i++);
 
-		ui_x = i < l->len_line ? i : 0;
+		to->x = i < l->len_line ? i : 0;
 	}else{
-		ui_x = 0;
+		to->x = 0;
 	}
+}
 
-	ui_cur_changed();
+void motion_apply(motionkey_t *m, buffer_t *buf, point_t *to)
+{
+	point_t from = { UI_X, UI_Y };
+	*to = from;
+
+	m->func(&m->motion);
+
+	if(memcmp(&from, to, sizeof from))
+		ui_cur_changed();
+}
+
+void motion_apply_buf(motionkey_t *m, buffer_t *buf)
+{
+	point_t to;
+
+	motion_apply(m, buf, &to);
+
+	buf->ui_pos = to;
 }

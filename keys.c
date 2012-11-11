@@ -4,6 +4,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "pos.h"
+#include "list.h"
+#include "buffer.h"
+
 #include "ui.h"
 #include "motion.h"
 #include "keys.h"
@@ -11,17 +15,13 @@
 #include "mem.h"
 #include "cmds.h"
 
-#include "list.h"
-#include "pos.h"
-#include "buffer.h"
-
 #include "buffers.h"
 
 #include "config.h"
 
-MotionKey *motion_next(enum ui_mode mode, int ch, int count)
+motionkey_t *motion_next(enum ui_mode mode, int ch, int count)
 {
-	extern MotionKey motion_keys[];
+	extern motionkey_t motion_keys[];
 	int i;
 
 	for(i = 0; motion_keys[i].ch; i++){
@@ -50,7 +50,7 @@ void parse_cmd(char *cmd, int *argc, char ***argv)
 		(*argv)[*argc] = NULL;
 }
 
-void k_cmd(const KeyArg *arg)
+void k_cmd(const keyarg_u *arg)
 {
 	int y, x;
 
@@ -127,18 +127,18 @@ cancel:
 	nc_set_yx(y, x);
 }
 
-void k_redraw(const KeyArg *a)
+void k_redraw(const keyarg_u *a)
 {
 	(void)a;
 	ui_redraw();
 }
 
-void k_set_mode(const KeyArg *a)
+void k_set_mode(const keyarg_u *a)
 {
 	ui_mode = a->i;
 }
 
-void k_scroll(const KeyArg *a)
+void k_scroll(const keyarg_u *a)
 {
 	buffer_t *buf = buffers_cur();
 
@@ -156,7 +156,7 @@ void k_scroll(const KeyArg *a)
 	ui_cur_changed();
 }
 
-void k_winsel(const KeyArg *a)
+void k_winsel(const keyarg_u *a)
 {
 	buffer_t *buf;
 	char dir;
@@ -188,7 +188,7 @@ void k_winsel(const KeyArg *a)
 	}
 }
 
-void k_show(const KeyArg *a)
+void k_show(const keyarg_u *a)
 {
 	buffer_t *buf = buffers_cur();
 	(void)a;
@@ -199,24 +199,20 @@ void k_show(const KeyArg *a)
 			buf->ui_pos.x, buf->ui_pos.y);
 }
 
-void k_open(const KeyArg *a)
+void k_open(const keyarg_u *a)
 {
 	buffer_insline(buffers_cur(), a->i);
 	ui_redraw();
 	ui_cur_changed();
 }
 
-void k_del(const KeyArg *a)
+void k_del(const keyarg_u *a)
 {
-	Motion *m = motion_next(ui_mode, nc_getch(), 0);
+	motionkey_t *mk = motion_next(ui_mode, nc_getch(), 0);
 
-	if(m){
-		Pos current = {
-			ui_x(), ui_y()
-		};
+	if(mk){
+		//motion_apply(mk, buffers_cur());
 
-		Pos to;
-
-		motion_apply(m, buffer, ...);
+		/* TODO: delete */
 	}
 }

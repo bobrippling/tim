@@ -3,11 +3,11 @@
 
 typedef void cmd_func(int argc, char **argv);
 
-typedef struct Cmd
+typedef struct cmd_t
 {
 	const char *cmd;
 	cmd_func *func;
-} Cmd;
+} cmd_t;
 
 cmd_func c_q, c_w, c_vs, c_sp, c_e, c_run;
 

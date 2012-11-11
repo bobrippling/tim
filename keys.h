@@ -3,37 +3,34 @@
 
 #define key_esc '\x1b'
 
-typedef union KeyArg KeyArg;
+typedef union keyarg_u keyarg_u;
 
-typedef void key_func(const KeyArg *);
+typedef void key_func(const keyarg_u *);
 
-union KeyArg
+union keyarg_u
 {
 	int i;
 	char *s;
-	struct Pos
-	{
-		int x, y;
-	} pos;
+	point_t pos;
 };
 
-typedef struct Key
+typedef struct key_t
 {
 	char ch;
 	key_func *func;
-	KeyArg arg;
+	keyarg_u arg;
 	enum ui_mode mode;
-} Key;
+} key_t;
 
-typedef struct MotionKey
+typedef struct motionkey_t
 {
 	char ch;
 	motion_func *func;
-	Motion motion;
+	motion_arg motion;
 	enum ui_mode mode;
-} MotionKey;
+} motionkey_t;
 
-MotionKey *motion_next(enum ui_mode mode, int ch, int count);
+motionkey_t *motion_next(enum ui_mode mode, int ch, int count);
 
 key_func k_cmd, k_set_mode;
 key_func k_redraw;

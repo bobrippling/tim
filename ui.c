@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "pos.h"
 #include "ui.h"
 #include "ncurses.h"
+#include "list.h"
+#include "buffer.h"
 #include "motion.h"
 #include "keys.h"
-#include "list.h"
-#include "pos.h"
-#include "buffer.h"
 #include "buffers.h"
 
 enum ui_mode ui_mode;
@@ -59,7 +59,7 @@ void ui_inschar(char ch)
 
 void ui_main()
 {
-	extern Key keys[];
+	extern key_t keys[];
 
 	ui_redraw();
 
@@ -67,10 +67,10 @@ void ui_main()
 		int ch = nc_getch();
 		int i = 0;
 		int found;
-		MotionKey *motion;
+		motionkey_t *motion;
 
 		while((motion = motion_next(ui_mode, ch, i++))){
-			motion->func(&motion->motion);
+			motion_apply_buf(&motion->motion, buffers_cur());
 			found = 1;
 		}
 
@@ -92,12 +92,6 @@ void ui_main()
 void ui_term()
 {
 	nc_term();
-}
-
-list_t *ui_current_line()
-{
-	buffer_t *buf = buffers_cur();
-	return list_seek(buf->head, buf->ui_pos.y, 0);
 }
 
 void ui_cur_changed()
