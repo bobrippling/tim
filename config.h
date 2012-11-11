@@ -70,6 +70,8 @@ Cmd cmds[] = {
 	{ "w",   c_w     },
 	{ "e",   c_e     },
 
+	{ "x",   c_x     },
+
 	{ "vs",  c_vs    },
 	{ "sp",  c_sp    },
 
