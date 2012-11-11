@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <wordexp.h>
 
 #include "ui.h"
 #include "motion.h"
@@ -20,13 +21,28 @@
 #include "config.h"
 
 static
+char *parse_arg(const char *arg)
+{
+	/* TODO: ~ substitution */
+	wordexp_t wexp;
+	int r = wordexp(arg, &wexp, WRDE_NOCMD);
+	char *ret;
+
+	ret = r ? ustrdup(arg) : join(" ", wexp.we_wordv, wexp.we_wordc);
+
+	wordfree(&wexp);
+
+	return ret;
+}
+
+static
 void parse_cmd(char *cmd, int *argc, char ***argv)
 {
 	char *p;
 
 	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
 		*argv = urealloc(*argv, (*argc + 2) * sizeof **argv);
-		(*argv)[*argc] = ustrdup(p);
+		(*argv)[*argc] = parse_arg(p);
 		++*argc;
 	}
 	if(*argc)
