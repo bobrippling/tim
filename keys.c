@@ -36,17 +36,33 @@ char *parse_arg(const char *arg)
 }
 
 static
-void parse_cmd(char *cmd, int *argc, char ***argv)
+void parse_cmd(char *cmd, int *pargc, char ***pargv)
 {
+	int argc = *pargc;
+	char **argv = *pargv;
 	char *p;
 
-	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
-		*argv = urealloc(*argv, (*argc + 2) * sizeof **argv);
-		(*argv)[*argc] = parse_arg(p);
-		++*argc;
+	/* special case */
+	if(ispunct(cmd[0])){
+		argv = urealloc(argv, (argc + 2) * sizeof *argv);
+
+		snprintf(
+				argv[argc++] = umalloc(2),
+				2,
+				cmd);
+
+		cmd++;
 	}
-	if(*argc)
-		(*argv)[*argc] = NULL;
+
+	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
+		argv = urealloc(argv, (argc + 2) * sizeof *argv);
+		argv[argc++] = parse_arg(p);
+	}
+	if(argc)
+		argv[argc] = NULL;
+
+	*pargv = argv;
+	*pargc = argc;
 }
 
 static
@@ -150,13 +166,13 @@ void k_cmd(const KeyArg *arg)
 		goto cancel;
 
 	for(i = 0; cmds[i].cmd; i++)
-		if(!strcmp(cmds[i].cmd, cmd)){
+		if(!strcmp(cmds[i].cmd, argv[0])){
 			cmds[i].func(argc, argv);
 			break;
 		}
 
 	if(!cmds[i].cmd)
-		ui_status("unknown command %s", cmd);
+		ui_status("unknown command %s", argv[0]);
 
 cancel:
 	free(cmd);
