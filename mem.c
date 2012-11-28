@@ -28,7 +28,7 @@ char *ustrdup(const char *s)
 	return r;
 }
 
-char *join(const char *sep, char **vec, int n)
+char *join(const char *sep, const char **vec, int n)
 {
 	const int len_sep = strlen(sep);
 	const char *sep_actual = "";

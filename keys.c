@@ -28,7 +28,7 @@ char *parse_arg(const char *arg)
 	int r = wordexp(arg, &wexp, WRDE_NOCMD);
 	char *ret;
 
-	ret = r ? ustrdup(arg) : join(" ", wexp.we_wordv, wexp.we_wordc);
+	ret = r ? ustrdup(arg) : join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
 
 	wordfree(&wexp);
 
@@ -47,6 +47,45 @@ void parse_cmd(char *cmd, int *argc, char ***argv)
 	}
 	if(*argc)
 		(*argv)[*argc] = NULL;
+}
+
+static
+void filter_cmd(int *pargc, char ***pargv)
+{
+	/* check for '%' */
+	int argc = *pargc;
+	char **argv = *pargv;
+	int i;
+	const char *const fnam = buffer_fname(buffers_cur());
+
+
+	for(i = 0; i < argc; i++){
+		char *p;
+
+		for(p = argv[i]; *p; p++){
+			if(*p == '\\')
+				continue;
+
+			switch(*p){
+				/* TODO: '#' */
+				case '%':
+					if(fnam){
+						char *new;
+
+						*p = '\0';
+
+						new = join("", (const char *[]){
+								argv[i],
+								fnam,
+								p + 1 }, 3);
+
+						free(argv[i]);
+						argv[i] = new;
+					}
+				break;
+			}
+		}
+	}
 }
 
 void k_cmd(const KeyArg *arg)
@@ -68,9 +107,6 @@ void k_cmd(const KeyArg *arg)
 	nc_addch(':');
 	nc_clrtoeol();
 
-	argv = NULL;
-	argc = 0;
-
 	while(reading){
 		int ch = nc_getch();
 
@@ -82,7 +118,7 @@ void k_cmd(const KeyArg *arg)
 			case CTRL_AND('H'):
 			case 263:
 			case 127:
-				/* backsapce */
+				/* backspace */
 				if(i == 0)
 					goto cancel;
 				cmd[i--] = '\0';
@@ -104,7 +140,11 @@ void k_cmd(const KeyArg *arg)
 		}
 	}
 
+	argv = NULL;
+	argc = 0;
 	parse_cmd(cmd, &argc, &argv);
+
+	filter_cmd(&argc, &argv);
 
 	if(!argc)
 		goto cancel;
