@@ -2,9 +2,27 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <termios.h>
+#include <unistd.h>
+
 #include "mem.h"
 #include "ui.h"
 #include "external.h"
+
+static int term_canon(int on)
+{
+	struct termios this;
+
+	if(tcgetattr(0, &this))
+		return 0;
+
+	if(on)
+		this.c_lflag |=  ICANON;
+	else
+		this.c_lflag &= ~ICANON;
+
+	return 0 == tcsetattr(0, 0, &this);
+}
 
 int shellout(const char *cmd)
 {
@@ -24,11 +42,18 @@ int shellout(const char *cmd)
 
 	r = system(shcmd);
 
-	fprintf(stderr, "enter to continue...");
-	for(;;){
-		int c = getchar();
-		if(c == EOF || c == '\n')
-			break;
+	if(term_canon(0)){
+		fprintf(stderr, "any key to continue...");
+		while(getchar() == -1);
+		term_canon(1);
+		fputc('\n', stderr);
+	}else{
+		fprintf(stderr, "enter to continue...");
+		for(;;){
+			int c = getchar();
+			if(c == EOF || c == '\n')
+				break;
+		}
 	}
 
 	ui_init();
