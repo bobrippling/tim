@@ -147,6 +147,11 @@ void k_cmd(const KeyArg *arg)
 				reading = 0;
 				break;
 
+			case CTRL_AND('u'):
+				cmd[i = 0] = '\0';
+				nc_set_yx(nc_LINES() - 1, i + 1);
+				break;
+
 			default:
 				cmd[i++] = ch;
 				nc_addch(ch);
