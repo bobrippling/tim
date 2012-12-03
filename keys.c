@@ -48,8 +48,7 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv)
 
 		snprintf(
 				argv[argc++] = umalloc(2),
-				2,
-				cmd);
+				2, "%s", cmd);
 
 		cmd++;
 	}
