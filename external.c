@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ncurses.h>
 
 #include <termios.h>
 #include <unistd.h>
@@ -43,10 +44,13 @@ int shellout(const char *cmd)
 	r = system(shcmd);
 
 	if(term_canon(0)){
+		int unget;
+
 		fprintf(stderr, "any key to continue...");
-		while(getchar() == -1);
+		while((unget = getchar()) == -1);
 		term_canon(1);
 		fputc('\n', stderr);
+		ungetch(unget);
 	}else{
 		fprintf(stderr, "enter to continue...");
 		for(;;){
