@@ -85,6 +85,7 @@ void filter_cmd(int *pargc, char ***pargv)
 				/* TODO: '#' */
 				case '%':
 					if(fnam){
+						const int di = p - argv[i];
 						char *new;
 
 						*p = '\0';
@@ -96,8 +97,9 @@ void filter_cmd(int *pargc, char ***pargv)
 
 						free(argv[i]);
 						argv[i] = new;
+						p = argv[i] + di;
 					}
-				break;
+					break;
 			}
 		}
 	}
