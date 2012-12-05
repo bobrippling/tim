@@ -78,20 +78,30 @@ int c_x(int argc, char **argv)
 
 int c_e(int argc, char **argv)
 {
-	if(argc != 2){
-		ui_status("usage: %s filename", *argv);
+	const char *fname;
+
+	if(argc == 1){
+		fname = buffer_fname(buffers_cur());
+		if(!fname){
+			ui_status("no filename");
+			return CMD_FAILURE;
+		}
+	}else if(argc == 2){
+		fname = argv[1];
+	}else{
+		ui_status("usage: %s [filename]", *argv);
 		return CMD_FAILURE;
 	}
 
-	if(!buffer_replace_fname(buffers_cur(), argv[1])){
+	if(!buffer_replace_fname(buffers_cur(), fname)){
 		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
 		buffers_set_cur(b);
-		ui_status("%s: %s", argv[1], strerror(errno));
+		ui_status("%s: %s", fname, strerror(errno));
 	}else{
-		ui_status("%s: loaded", argv[1]);
+		ui_status("%s: loaded", fname);
 	}
 
-	buffer_set_fname(buffers_cur(), argv[1]);
+	buffer_set_fname(buffers_cur(), fname);
 
 	ui_redraw();
 	ui_cur_changed();
