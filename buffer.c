@@ -93,8 +93,10 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 
 void buffer_set_fname(buffer_t *b, const char *s)
 {
-	free(b->fname);
-	b->fname = ustrdup(s);
+	if(b->fname != s){
+		free(b->fname);
+		b->fname = ustrdup(s);
+	}
 }
 
 const char *buffer_fname(buffer_t *b)
