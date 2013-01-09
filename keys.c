@@ -113,8 +113,8 @@ void k_cmd(const KeyArg *arg)
 	int i = 0;
 	int len = 10;
 	char *cmd = umalloc(len);
-	char **argv;
-	int argc;
+	char **argv = NULL;
+	int argc = 0;
 
 	(void)arg;
 
@@ -162,8 +162,6 @@ void k_cmd(const KeyArg *arg)
 		}
 	}
 
-	argv = NULL;
-	argc = 0;
 	parse_cmd(cmd, &argc, &argv);
 
 	filter_cmd(&argc, &argv);
