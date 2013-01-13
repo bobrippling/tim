@@ -62,7 +62,8 @@ void ui_main()
 	extern Key keys[];
 	extern MotionKey motion_keys[];
 
-	ui_redraw();
+	ui_redraw(); /* this first, to frame buf_sel */
+	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
 		int ch = nc_getch();
