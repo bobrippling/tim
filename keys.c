@@ -28,7 +28,10 @@ char *parse_arg(const char *arg)
 	int r = wordexp(arg, &wexp, WRDE_NOCMD);
 	char *ret;
 
-	ret = r ? ustrdup(arg) : join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
+	if(r)
+		return ustrdup(arg);
+
+	ret = join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
 
 	wordfree(&wexp);
 
