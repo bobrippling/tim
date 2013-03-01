@@ -13,14 +13,22 @@
 #include "external.h"
 #include "mem.h"
 
-void c_q(int argc, char **argv)
+enum
+{
+	CMD_SUCCESS,
+	CMD_FAILURE
+};
+
+int c_q(int argc, char **argv)
 {
 	(void)argc;
 	(void)argv;
 	ui_running = 0;
+
+	return CMD_SUCCESS;
 }
 
-void c_w(int argc, char **argv)
+int c_w(int argc, char **argv)
 {
 	FILE *f;
 	list_t *l;
@@ -30,13 +38,13 @@ void c_w(int argc, char **argv)
 		buffer_set_fname(buffers_cur(), argv[1]);
 	}else if(argc != 1){
 		ui_status("usage: %s filename", *argv);
-		return;
+		return CMD_FAILURE;
 	}
 
 	fname = buffer_fname(buffers_cur());
 	if(!fname){
 		ui_status("no filename");
-		return;
+		return CMD_FAILURE;
 	}
 
 	f = fopen(fname, "w");
@@ -46,7 +54,7 @@ got_err:
 		ui_status("%s: %s", fname, strerror(errno));
 		if(f)
 			fclose(f);
-		return;
+		return CMD_FAILURE;
 	}
 
 	for(l = buffers_cur()->head; l; l = l->next)
@@ -59,34 +67,56 @@ got_err:
 	}
 
 	ui_status("written to \"%s\"", fname);
+
+	return CMD_SUCCESS;
 }
 
-void c_e(int argc, char **argv)
+int c_x(int argc, char **argv)
 {
-	if(argc != 2){
-		ui_status("usage: %s filename", *argv);
-		return;
+	return c_w(argc, argv) == CMD_SUCCESS && c_q(0, NULL) == CMD_SUCCESS ? CMD_SUCCESS : CMD_FAILURE;
+}
+
+int c_e(int argc, char **argv)
+{
+	const char *fname;
+
+	if(argc == 1){
+		fname = buffer_fname(buffers_cur());
+		if(!fname){
+			ui_status("no filename");
+			return CMD_FAILURE;
+		}
+	}else if(argc == 2){
+		fname = argv[1];
+	}else{
+		ui_status("usage: %s [filename]", *argv);
+		return CMD_FAILURE;
 	}
 
-	if(!buffer_replace_fname(buffers_cur(), argv[1])){
+	if(!buffer_replace_fname(buffers_cur(), fname)){
 		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
 		buffers_set_cur(b);
-		buffer_set_fname(b, argv[1]);
-		ui_status("%s: %s", argv[1], strerror(errno));
+		ui_status("%s: %s", fname, strerror(errno));
+	}else{
+		ui_status("%s: loaded", fname);
 	}
+
+	buffer_set_fname(buffers_cur(), fname);
 
 	ui_redraw();
 	ui_cur_changed();
+
+	return CMD_SUCCESS;
 }
 
 static
-void c_split(enum buffer_neighbour ne, int argc, char **argv)
+int c_split(enum buffer_neighbour ne, int argc, char **argv)
 {
 	buffer_t *b;
 
 	if(argc > 2){
 		ui_status("usage: %s [filename]", *argv);
-		return;
+		return CMD_FAILURE;
 	}
 
 	if(argc > 1){
@@ -102,19 +132,21 @@ void c_split(enum buffer_neighbour ne, int argc, char **argv)
 	buffer_add_neighbour(buffers_cur(), ne, b);
 	ui_redraw();
 	ui_cur_changed();
+
+	return CMD_SUCCESS;
 }
 
-void c_vs(int argc, char **argv)
+int c_vs(int argc, char **argv)
 {
-	c_split(BUF_RIGHT, argc, argv);
+	return c_split(BUF_RIGHT, argc, argv);
 }
 
-void c_sp(int argc, char **argv)
+int c_sp(int argc, char **argv)
 {
-	c_split(BUF_DOWN, argc, argv);
+	return c_split(BUF_DOWN, argc, argv);
 }
 
-void c_run(int argc, char **argv)
+int c_run(int argc, char **argv)
 {
 	if(argc == 1){
 		shellout(NULL);
@@ -135,4 +167,6 @@ void c_run(int argc, char **argv)
 
 		free(cmd);
 	}
+
+	return CMD_SUCCESS;
 }

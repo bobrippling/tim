@@ -24,7 +24,7 @@ void buffers_set_cur(buffer_t *b)
 	buf_sel = b;
 }
 
-void buffers_init(int argc, char **argv, enum buffer_init_args a)
+void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 {
 	int i;
 
@@ -66,5 +66,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a)
 		buf_sel = buffer_new();
 	}
 
-fin:;
+fin:
+	if(off)
+		buf_sel->ui_pos.y = off;
 }

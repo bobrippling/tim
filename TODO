@@ -1,2 +1,4 @@
 deletion
-:!
+:! / cmd parsing
+save-check  on :q/e
+exist-check on :w

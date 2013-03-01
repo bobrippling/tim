@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <wordexp.h>
 
 #include "pos.h"
 #include "list.h"
@@ -37,17 +38,91 @@ motionkey_t *motion_next(enum ui_mode mode, int ch, int count)
 }
 
 static
-void parse_cmd(char *cmd, int *argc, char ***argv)
+char *parse_arg(const char *arg)
 {
+	/* TODO: ~ substitution */
+	wordexp_t wexp;
+	int r = wordexp(arg, &wexp, WRDE_NOCMD);
+	char *ret;
+
+	if(r)
+		return ustrdup(arg);
+
+	ret = join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
+
+	wordfree(&wexp);
+
+	return ret;
+}
+
+static
+void parse_cmd(char *cmd, int *pargc, char ***pargv)
+{
+	int argc = *pargc;
+	char **argv = *pargv;
 	char *p;
 
-	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
-		*argv = urealloc(*argv, (*argc + 2) * sizeof **argv);
-		(*argv)[*argc] = ustrdup(p);
-		++*argc;
+	/* special case */
+	if(ispunct(cmd[0])){
+		argv = urealloc(argv, (argc + 2) * sizeof *argv);
+
+		snprintf(
+				argv[argc++] = umalloc(2),
+				2, "%s", cmd);
+
+		cmd++;
 	}
-	if(*argc)
-		(*argv)[*argc] = NULL;
+
+	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
+		argv = urealloc(argv, (argc + 2) * sizeof *argv);
+		argv[argc++] = parse_arg(p);
+	}
+	if(argc)
+		argv[argc] = NULL;
+
+	*pargv = argv;
+	*pargc = argc;
+}
+
+static
+void filter_cmd(int *pargc, char ***pargv)
+{
+	/* check for '%' */
+	int argc = *pargc;
+	char **argv = *pargv;
+	int i;
+	const char *const fnam = buffer_fname(buffers_cur());
+
+
+	for(i = 0; i < argc; i++){
+		char *p;
+
+		for(p = argv[i]; *p; p++){
+			if(*p == '\\')
+				continue;
+
+			switch(*p){
+				/* TODO: '#' */
+				case '%':
+					if(fnam){
+						const int di = p - argv[i];
+						char *new;
+
+						*p = '\0';
+
+						new = join("", (const char *[]){
+								argv[i],
+								fnam,
+								p + 1 }, 3);
+
+						free(argv[i]);
+						argv[i] = new;
+						p = argv[i] + di;
+					}
+					break;
+			}
+		}
+	}
 }
 
 void k_cmd(const keyarg_u *arg)
@@ -58,8 +133,8 @@ void k_cmd(const keyarg_u *arg)
 	int i = 0;
 	int len = 10;
 	char *cmd = umalloc(len);
-	char **argv;
-	int argc;
+	char **argv = NULL;
+	int argc = 0;
 
 	(void)arg;
 
@@ -68,9 +143,6 @@ void k_cmd(const keyarg_u *arg)
 	nc_set_yx(nc_LINES() - 1, 0);
 	nc_addch(':');
 	nc_clrtoeol();
-
-	argv = NULL;
-	argc = 0;
 
 	while(reading){
 		int ch = nc_getch();
@@ -83,7 +155,7 @@ void k_cmd(const keyarg_u *arg)
 			case CTRL_AND('H'):
 			case 263:
 			case 127:
-				/* backsapce */
+				/* backspace */
 				if(i == 0)
 					goto cancel;
 				cmd[i--] = '\0';
@@ -93,6 +165,11 @@ void k_cmd(const keyarg_u *arg)
 			case '\n':
 			case '\r':
 				reading = 0;
+				break;
+
+			case CTRL_AND('u'):
+				cmd[i = 0] = '\0';
+				nc_set_yx(nc_LINES() - 1, i + 1);
 				break;
 
 			default:
@@ -107,17 +184,19 @@ void k_cmd(const keyarg_u *arg)
 
 	parse_cmd(cmd, &argc, &argv);
 
+	filter_cmd(&argc, &argv);
+
 	if(!argc)
 		goto cancel;
 
 	for(i = 0; cmds[i].cmd; i++)
-		if(!strcmp(cmds[i].cmd, cmd)){
+		if(!strcmp(cmds[i].cmd, argv[0])){
 			cmds[i].func(argc, argv);
 			break;
 		}
 
 	if(!cmds[i].cmd)
-		ui_status("unknown command %s", cmd);
+		ui_status("unknown command %s", argv[0]);
 
 cancel:
 	free(cmd);

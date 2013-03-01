@@ -8,7 +8,7 @@ enum buffer_init_args
 	BUF_HALL
 };
 
-void buffers_init(int argc, char **argv, enum buffer_init_args a);
+void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off);
 
 buffer_t *buffers_cur(void);
 void buffers_set_cur(buffer_t *);

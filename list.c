@@ -101,7 +101,7 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 	}else{
 		/* shift stuff up */
 		l->line = urealloc(l->line, ++l->len_malloc);
-		memmove(l->line + *x + 1, l->line + *x, l->len_line - *x);
+		memmove(l->line + *x + 1, l->line + *x, l->len_malloc - *x - 1);
 	}
 
 	if(ch == '\n' || ch == '\r'){
@@ -151,9 +151,7 @@ void list_delchar(list_t *l, int *x, int *y)
 	if((unsigned)*x >= l->len_line)
 		return;
 
-	memmove(l->line + *x, l->line + *x + 1, l->len_line - *x);
-
-	l->len_line--;
+	memmove(l->line + *x, l->line + *x + 1, --l->len_line - *x);
 }
 
 void list_insline(list_t **pl, int *x, int *y, int dir)
