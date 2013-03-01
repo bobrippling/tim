@@ -9,7 +9,7 @@ typedef void key_func(const keyarg_u *);
 
 union keyarg_u
 {
-	int i;
+	int i, linewise;
 	char *s;
 	point_t pos;
 };

@@ -3,8 +3,8 @@
 #include <ctype.h>
 
 #include "ui.h"
-#include "list.h"
 #include "pos.h"
+#include "list.h"
 #include "buffer.h"
 #include "buffers.h"
 

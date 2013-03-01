@@ -38,6 +38,8 @@ const char *buffer_fname(const buffer_t *);
 /* TODO: remove arg 2 and 3 */
 void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
+void buffer_delbetween(buffer_t *buf,
+		point_t const *from, point_t const *to, int linewise);
 
 void buffer_insline(buffer_t *, int dir);
 

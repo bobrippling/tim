@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
+#include "pos.h"
 #include "list.h"
 #include "mem.h"
 
@@ -63,21 +65,28 @@ void list_free(list_t *l)
 	}
 }
 
-list_t *list_seek(list_t *l, int y, int creat)
+static
+list_t **list_seekp(list_t **pl, int y, int creat)
 {
 	while(y > 0){
-		if(!l->next){
+		if(!(*pl)->next){
 			if(creat)
-				l->next = list_new();
+				(*pl)->next = list_new();
 			else
 				return NULL;
 		}
 
-		l = l->next;
+		pl = &(*pl)->next;
 		y--;
 	}
 
-	return l;
+	return pl;
+}
+
+list_t *list_seek(list_t *l, int y, int creat)
+{
+	list_t **p = list_seekp(&l, y, creat);
+	return p ? *p : NULL;
 }
 
 void list_inschar(list_t *l, int *x, int *y, char ch)
@@ -152,6 +161,54 @@ void list_delchar(list_t *l, int *x, int *y)
 		return;
 
 	memmove(l->line + *x, l->line + *x + 1, --l->len_line - *x);
+}
+
+static
+void list_dellines(list_t **pl, unsigned n)
+{
+	if(n == 0)
+		return;
+
+	list_t *l = *pl;
+
+	assert(l);
+
+	if(n == 1){
+		*pl = l->next;
+		l->next = NULL;
+
+	}else{
+		list_t *end_m1 = list_seek(l, n - 2, 0);
+
+		if(end_m1){
+			*pl = end_m1->next;
+			end_m1->next = NULL;
+		}else{
+			/* delete everything */
+			*pl = NULL;
+		}
+	}
+
+	list_free(l);
+}
+
+void list_delbetween(list_t **pl,
+		point_t const *from, point_t const *to,
+		int linewise)
+{
+	assert(from->y <= to->y);
+	assert(from->y < to->y || from->x < to->x);
+
+	list_t **seeked = list_seekp(pl, from->y, 0);
+
+	if(!seeked)
+		return;
+
+	if(linewise){
+		list_dellines(seeked, to->y - from->y + 1);
+	}else{
+		assert(0 && "TODO");
+	}
 }
 
 void list_insline(list_t **pl, int *x, int *y, int dir)

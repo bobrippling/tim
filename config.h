@@ -1,8 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define KEY_ARG_NONE    { 0 }
-#define MOTION_ARG_NONE { 0 }
+#define KEY_ARG_NONE        { 0 }
+#define MOTION_ARG_NONE     { 0 }
+#define KEY_ARG_LINEWISE    { 1 }
 
 motionkey_t motion_keys[] = {
 	{ '\033',         { m_move, { .pos = { -1, 0 } } },              UI_INSERT },
@@ -44,7 +45,7 @@ key_t keys[] = {
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
 	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
 
-	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
+	{ 'd',            k_del,        KEY_ARG_LINEWISE,  UI_NORMAL },
 
 	INS_KEY('i'),
 	INS_KEY('I'),

@@ -2,8 +2,8 @@
 #include <string.h>
 #include <errno.h>
 
-#include "list.h"
 #include "pos.h"
+#include "list.h"
 #include "buffer.h"
 #include "buffers.h"
 #include "mem.h"

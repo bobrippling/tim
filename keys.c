@@ -298,7 +298,11 @@ void k_del(const keyarg_u *a)
 
 		motion_apply_buf_dry(&mk->motion, b, &to);
 
-		fprintf(stderr, "delete(%c): { %d, %d } -> { %d, %d }\n",
-				k, b->ui_pos.x, b->ui_pos.y, to.x, to.y);
+		/* FIXME: reverse if negative range */
+
+		buffer_delbetween(b, &b->ui_pos, &to, a->linewise);
+
+		ui_redraw();
+		ui_cur_changed();
 	}
 }

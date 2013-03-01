@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "list.h"
 #include "pos.h"
+#include "list.h"
 #include "buffer.h"
 #include "mem.h"
 
@@ -112,6 +112,13 @@ void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
 void buffer_delchar(buffer_t *buf, int *x, int *y)
 {
 	list_delchar(buf->head, x, y);
+}
+
+void buffer_delbetween(buffer_t *buf,
+		point_t const *from, point_t const *to,
+		int linewise)
+{
+	list_delbetween(&buf->head, from, to, linewise);
 }
 
 void buffer_insline(buffer_t *buf, int dir)

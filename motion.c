@@ -3,8 +3,8 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "list.h"
 #include "pos.h"
+#include "list.h"
 #include "buffer.h"
 #include "motion.h"
 #include "ui.h"
