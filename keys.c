@@ -293,7 +293,12 @@ void k_del(const keyarg_u *a)
 	motionkey_t *mk = motion_next(ui_mode, k, 0);
 
 	if(mk){
-		fprintf(stderr, "found motion for delete, key %c\n", k);
-		motion_apply_buf(&mk->motion, buffers_cur());
+		buffer_t *b = buffers_cur();
+		point_t to;
+
+		motion_apply_buf_dry(&mk->motion, b, &to);
+
+		fprintf(stderr, "delete(%c): { %d, %d } -> { %d, %d }\n",
+				k, b->ui_pos.x, b->ui_pos.y, to.x, to.y);
 	}
 }
