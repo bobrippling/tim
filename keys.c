@@ -20,16 +20,18 @@
 
 #include "config.h"
 
-motionkey_t *motion_next(enum ui_mode mode, int ch, int count)
+motionkey_t *motion_next(enum ui_mode mode, int ch, int skip)
 {
 	extern motionkey_t motion_keys[];
 	int i;
 
 	for(i = 0; motion_keys[i].ch; i++){
 		if(motion_keys[i].mode & mode
-		&& motion_keys[i].ch == ch
-		&& count-- < 0)
+		&& motion_keys[i].ch == ch)
 		{
+			if(skip-- > 0)
+				continue;
+
 			return &motion_keys[i];
 		}
 	}
@@ -287,11 +289,11 @@ void k_open(const keyarg_u *a)
 
 void k_del(const keyarg_u *a)
 {
-	motionkey_t *mk = motion_next(ui_mode, nc_getch(), 0);
+	int k = nc_getch();
+	motionkey_t *mk = motion_next(ui_mode, k, 0);
 
 	if(mk){
-		//motion_apply(mk, buffers_cur());
-
-		/* TODO: delete */
+		fprintf(stderr, "found motion for delete, key %c\n", k);
+		motion_apply_buf(&mk->motion, buffers_cur());
 	}
 }

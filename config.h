@@ -5,32 +5,32 @@
 #define MOTION_ARG_NONE { 0 }
 
 motionkey_t motion_keys[] = {
-	{ '\033',         m_move,       { .pos = { -1, 0 } },              UI_INSERT },
+	{ '\033',         { m_move, { .pos = { -1, 0 } } },              UI_INSERT },
 
-	{ 'I',            m_sol,        MOTION_ARG_NONE,                   UI_NORMAL },
+	{ 'I',            { m_sol,  MOTION_ARG_NONE },                   UI_NORMAL },
 
-	{ 'a',            m_move,       { .pos = { 1, 0 } },               UI_NORMAL },
+	{ 'a',            { m_move, { .pos = { 1, 0 } } },               UI_NORMAL },
 
-	{ 'A',            m_eol,        { .pos = { 1, 0 } },               UI_NORMAL },
-	{ 'A',            m_move,       { .pos = { 1, 0 } },               UI_NORMAL },
+	{ 'A',            { m_eol,  { .pos = { 1, 0 } } },               UI_NORMAL },
+	{ 'A',            { m_move, { .pos = { 1, 0 } } },               UI_NORMAL },
 
-	{ 'j',            m_move,       { .pos = {  0,  1 } },             UI_NORMAL },
-	{ 'k',            m_move,       { .pos = {  0, -1 } },             UI_NORMAL },
-	{ 'h',            m_move,       { .pos = { -1,  0 } },             UI_NORMAL },
-	{ 'l',            m_move,       { .pos = {  1,  0 } },             UI_NORMAL },
+	{ 'j',            { m_move, { .pos = {  0,  1 } } },             UI_NORMAL },
+	{ 'k',            { m_move, { .pos = {  0, -1 } } },             UI_NORMAL },
+	{ 'h',            { m_move, { .pos = { -1,  0 } } },             UI_NORMAL },
+	{ 'l',            { m_move, { .pos = {  1,  0 } } },             UI_NORMAL },
 
-	{ '0',            m_goto,       { .pos = { 0, -1 } },              UI_NORMAL },
-	{ '^',            m_sol,        MOTION_ARG_NONE,                   UI_NORMAL },
-	{ '$',            m_eol,        MOTION_ARG_NONE,                   UI_NORMAL },
+	{ '0',            { m_goto, { .pos = { 0, -1 } } },              UI_NORMAL },
+	{ '^',            { m_sol,  MOTION_ARG_NONE },                   UI_NORMAL },
+	{ '$',            { m_eol,  MOTION_ARG_NONE },                   UI_NORMAL },
 
-	{ 'g',            m_sof,        MOTION_ARG_NONE,                   UI_NORMAL },
-	{ 'G',            m_eof,        MOTION_ARG_NONE,                   UI_NORMAL },
+	{ 'g',            { m_sof,  MOTION_ARG_NONE },                   UI_NORMAL },
+	{ 'G',            { m_eof,  MOTION_ARG_NONE },                   UI_NORMAL },
 
-	{ 'H',            m_sos,        MOTION_ARG_NONE,                   UI_NORMAL },
-	{ 'M',            m_mos,        MOTION_ARG_NONE,                   UI_NORMAL },
-	{ 'L',            m_eos,        MOTION_ARG_NONE,                   UI_NORMAL },
+	{ 'H',            { m_sos,  MOTION_ARG_NONE },                   UI_NORMAL },
+	{ 'M',            { m_mos,  MOTION_ARG_NONE },                   UI_NORMAL },
+	{ 'L',            { m_eos,  MOTION_ARG_NONE },                   UI_NORMAL },
 
-	{ 0 }
+	{ 0, { 0, MOTION_ARG_NONE }, 0 }
 };
 
 #define INS_KEY(k) \

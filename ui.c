@@ -65,9 +65,9 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		int ch = nc_getch();
+		const int ch = nc_getch();
 		int i = 0;
-		int found;
+		int found = 0;
 		motionkey_t *motion;
 
 		while((motion = motion_next(ui_mode, ch, i++))){

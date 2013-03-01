@@ -25,12 +25,11 @@ typedef struct key_t
 typedef struct motionkey_t
 {
 	char ch;
-	motion_func *func;
-	motion_arg motion;
+	motion motion;
 	enum ui_mode mode;
 } motionkey_t;
 
-motionkey_t *motion_next(enum ui_mode mode, int ch, int count);
+motionkey_t *motion_next(enum ui_mode mode, int ch, int skip);
 
 key_func k_cmd, k_set_mode;
 key_func k_redraw;
