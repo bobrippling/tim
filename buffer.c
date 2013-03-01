@@ -99,7 +99,7 @@ void buffer_set_fname(buffer_t *b, const char *s)
 	}
 }
 
-const char *buffer_fname(buffer_t *b)
+const char *buffer_fname(const buffer_t *b)
 {
 	return b->fname;
 }
@@ -151,7 +151,7 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new
 	new->neighbours[rloc] = to;
 }
 
-list_t *buffer_current_line(buffer_t *b)
+list_t *buffer_current_line(const buffer_t *b)
 {
 	return list_seek(b->head, b->ui_pos.y, 0);
 }

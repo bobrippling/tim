@@ -5,7 +5,7 @@ typedef union motion_arg motion_arg;
 
 typedef void motion_func(
 		motion_arg const *,
-		buffer_t *,
+		const buffer_t *,
 		point_t *);
 
 union motion_arg
@@ -22,6 +22,7 @@ typedef struct motion
 	motion_arg arg;
 } motion;
 
+void motion_apply_buf_dry(const motion *m, const buffer_t *buf, point_t *out);
 void motion_apply_buf(const motion *, buffer_t *buf);
 
 #endif
