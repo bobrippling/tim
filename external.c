@@ -47,7 +47,8 @@ int shellout(const char *cmd)
 		int unget;
 
 		fprintf(stderr, "any key to continue...");
-		while((unget = getchar()) == -1);
+		/* use getch() so we don't go behind ncurses' back */
+		while((unget = getch()) == -1);
 		term_canon(1);
 		fputc('\n', stderr);
 		ungetch(unget);
