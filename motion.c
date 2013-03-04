@@ -13,8 +13,6 @@
 #define UI_Y   buf->ui_pos.y
 #define UI_TOP buf->ui_start.y
 
-#define DEFAULT_REPEAT(r) (r ? r : 1)
-
 void m_eof(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	to->y = list_count(buf->head);

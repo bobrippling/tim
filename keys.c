@@ -30,24 +30,29 @@ const motion *motion_find(int first_ch)
 	return NULL;
 }
 
-int motion_repeat_read(motion_repeat *mr, int ch)
+int motion_repeat_read(motion_repeat *mr, int *pch)
 {
-	unsigned repeat = 0;
+	int ch = *pch;
+
+	mr->repeat = 0;
 
 	/* attempt to get a motion from this */
 	for(;;){
 		const motion *m = motion_find(ch);
+		int this_repeat = 0;
 
 		if(m){
-			mr->motion = m, mr->repeat = repeat;
+			mr->motion = m;
 			return 1;
 		}
 
 		while('0' <= ch && ch <= '9'){
-			repeat = repeat * 10 + ch - '0',
+			mr->repeat = mr->repeat * 10 + ch - '0',
 			ch = nc_getch();
+			this_repeat = 1;
 		}
-		if(repeat)
+		*pch = ch;
+		if(this_repeat)
 			continue;
 
 		return 0;
@@ -309,11 +314,13 @@ void k_motion(const keyarg_u *a, unsigned repeat)
 
 void k_del(const keyarg_u *a, unsigned repeat)
 {
+	int ch = nc_getch();
 	motion_repeat mr;
-	if(motion_repeat_read(&mr, nc_getch())){
+	if(motion_repeat_read(&mr, &ch)){
 		buffer_t *b = buffers_cur();
 		point_t to;
 
+		mr.repeat = DEFAULT_REPEAT(mr.repeat) * DEFAULT_REPEAT(repeat);
 		motion_apply_buf_dry(&mr, b, &to);
 
 		/* FIXME: reverse if negative range */

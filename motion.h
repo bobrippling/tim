@@ -30,6 +30,7 @@ typedef struct motion_repeat
 } motion_repeat;
 
 #define MOTION_REPEAT() { NULL, 0U }
+#define DEFAULT_REPEAT(r) (r ? r : 1)
 
 void motion_apply_buf_dry(const motion_repeat *, const buffer_t *, point_t *out);
 void motion_apply_buf(const motion_repeat *, buffer_t *);

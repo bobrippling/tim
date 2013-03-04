@@ -68,7 +68,7 @@ void ui_main()
 		int first_ch = nc_getch();
 		motion_repeat mr = MOTION_REPEAT();
 
-		if(ui_mode == UI_NORMAL && motion_repeat_read(&mr, first_ch)){
+		if(ui_mode == UI_NORMAL && motion_repeat_read(&mr, &first_ch)){
 			motion_apply_buf(&mr, buffers_cur());
 
 		}else{
