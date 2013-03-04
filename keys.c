@@ -43,11 +43,12 @@ int motion_repeat_read(motion_repeat *mr, int ch)
 			return 1;
 		}
 
-		if('0' <= ch && ch <= '9'){
+		while('0' <= ch && ch <= '9'){
 			repeat = repeat * 10 + ch - '0',
 			ch = nc_getch();
-			continue;
 		}
+		if(repeat)
+			continue;
 
 		return 0;
 	}

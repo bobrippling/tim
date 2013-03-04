@@ -29,6 +29,8 @@ typedef struct motion_repeat
 	unsigned repeat;
 } motion_repeat;
 
+#define MOTION_REPEAT() { NULL, 0U }
+
 void motion_apply_buf_dry(const motion_repeat *, const buffer_t *, point_t *out);
 void motion_apply_buf(const motion_repeat *, buffer_t *);
 
