@@ -65,27 +65,30 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		const int ch = nc_getch();
-		int i = 0;
-		int found = 0;
-		motionkey_t *motion;
+		int first_ch = nc_getch();
+		motion_repeat mr;
 
-		while((motion = motion_next(ui_mode, ch, i++))){
-			motion_apply_buf(&motion->motion, buffers_cur());
-			found = 1;
-		}
+		if(ui_mode == UI_NORMAL && motion_repeat_read(&mr, first_ch)){
+			motion_apply_buf(&mr, buffers_cur());
 
-		for(i = 0; keys[i].ch; i++)
-			if(keys[i].mode & ui_mode && keys[i].ch == ch){
-				keys[i].func(&keys[i].arg);
-				found = 1;
+		}else{
+			int found = 0;
+
+			for(int i = 0; keys[i].ch; i++)
+				if(keys[i].mode & ui_mode && keys[i].ch == first_ch){
+					keys[i].func(&keys[i].arg, 0 /* TODO repeat */);
+					found = 1;
+				}
+
+			if(!found){
+				/* checks for multiple */
+				if(ui_mode == UI_INSERT)
+					ui_inschar(first_ch);
+				/*else if('0' <= first_ch && first_ch <= '9')
+					repeat = repeat * 10 + first_ch - '0'; /* FIXME: overflow */
+				else
+					ui_status("unknown key %d", first_ch);
 			}
-
-		if(!found){
-			if(ui_mode == UI_INSERT)
-				ui_inschar(ch);
-			else
-				ui_status("unknown key %d", ch);
 		}
 	}
 }

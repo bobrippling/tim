@@ -20,23 +20,37 @@
 
 #include "config.h"
 
-motionkey_t *motion_next(enum ui_mode mode, int ch, int skip)
+const motion *motion_find(int first_ch)
 {
-	extern motionkey_t motion_keys[];
 	int i;
-
-	for(i = 0; motion_keys[i].ch; i++){
-		if(motion_keys[i].mode & mode
-		&& motion_keys[i].ch == ch)
-		{
-			if(skip-- > 0)
-				continue;
-
-			return &motion_keys[i];
-		}
-	}
+	for(i = 0; motion_keys[i].ch; i++)
+		if(motion_keys[i].ch == first_ch)
+			return &motion_keys[i].motion;
 
 	return NULL;
+}
+
+int motion_repeat_read(motion_repeat *mr, int ch)
+{
+	unsigned repeat = 0;
+
+	/* attempt to get a motion from this */
+	for(;;){
+		const motion *m = motion_find(ch);
+
+		if(m){
+			mr->motion = m, mr->repeat = repeat;
+			return 1;
+		}
+
+		if('0' <= ch && ch <= '9'){
+			repeat = repeat * 10 + ch - '0',
+			ch = nc_getch();
+			continue;
+		}
+
+		return 0;
+	}
 }
 
 static
@@ -127,7 +141,7 @@ void filter_cmd(int *pargc, char ***pargv)
 	}
 }
 
-void k_cmd(const keyarg_u *arg)
+void k_cmd(const keyarg_u *arg, unsigned repeat)
 {
 	int y, x;
 
@@ -208,18 +222,18 @@ cancel:
 	nc_set_yx(y, x);
 }
 
-void k_redraw(const keyarg_u *a)
+void k_redraw(const keyarg_u *a, unsigned repeat)
 {
 	(void)a;
 	ui_redraw();
 }
 
-void k_set_mode(const keyarg_u *a)
+void k_set_mode(const keyarg_u *a, unsigned repeat)
 {
 	ui_mode = a->i;
 }
 
-void k_scroll(const keyarg_u *a)
+void k_scroll(const keyarg_u *a, unsigned repeat)
 {
 	buffer_t *buf = buffers_cur();
 
@@ -237,7 +251,7 @@ void k_scroll(const keyarg_u *a)
 	ui_cur_changed();
 }
 
-void k_winsel(const keyarg_u *a)
+void k_winsel(const keyarg_u *a, unsigned repeat)
 {
 	buffer_t *buf;
 	char dir;
@@ -269,7 +283,7 @@ void k_winsel(const keyarg_u *a)
 	}
 }
 
-void k_show(const keyarg_u *a)
+void k_show(const keyarg_u *a, unsigned repeat)
 {
 	buffer_t *buf = buffers_cur();
 	(void)a;
@@ -280,23 +294,26 @@ void k_show(const keyarg_u *a)
 			buf->ui_pos.x, buf->ui_pos.y);
 }
 
-void k_open(const keyarg_u *a)
+void k_open(const keyarg_u *a, unsigned repeat)
 {
 	buffer_insline(buffers_cur(), a->i);
 	ui_redraw();
 	ui_cur_changed();
 }
 
-void k_del(const keyarg_u *a)
+void k_motion(const keyarg_u *a, unsigned repeat)
 {
-	int k = nc_getch();
-	motionkey_t *mk = motion_next(ui_mode, k, 0);
+	/* TODO */
+}
 
-	if(mk){
+void k_del(const keyarg_u *a, unsigned repeat)
+{
+	motion_repeat mr;
+	if(motion_repeat_read(&mr, nc_getch())){
 		buffer_t *b = buffers_cur();
 		point_t to;
 
-		motion_apply_buf_dry(&mk->motion, b, &to);
+		motion_apply_buf_dry(&mr, b, &to);
 
 		/* FIXME: reverse if negative range */
 

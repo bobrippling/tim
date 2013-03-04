@@ -5,11 +5,12 @@
 
 typedef union keyarg_u keyarg_u;
 
-typedef void key_func(const keyarg_u *);
+typedef void key_func(const keyarg_u *, unsigned repeat);
 
 union keyarg_u
 {
 	int i, linewise;
+	motion motion;
 	char *s;
 	point_t pos;
 };
@@ -26,10 +27,10 @@ typedef struct motionkey_t
 {
 	char ch;
 	motion motion;
-	enum ui_mode mode;
 } motionkey_t;
 
-motionkey_t *motion_next(enum ui_mode mode, int ch, int skip);
+const motion *motion_find(int first_ch);
+int motion_repeat_read(motion_repeat *, int first_ch);
 
 key_func k_cmd, k_set_mode;
 key_func k_redraw;
@@ -38,5 +39,6 @@ key_func k_winsel;
 key_func k_show;
 key_func k_open;
 key_func k_del;
+key_func k_motion;
 
 #endif

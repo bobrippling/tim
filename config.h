@@ -5,41 +5,40 @@
 #define MOTION_ARG_NONE     { 0 }
 #define KEY_ARG_LINEWISE    { 1 }
 
-motionkey_t motion_keys[] = {
-	{ '\033',         { m_move, { .pos = { -1, 0 } } },              UI_INSERT },
+const motionkey_t motion_keys[] = {
+	{ 'I',            { m_sol,  MOTION_ARG_NONE } },
 
-	{ 'I',            { m_sol,  MOTION_ARG_NONE },                   UI_NORMAL },
+	{ 'a',            { m_move, { .pos = { 1, 0 } } } },
 
-	{ 'a',            { m_move, { .pos = { 1, 0 } } },               UI_NORMAL },
+	{ 'A',            { m_eol,  { .pos = { 1, 0 } } } },
+	{ 'A',            { m_move, { .pos = { 1, 0 } } } },
 
-	{ 'A',            { m_eol,  { .pos = { 1, 0 } } },               UI_NORMAL },
-	{ 'A',            { m_move, { .pos = { 1, 0 } } },               UI_NORMAL },
+	{ 'j',            { m_move, { .pos = {  0,  1 } } } },
+	{ 'k',            { m_move, { .pos = {  0, -1 } } } },
+	{ 'h',            { m_move, { .pos = { -1,  0 } } } },
+	{ 'l',            { m_move, { .pos = {  1,  0 } } } },
 
-	{ 'j',            { m_move, { .pos = {  0,  1 } } },             UI_NORMAL },
-	{ 'k',            { m_move, { .pos = {  0, -1 } } },             UI_NORMAL },
-	{ 'h',            { m_move, { .pos = { -1,  0 } } },             UI_NORMAL },
-	{ 'l',            { m_move, { .pos = {  1,  0 } } },             UI_NORMAL },
+	{ '0',            { m_goto, { .pos = { 0, -1 } } } },
+	{ '^',            { m_sol,  MOTION_ARG_NONE } },
+	{ '$',            { m_eol,  MOTION_ARG_NONE } },
 
-	{ '0',            { m_goto, { .pos = { 0, -1 } } },              UI_NORMAL },
-	{ '^',            { m_sol,  MOTION_ARG_NONE },                   UI_NORMAL },
-	{ '$',            { m_eol,  MOTION_ARG_NONE },                   UI_NORMAL },
+	{ 'g',            { m_sof,  MOTION_ARG_NONE } },
+	{ 'G',            { m_eof,  MOTION_ARG_NONE } },
 
-	{ 'g',            { m_sof,  MOTION_ARG_NONE },                   UI_NORMAL },
-	{ 'G',            { m_eof,  MOTION_ARG_NONE },                   UI_NORMAL },
+	{ 'H',            { m_sos,  MOTION_ARG_NONE } },
+	{ 'M',            { m_mos,  MOTION_ARG_NONE } },
+	{ 'L',            { m_eos,  MOTION_ARG_NONE } },
 
-	{ 'H',            { m_sos,  MOTION_ARG_NONE },                   UI_NORMAL },
-	{ 'M',            { m_mos,  MOTION_ARG_NONE },                   UI_NORMAL },
-	{ 'L',            { m_eos,  MOTION_ARG_NONE },                   UI_NORMAL },
-
-	{ 0, { 0, MOTION_ARG_NONE }, 0 }
+	{ 0, { 0, MOTION_ARG_NONE }, }
 };
 
 #define INS_KEY(k) \
 	{ k, k_set_mode, { UI_INSERT }, UI_NORMAL }
 
-key_t keys[] = {
+const key_t keys[] = {
 	/* order is important */
 	/* char, func, arg, mode */
+	{ '\033',         k_motion,     { .motion = { m_move, .arg.pos = { -1, 0 }}}, UI_INSERT },
 	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_NORMAL | UI_INSERT },
 
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
@@ -69,7 +68,7 @@ key_t keys[] = {
 	{ 0, NULL, KEY_ARG_NONE, UI_NORMAL }
 };
 
-cmd_t cmds[] = {
+const cmd_t cmds[] = {
 	{ "q",   c_q     },
 	{ "w",   c_w     },
 	{ "e",   c_e     },

@@ -13,36 +13,38 @@
 #define UI_Y   buf->ui_pos.y
 #define UI_TOP buf->ui_start.y
 
+#define DEFAULT_REPEAT(r) (r ? r : 1)
 
-void m_eof(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_eof(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	to->y = list_count(buf->head);
 }
 
-void m_eol(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_eol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
 
 	to->x = l ? l->len_line - 1 : 0;
 }
 
-void m_sos(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_sos(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	to->y = UI_TOP;
 }
 
-void m_eos(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_eos(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	to->y = UI_TOP + buf->screen_coord.h - 1;
 }
 
-void m_mos(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_mos(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	to->y = UI_TOP + buf->screen_coord.h / 2 - 1;
 }
 
-void m_goto(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_goto(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
+	/* TODO: repeat */
 	if(m->pos.y > -1)
 		to->y = m->pos.y;
 
@@ -50,18 +52,18 @@ void m_goto(motion_arg const *m, const buffer_t *buf, point_t *to)
 		to->x = m->pos.x;
 }
 
-void m_move(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_move(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
-	to->y += m->pos.y;
-	to->x += m->pos.x;
+	to->y += m->pos.y * DEFAULT_REPEAT(repeat);
+	to->x += m->pos.x * DEFAULT_REPEAT(repeat);
 }
 
-void m_sof(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_sof(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	to->y = 0;
 }
 
-void m_sol(motion_arg const *m, const buffer_t *buf, point_t *to)
+void m_sol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
 	unsigned int i;
@@ -75,17 +77,17 @@ void m_sol(motion_arg const *m, const buffer_t *buf, point_t *to)
 	}
 }
 
-void motion_apply_buf_dry(const motion *m, const buffer_t *buf, point_t *out)
+void motion_apply_buf_dry(const motion_repeat *mr, const buffer_t *buf, point_t *out)
 {
 	*out = buf->ui_pos;
-	m->func(&m->arg, buf, out);
+	mr->motion->func(&mr->motion->arg, mr->repeat, buf, out);
 }
 
-void motion_apply_buf(const motion *m, buffer_t *buf)
+void motion_apply_buf(const motion_repeat *mr, buffer_t *buf)
 {
 	point_t to;
 
-	motion_apply_buf_dry(m, buf, &to);
+	motion_apply_buf_dry(mr, buf, &to);
 
 	if(memcmp(&buf->ui_pos, &to, sizeof to)){
 		buf->ui_pos = to;

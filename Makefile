@@ -1,4 +1,6 @@
-CFLAGS = -Wall -Wextra -pedantic -g -std=c99 -Wmissing-prototypes -Wno-unused-parameter
+CFLAGS = -Wall -Wextra -pedantic -g -std=c99 \
+				 -fms-extensions -Wno-microsoft      \
+				 -Wmissing-prototypes -Wno-unused-parameter
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o buffers.o motion.o external.o
