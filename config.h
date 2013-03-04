@@ -3,7 +3,6 @@
 
 #define KEY_ARG_NONE        { 0 }
 #define MOTION_ARG_NONE     { 0 }
-#define KEY_ARG_LINEWISE    { 1 }
 
 const motionkey_t motion_keys[] = {
 	{ 'I',            { m_sol,  MOTION_ARG_NONE } },
@@ -44,7 +43,7 @@ const key_t keys[] = {
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
 	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
 
-	{ 'd',            k_del,        KEY_ARG_LINEWISE,  UI_NORMAL },
+	{ 'd',            k_del,        { LINEWISE },  UI_NORMAL },
 
 	INS_KEY('i'),
 	INS_KEY('I'),

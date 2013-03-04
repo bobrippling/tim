@@ -9,7 +9,8 @@ typedef void key_func(const keyarg_u *, unsigned repeat);
 
 union keyarg_u
 {
-	int i, linewise;
+	int i;
+	enum { LINEWISE = 1 << 0, EXCLUSIVE = 1 << 1 } how;
 	motion motion;
 	char *s;
 	point_t pos;

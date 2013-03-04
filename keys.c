@@ -318,14 +318,30 @@ void k_del(const keyarg_u *a, unsigned repeat)
 	motion_repeat mr;
 	if(motion_repeat_read(&mr, &ch)){
 		buffer_t *b = buffers_cur();
-		point_t to;
+		point_t to, from;
 
 		mr.repeat = DEFAULT_REPEAT(mr.repeat) * DEFAULT_REPEAT(repeat);
 		motion_apply_buf_dry(&mr, b, &to);
 
-		/* FIXME: reverse if negative range */
+		from = b->ui_pos;
 
-		buffer_delbetween(b, &b->ui_pos, &to, a->linewise);
+		/* reverse if negative range */
+		if(to.y < from.y){
+			point_t tmp = to;
+			to = from;
+			from = tmp;
+		}else if(to.y == from.y && to.x < from.x){
+			int tmp = to.x;
+			to.x = from.x;
+			from.x = tmp;
+		}
+
+		if(!(a->how & EXCLUSIVE))
+			a->how & LINEWISE ? ++to.y : ++to.x;
+
+		buffer_delbetween(b, &from, &to, a->how & LINEWISE);
+
+		b->ui_pos = from;
 
 		ui_redraw();
 		ui_cur_changed();
