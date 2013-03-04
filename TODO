@@ -2,3 +2,5 @@ deletion
 :! / cmd parsing
 save-check  on :q/e
 exist-check on :w
+
+"saved to really/long/path.txt" trimming
