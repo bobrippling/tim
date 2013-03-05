@@ -180,7 +180,7 @@ void k_cmd(const keyarg_u *arg, unsigned repeat)
 				/* backspace */
 				if(i == 0)
 					goto cancel;
-				cmd[i--] = '\0';
+				cmd[--i] = '\0';
 				nc_set_yx(nc_LINES() - 1, i + 1);
 				break;
 
