@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Wextra -pedantic -g -std=c99 \
-				 -fms-extensions -Wno-microsoft      \
+				 -fms-extensions                     \
 				 -Wmissing-prototypes -Wno-unused-parameter
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
