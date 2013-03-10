@@ -59,7 +59,7 @@ void ui_inschar(char ch)
 
 void ui_main()
 {
-	extern key_t keys[];
+	extern ikey_t keys[];
 
 	ui_redraw(); /* this first, to frame buf_sel */
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
