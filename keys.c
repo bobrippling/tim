@@ -309,7 +309,10 @@ void k_open(const keyarg_u *a, unsigned repeat)
 
 void k_motion(const keyarg_u *a, unsigned repeat)
 {
-	/* TODO */
+	motion_repeat mr = MOTION_REPEAT();
+	mr.motion = &a->motion;
+	mr.repeat = repeat;
+	motion_apply_buf(&mr, buffers_cur());
 }
 
 void k_del(const keyarg_u *a, unsigned repeat)
