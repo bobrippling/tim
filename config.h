@@ -9,7 +9,8 @@ const motionkey_t motion_keys[] = {
 
 	{ 'a',            { m_move, { .pos = { 1, 0 } } } },
 
-	{ 'A',            { m_eol,  { .pos = { 1, 0 } } } },
+	/* A -> eol, then move right by 1 */
+	{ 'A',            { m_eol,  MOTION_ARG_NONE } },
 	{ 'A',            { m_move, { .pos = { 1, 0 } } } },
 
 	{ 'j',            { m_move, { .pos = {  0,  1 } } } },

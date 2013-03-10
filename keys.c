@@ -20,17 +20,17 @@
 
 #include "config.h"
 
-const motion *motion_find(int first_ch)
+const motion *motion_find(int first_ch, int skip)
 {
 	int i;
 	for(i = 0; motion_keys[i].ch; i++)
-		if(motion_keys[i].ch == first_ch)
+		if(motion_keys[i].ch == first_ch && skip-- <= 0)
 			return &motion_keys[i].motion;
 
 	return NULL;
 }
 
-int motion_repeat_read(motion_repeat *mr, int *pch)
+int motion_repeat_read(motion_repeat *mr, int *pch, int skip)
 {
 	int ch = *pch;
 
@@ -38,7 +38,7 @@ int motion_repeat_read(motion_repeat *mr, int *pch)
 
 	/* attempt to get a motion from this */
 	for(;;){
-		const motion *m = motion_find(ch);
+		const motion *m = motion_find(ch, skip);
 		int this_repeat = 0;
 
 		if(m){
@@ -316,7 +316,7 @@ void k_del(const keyarg_u *a, unsigned repeat)
 {
 	int ch = nc_getch();
 	motion_repeat mr;
-	if(motion_repeat_read(&mr, &ch)){
+	if(motion_repeat_read(&mr, &ch, 0)){
 		buffer_t *b = buffers_cur();
 		point_t to, from;
 

@@ -68,27 +68,28 @@ void ui_main()
 		int first_ch = nc_getch();
 		motion_repeat mr = MOTION_REPEAT();
 
-		if(ui_mode == UI_NORMAL && motion_repeat_read(&mr, &first_ch)){
-			motion_apply_buf(&mr, buffers_cur());
+		if(ui_mode == UI_NORMAL){
+			int skip = 0;
+			while(motion_repeat_read(&mr, &first_ch, skip))
+				skip++, motion_apply_buf(&mr, buffers_cur());
+		}
 
-		}else{
-			int found = 0;
+		int found = 0;
 
-			for(int i = 0; keys[i].ch; i++)
-				if(keys[i].mode & ui_mode && keys[i].ch == first_ch){
-					keys[i].func(&keys[i].arg, mr.repeat);
-					found = 1;
-				}
-
-			if(!found){
-				/* checks for multiple */
-				if(ui_mode == UI_INSERT)
-					ui_inschar(first_ch);
-				else if(mr.repeat)
-					; /* ignore */
-				else
-					ui_status("unknown key %d", first_ch);
+		for(int i = 0; keys[i].ch; i++)
+			if(keys[i].mode & ui_mode && keys[i].ch == first_ch){
+				keys[i].func(&keys[i].arg, mr.repeat);
+				found = 1;
 			}
+
+		if(!found){
+			/* checks for multiple */
+			if(ui_mode == UI_INSERT)
+				ui_inschar(first_ch);
+			else if(mr.repeat)
+				; /* ignore */
+			else
+				ui_status("unknown key %d", first_ch);
 		}
 	}
 }
