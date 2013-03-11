@@ -8,6 +8,7 @@
 #include "buffer.h"
 #include "motion.h"
 #include "ui.h"
+#include "ncurses.h"
 
 #define UI_X   buf->ui_pos.x
 #define UI_Y   buf->ui_pos.y
@@ -73,6 +74,32 @@ void m_sol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *t
 	}else{
 		to->x = 0;
 	}
+}
+
+void m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+{
+	int f = nc_getch();
+	struct list *l = buffer_current_line(buf);
+
+	if(!l)
+		goto failed;
+
+	point_t bpos = buf->ui_pos;
+	bpos.x++;
+	if((unsigned)bpos.x >= l->len_line)
+		goto failed;
+
+	char *start = l->line + bpos.x;
+	char *p = strchr(start, f);
+	if(!p)
+		goto failed;
+
+	*to = (point_t){ .x = bpos.x + p - start,
+	                 .y = bpos.y };
+	return;
+
+failed: /* FIXME: need to say motion failed */
+	;
 }
 
 void motion_apply_buf_dry(const motion_repeat *mr, const buffer_t *buf, point_t *out)

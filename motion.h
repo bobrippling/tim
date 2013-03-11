@@ -16,6 +16,7 @@ union motion_arg
 };
 
 motion_func m_eof, m_eol, m_eos, m_goto, m_mos, m_move, m_sof, m_sol, m_sos;
+motion_func m_find;
 
 typedef struct motion
 {

@@ -18,6 +18,8 @@ const motionkey_t motion_keys[] = {
 	{ 'h',            { m_move, { .pos = { -1,  0 } } } },
 	{ 'l',            { m_move, { .pos = {  1,  0 } } } },
 
+	{ 'f',            { m_find, MOTION_ARG_NONE } },
+
 	{ '0',            { m_goto, { .pos = { 0, -1 } } } },
 	{ '^',            { m_sol,  MOTION_ARG_NONE } },
 	{ '$',            { m_eol,  MOTION_ARG_NONE } },
