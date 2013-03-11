@@ -92,9 +92,10 @@ int m_sol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to
 	return MOTION_SUCCESS;
 }
 
-int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+static int last_find;
+
+int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
-	int f = nc_getch();
 	struct list *l = buffer_current_line(buf);
 
 	if(!l)
@@ -106,7 +107,7 @@ int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *t
 		goto failed;
 
 	char *start = l->line + bpos.x;
-	char *p = strchr(start, f);
+	char *p = strchr(start, last_find);
 	if(!p)
 		goto failed;
 
@@ -116,6 +117,13 @@ int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *t
 	return MOTION_SUCCESS;
 failed:
 	return MOTION_FAILURE;
+}
+
+int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+{
+	last_find = nc_getch();
+
+	return m_findnext(m, repeat, buf, to);
 }
 
 int motion_apply_buf_dry(const motion_repeat *mr, const buffer_t *buf, point_t *out)
