@@ -5,6 +5,7 @@
 #define MOTION_ARG_NONE     { 0 }
 
 const motionkey_t motion_keys[] = {
+	/* FIXME: insert motions only in insert mode */
 	{ 'I',            { m_sol,  MOTION_ARG_NONE } },
 
 	{ 'a',            { m_move, { .pos = { 1, 0 } } } },
@@ -25,7 +26,7 @@ const motionkey_t motion_keys[] = {
 	{ '^',            { m_sol,  MOTION_ARG_NONE } },
 	{ '$',            { m_eol,  MOTION_ARG_NONE } },
 
-	{ 'g',            { m_sof,  MOTION_ARG_NONE } },
+	{ 'g',            { m_sof,  MOTION_ARG_NONE } }, // FIXME: goto
 	{ 'G',            { m_eof,  MOTION_ARG_NONE } },
 
 	{ 'H',            { m_sos,  MOTION_ARG_NONE } },
