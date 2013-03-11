@@ -68,13 +68,15 @@ void ui_main()
 		int first_ch = nc_getch();
 		motion_repeat mr = MOTION_REPEAT();
 
+		int found = 0;
+
 		if(ui_mode == UI_NORMAL){
 			int skip = 0;
 			while(motion_repeat_read(&mr, &first_ch, skip))
 				skip++, motion_apply_buf(&mr, buffers_cur());
-		}
 
-		int found = 0;
+			found = skip > 0;
+		}
 
 		for(int i = 0; keys[i].ch; i++)
 			if(keys[i].mode & ui_mode && keys[i].ch == first_ch){
