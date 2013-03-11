@@ -54,12 +54,11 @@ int m_mos(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to
 
 int m_goto(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
-	/* TODO: repeat */
 	if(m->pos.y > -1)
-		to->y = m->pos.y;
+		to->y = m->pos.y * DEFAULT_REPEAT(repeat);
 
 	if(m->pos.x > -1)
-		to->x = m->pos.x;
+		to->x = m->pos.x * DEFAULT_REPEAT(repeat);
 
 	return MOTION_SUCCESS;
 }
