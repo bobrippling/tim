@@ -1,7 +1,7 @@
 #ifndef CMDS_H
 #define CMDS_H
 
-typedef int cmd_func(int argc, char **argv);
+typedef int cmd_func(int argc, char **argv) __attribute__((nonnull));
 
 typedef struct cmd_t
 {

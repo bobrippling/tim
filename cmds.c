@@ -15,8 +15,8 @@
 
 enum
 {
+	CMD_FAILURE,
 	CMD_SUCCESS,
-	CMD_FAILURE
 };
 
 int c_q(int argc, char **argv)
@@ -76,7 +76,7 @@ got_err:
 
 int c_x(int argc, char **argv)
 {
-	return c_w(argc, argv) == CMD_SUCCESS && c_q(0, NULL) == CMD_SUCCESS ? CMD_SUCCESS : CMD_FAILURE;
+	return c_w(argc, argv) && c_q(argc, argv);
 }
 
 int c_e(int argc, char **argv)
