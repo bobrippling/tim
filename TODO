@@ -1,4 +1,5 @@
-deletion
+dd, yy, cc
+s
 :! / cmd parsing
 save-check  on :q/e
 exist-check on :w
