@@ -58,9 +58,13 @@ void nc_cls()
 
 void nc_vstatus(const char *fmt, va_list l)
 {
+	scrollok(stdscr, 0);
+
 	move(LINES - 1, 0);
 	clrtoeol();
 	vwprintw(stdscr, fmt, l);
+
+	scrollok(stdscr, 1);
 }
 
 void nc_get_yx(int *y, int *x)
