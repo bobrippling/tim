@@ -51,7 +51,7 @@ int c_w(int argc, char **argv)
 
 	if(!f){
 got_err:
-		ui_status("%s: %s", fname, strerror(errno));
+		ui_status("%s: %s", buffer_shortfname(fname), strerror(errno));
 		if(f)
 			fclose(f);
 		return CMD_FAILURE;
@@ -66,7 +66,7 @@ got_err:
 		goto got_err;
 	}
 
-	ui_status("written to \"%s\"", fname);
+	ui_status("written to \"%s\"", buffer_shortfname(fname));
 
 	return CMD_SUCCESS;
 }
@@ -96,9 +96,9 @@ int c_e(int argc, char **argv)
 	if(!buffer_replace_fname(buffers_cur(), fname)){
 		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
 		buffers_set_cur(b);
-		ui_status("%s: %s", fname, strerror(errno));
+		ui_status("%s: %s", buffer_shortfname(fname), strerror(errno));
 	}else{
-		ui_status("%s: loaded", fname);
+		ui_status("%s: loaded", buffer_shortfname(fname));
 	}
 
 	buffer_set_fname(buffers_cur(), fname);
@@ -124,7 +124,7 @@ int c_split(enum buffer_neighbour ne, int argc, char **argv)
 		buffer_new_fname(&b, argv[1], &err);
 
 		if(err)
-			ui_status("%s: %s", argv[1], strerror(errno));
+			ui_status("%s: %s", buffer_shortfname(argv[1]), strerror(errno));
 	}else{
 		b = buffer_new();
 	}

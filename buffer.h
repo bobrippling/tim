@@ -49,4 +49,6 @@ struct list *buffer_current_line(const buffer_t *);
 buffer_t *buffer_topleftmost(buffer_t *b);
 void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
 
+const char *buffer_shortfname(const char *); /* internal fname buffer */
+
 #endif

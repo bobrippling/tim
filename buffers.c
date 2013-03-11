@@ -40,7 +40,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 
 		buffer_new_fname(&buf_sel, argv[0], &err);
 		if(err)
-			ui_status("\"%s\": %s", argv[0], strerror(errno));
+			ui_status("\"%s\": %s", buffer_shortfname(argv[0]), strerror(errno));
 
 		switch(a){
 			case BUF_VALL: dir = BUF_RIGHT; break;

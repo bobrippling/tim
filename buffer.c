@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "pos.h"
 #include "list.h"
@@ -161,4 +162,25 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new
 list_t *buffer_current_line(const buffer_t *b)
 {
 	return list_seek(b->head, b->ui_pos.y, 0);
+}
+
+const char *buffer_shortfname(const char *s)
+{
+#define SHORT_LEN_HALF 14
+	static char buf[(SHORT_LEN_HALF + 2) * 2];
+	size_t l = strlen(s);
+
+	if(l > sizeof(buf)){
+		const char *fin = s + l - SHORT_LEN_HALF;
+
+		strncpy(buf, s, SHORT_LEN_HALF);
+		buf[SHORT_LEN_HALF] = 0;
+
+		snprintf(buf + SHORT_LEN_HALF - 1, sizeof(buf) - SHORT_LEN_HALF,
+				"...%s", fin);
+
+		return buf;
+	}
+
+	return s;
 }
