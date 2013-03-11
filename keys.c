@@ -46,6 +46,9 @@ int motion_repeat_read(motion_repeat *mr, int *pch, int skip)
 			return 1;
 		}
 
+		if(ch == '0' && !mr->repeat)
+			return 0;
+
 		while('0' <= ch && ch <= '9'){
 			mr->repeat = mr->repeat * 10 + ch - '0',
 			ch = nc_getch();
