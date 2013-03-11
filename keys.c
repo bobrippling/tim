@@ -324,7 +324,8 @@ void k_del(const keyarg_u *a, unsigned repeat)
 		point_t to, from;
 
 		mr.repeat = DEFAULT_REPEAT(mr.repeat) * DEFAULT_REPEAT(repeat);
-		motion_apply_buf_dry(&mr, b, &to);
+		if(!motion_apply_buf_dry(&mr, b, &to))
+			return;
 
 		from = b->ui_pos;
 
