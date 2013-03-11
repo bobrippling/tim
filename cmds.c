@@ -21,8 +21,11 @@ enum
 
 int c_q(int argc, char **argv)
 {
-	(void)argc;
-	(void)argv;
+	if(argc != 1){
+		ui_status("usage: %s", *argv);
+		return CMD_FAILURE;
+	}
+
 	ui_running = 0;
 
 	return CMD_SUCCESS;

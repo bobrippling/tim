@@ -76,6 +76,7 @@ const cmd_t cmds[] = {
 	{ "e",   c_e     },
 
 	{ "x",   c_x     },
+	{ "wq",  c_x     },
 
 	{ "vs",  c_vs    },
 	{ "sp",  c_sp    },
