@@ -106,13 +106,24 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 	if((unsigned)bpos.x >= l->len_line)
 		goto failed;
 
-	char *start = l->line + bpos.x;
-	char *p = strchr(start, last_find);
-	if(!p)
-		goto failed;
+	char *const start = l->line + bpos.x;
+	char *p = start;
 
-	*to = (point_t){ .x = bpos.x + p - start,
-	                 .y = bpos.y };
+	repeat = DEFAULT_REPEAT(repeat);
+
+	for(;;){
+		p = strchr(p, last_find);
+		if(!p)
+			goto failed;
+
+		if(--repeat == 0){
+			*to = (point_t){ .x = bpos.x + p - start,
+				               .y = bpos.y };
+			break;
+		}else{
+			p++;
+		}
+	}
 
 	return MOTION_SUCCESS;
 failed:
