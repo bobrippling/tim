@@ -106,7 +106,15 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, cons
 		if((unsigned)bpos.x >= l->len_line)
 			goto failed;
 	}else{
+		if(l->len_line == 0)
+			goto failed;
+
+		/* if we're after the actual length, move from logical to it */
+		if((unsigned)bpos.x >= l->len_line)
+			bpos.x = l->len_line;
+
 		bpos.x--;
+
 		if(bpos.x < 0)
 			goto failed;
 	}
