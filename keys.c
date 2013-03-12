@@ -343,10 +343,10 @@ void k_del(const keyarg_u *a, unsigned repeat)
 			from.x = tmp;
 		}
 
-		if(!(a->how & EXCLUSIVE))
-			a->how & LINEWISE ? ++to.y : ++to.x;
+		if(!(mr.motion->how & M_EXCLUSIVE))
+			mr.motion->how & M_LINEWISE ? ++to.y : ++to.x;
 
-		buffer_delbetween(b, &from, &to, a->how & LINEWISE);
+		buffer_delbetween(b, &from, &to, mr.motion->how & M_LINEWISE);
 
 		b->ui_pos = from;
 

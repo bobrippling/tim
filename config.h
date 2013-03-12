@@ -6,34 +6,34 @@
 
 const motionkey_t motion_keys[] = {
 	/* FIXME: insert motions only in insert mode */
-	{ 'I',            { m_sol,  MOTION_ARG_NONE } },
+	{ 'I',            { m_sol,  MOTION_ARG_NONE, M_LINEWISE } },
 
-	{ 'a',            { m_move, { .pos = { 1, 0 } } } },
+	{ 'a',            { m_move, { .pos = { 1, 0 } }, M_LINEWISE } },
 
 	/* A -> eol, then move right by 1 */
-	{ 'A',            { m_eol,  MOTION_ARG_NONE } },
-	{ 'A',            { m_move, { .pos = { 1, 0 } } } },
+	{ 'A',            { m_eol,  MOTION_ARG_NONE, M_LINEWISE } },
+	{ 'A',            { m_move, { .pos = { 1, 0 } }, M_LINEWISE } },
 
-	{ 'j',            { m_move, { .pos = {  0,  1 } } } },
-	{ 'k',            { m_move, { .pos = {  0, -1 } } } },
-	{ 'h',            { m_move, { .pos = { -1,  0 } } } },
-	{ 'l',            { m_move, { .pos = {  1,  0 } } } },
+	{ 'j',            { m_move, { .pos = {  0,  1 } }, M_LINEWISE } },
+	{ 'k',            { m_move, { .pos = {  0, -1 } }, M_LINEWISE } },
+	{ 'h',            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },
+	{ 'l',            { m_move, { .pos = {  1,  0 } }, M_EXCLUSIVE } },
 
-	{ 'f',            { m_find, MOTION_ARG_NONE } },
-	{ ';',            { m_findnext, MOTION_ARG_NONE } },
+	{ 'f',            { m_find,     MOTION_ARG_NONE, M_NONE } },
+	{ ';',            { m_findnext, MOTION_ARG_NONE, M_NONE } },
 
-	{ '0',            { m_goto, { .pos = { 0, -1 } } } },
-	{ '^',            { m_sol,  MOTION_ARG_NONE } },
-	{ '$',            { m_eol,  MOTION_ARG_NONE } },
+	{ '0',            { m_goto, { .pos = { 0, -1 } }, M_EXCLUSIVE } },
+	{ '^',            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },
+	{ '$',            { m_eol,  MOTION_ARG_NONE,      M_NONE      } },
 
-	{ 'g',            { m_sof,  MOTION_ARG_NONE } }, // FIXME: goto
-	{ 'G',            { m_eof,  MOTION_ARG_NONE } },
+	{ 'g',            { m_sof,  MOTION_ARG_NONE, M_LINEWISE } }, // FIXME: goto
+	{ 'G',            { m_eof,  MOTION_ARG_NONE, M_LINEWISE } },
 
-	{ 'H',            { m_sos,  MOTION_ARG_NONE } },
-	{ 'M',            { m_mos,  MOTION_ARG_NONE } },
-	{ 'L',            { m_eos,  MOTION_ARG_NONE } },
+	{ 'H',            { m_sos,  MOTION_ARG_NONE, M_LINEWISE } },
+	{ 'M',            { m_mos,  MOTION_ARG_NONE, M_LINEWISE } },
+	{ 'L',            { m_eos,  MOTION_ARG_NONE, M_LINEWISE } },
 
-	{ 0, { 0, MOTION_ARG_NONE }, }
+	{ 0, { 0, MOTION_ARG_NONE, M_NONE } }
 };
 
 #define INS_KEY(k) \
@@ -48,7 +48,7 @@ const ikey_t keys[] = {
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
 	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
 
-	{ 'd',            k_del,        { LINEWISE },  UI_NORMAL },
+	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
 
 	INS_KEY('i'),
 	INS_KEY('I'),

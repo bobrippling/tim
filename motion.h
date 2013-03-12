@@ -22,6 +22,12 @@ typedef struct motion
 {
 	motion_func *func;
 	motion_arg arg;
+	enum motion_wise
+	{
+		M_NONE      = 0,
+		M_LINEWISE  = 1 << 0,
+		M_EXCLUSIVE = 1 << 1,
+	} how;
 } motion;
 
 typedef struct motion_repeat

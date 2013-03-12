@@ -5,5 +5,3 @@ save-check  on :q/e
 exist-check on :w
 
 "saved to really/long/path.txt" trimming
-
-linewise/exclusive belongs with a motion, not a 'd' etc
