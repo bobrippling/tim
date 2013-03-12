@@ -92,9 +92,7 @@ int m_sol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to
 	return MOTION_SUCCESS;
 }
 
-static int last_find;
-
-int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	struct list *l = buffer_current_line(buf);
 
@@ -103,7 +101,7 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 
 	point_t bpos = buf->ui_pos;
 
-	if(!(m->find_type & F_REV)){
+	if(!(ftype & F_REV)){
 		bpos.x++;
 		if((unsigned)bpos.x >= l->len_line)
 			goto failed;
@@ -119,13 +117,13 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 	repeat = DEFAULT_REPEAT(repeat);
 
 	for(;;){
-		p = (m->find_type & F_REV ? strchr_rev(p, last_find, l->line) : strchr(p, last_find));
+		p = (ftype & F_REV ? strchr_rev(p, ch, l->line) : strchr(p, ch));
 
 		if(!p)
 			goto failed;
 
 		if(--repeat == 0){
-			const int adj = m->find_type & F_TIL ? m->find_type & F_REV ? 1 : -1 : 0;
+			const int adj = ftype & F_TIL ? ftype & F_REV ? 1 : -1 : 0;
 
 			*to = (point_t){ .x = bpos.x + p - start + adj,
 				               .y = bpos.y };
@@ -140,11 +138,25 @@ failed:
 	return MOTION_FAILURE;
 }
 
+static int last_find_ch;
+static enum find_type last_find_type;
+
+int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+{
+	return m_findnext2(
+			last_find_ch,
+			m->find_type ^ last_find_type,
+			repeat,
+			buf,
+			to);
+}
+
 int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
-	last_find = nc_getch();
-
-	return m_findnext(m, repeat, buf, to);
+	return m_findnext2(
+			last_find_ch = nc_getch(),
+			last_find_type = m->find_type,
+			repeat, buf, to);
 }
 
 int motion_apply_buf_dry(const motion_repeat *mr, const buffer_t *buf, point_t *out)
