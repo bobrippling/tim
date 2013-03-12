@@ -9,6 +9,7 @@
 #include "motion.h"
 #include "ui.h"
 #include "ncurses.h"
+#include "str.h"
 
 #define UI_X   buf->ui_pos.x
 #define UI_Y   buf->ui_pos.y
@@ -101,9 +102,16 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 		goto failed;
 
 	point_t bpos = buf->ui_pos;
-	bpos.x++;
-	if((unsigned)bpos.x >= l->len_line)
-		goto failed;
+
+	if(m->i > 0){
+		bpos.x++;
+		if((unsigned)bpos.x >= l->len_line)
+			goto failed;
+	}else{
+		bpos.x--;
+		if(bpos.x < 0)
+			goto failed;
+	}
 
 	char *const start = l->line + bpos.x;
 	char *p = start;
@@ -111,7 +119,8 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 	repeat = DEFAULT_REPEAT(repeat);
 
 	for(;;){
-		p = strchr(p, last_find);
+		p = (m->i > 0 ? strchr(p, last_find) : strchr_rev(p, last_find, l->line));
+
 		if(!p)
 			goto failed;
 
