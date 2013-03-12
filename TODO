@@ -1,9 +1,15 @@
-memory leaks - wordexp and buffer_new()
+memory leak - buffer_new()
 
 dd, yy, cc
 s
+
+motions:
+	{
+	[[
+	i:
+		iw
+		i{
+
 :! / cmd parsing
 save-check  on :q/e
 exist-check on :w
-
-"saved to really/long/path.txt" trimming
