@@ -12,6 +12,11 @@ typedef int motion_func(
 union motion_arg
 {
 	int i;
+	enum
+	{
+		F_TIL = 1 << 0, /* 'f' or 't' */
+		F_REV = 1 << 1, /* 'F' or 'T' */
+	} find_type;
 	point_t pos;
 };
 

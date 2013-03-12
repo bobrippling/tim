@@ -19,10 +19,12 @@ const motionkey_t motion_keys[] = {
 	{ 'h',            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },
 	{ 'l',            { m_move, { .pos = {  1,  0 } }, M_EXCLUSIVE } },
 
-	{ 'f',            { m_find,     {  1 }, M_NONE } },
-	{ ';',            { m_findnext, {  1 }, M_NONE } },
-	{ 'F',            { m_find,     { -1 }, M_NONE } },
-	{ ',',            { m_findnext, { -1 }, M_NONE } },
+	{ 'f',            { m_find,     { .find_type = 0             }, M_NONE } },
+	{ 'F',            { m_find,     { .find_type = F_REV         }, M_NONE } },
+	{ 't',            { m_find,     { .find_type = F_TIL         }, M_NONE } },
+	{ 'T',            { m_find,     { .find_type = F_REV | F_TIL }, M_NONE } },
+	{ ';',            { m_findnext, { .find_type = 0             }, M_NONE } },
+	{ ',',            { m_findnext, { .find_type = F_REV         }, M_NONE } },
 
 	{ '0',            { m_goto, { .pos = { 0, -1 } }, M_EXCLUSIVE } },
 	{ '^',            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },

@@ -103,7 +103,7 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 
 	point_t bpos = buf->ui_pos;
 
-	if(m->i > 0){
+	if(!(m->find_type & F_REV)){
 		bpos.x++;
 		if((unsigned)bpos.x >= l->len_line)
 			goto failed;
@@ -119,13 +119,15 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 	repeat = DEFAULT_REPEAT(repeat);
 
 	for(;;){
-		p = (m->i > 0 ? strchr(p, last_find) : strchr_rev(p, last_find, l->line));
+		p = (m->find_type & F_REV ? strchr_rev(p, last_find, l->line) : strchr(p, last_find));
 
 		if(!p)
 			goto failed;
 
 		if(--repeat == 0){
-			*to = (point_t){ .x = bpos.x + p - start,
+			const int adj = m->find_type & F_TIL ? m->find_type & F_REV ? 1 : -1 : 0;
+
+			*to = (point_t){ .x = bpos.x + p - start + adj,
 				               .y = bpos.y };
 			break;
 		}else{
