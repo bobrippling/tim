@@ -207,7 +207,19 @@ void list_delbetween(list_t **pl,
 	if(linewise){
 		list_dellines(seeked, to->y - from->y + 1);
 	}else{
-		assert(0 && "TODO");
+		list_t *l = *seeked;
+
+		if((unsigned)to->x > l->len_line)
+			return;
+
+		size_t diff = to->x - from->x;
+
+		memmove(
+				l->line + from->x,
+				l->line + to->x,
+				l->len_line - from->x);
+
+		l->len_line -= diff;
 	}
 }
 
