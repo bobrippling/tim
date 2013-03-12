@@ -1,3 +1,5 @@
+memory leaks - wordexp and buffer_new()
+
 dd, yy, cc
 s
 :! / cmd parsing

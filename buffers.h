@@ -9,6 +9,7 @@ enum buffer_init_args
 };
 
 void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off);
+void buffers_term(void);
 
 buffer_t *buffers_cur(void);
 void buffers_set_cur(buffer_t *);

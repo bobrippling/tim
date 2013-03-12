@@ -11,6 +11,7 @@
 void buffer_free(buffer_t *b)
 {
 	list_free(b->head);
+	free(b->fname);
 	free(b);
 }
 

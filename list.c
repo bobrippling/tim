@@ -121,8 +121,13 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 		if(l->line){
 			cut_len = l->len_line - *x;
 
-			cut = umalloc(cut_len);
-			memcpy(cut, l->line + *x, cut_len);
+			if(cut_len > 0){
+				cut = umalloc(cut_len);
+				memcpy(cut, l->line + *x, cut_len);
+			}else{
+				cut = NULL;
+				cut_len = 0;
+			}
 
 			l->len_line = *x;
 		}else{

@@ -44,5 +44,7 @@ int main(int argc, char **argv)
 	ui_main();
 	ui_term();
 
+	buffers_term();
+
 	return 0;
 }

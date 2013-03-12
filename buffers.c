@@ -21,6 +21,7 @@ buffer_t *buffers_cur()
 
 void buffers_set_cur(buffer_t *b)
 {
+	/* FIXME: free old */
 	buf_sel = b;
 }
 
@@ -29,19 +30,17 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 	int i;
 
 	if(argc){
-		enum buffer_neighbour dir;
-		buffer_t *prev_buf;
-		int err;
-
 		buf_c = argc;
 		buf_list = umalloc(argc * sizeof *buf_list);
 		for(i = 0; i < argc; i++)
 			buf_list[i] = ustrdup(argv[i]);
 
+		int err;
 		buffer_new_fname(&buf_sel, argv[0], &err);
 		if(err)
 			ui_status("\"%s\": %s", buffer_shortfname(argv[0]), strerror(errno));
 
+		enum buffer_neighbour dir;
 		switch(a){
 			case BUF_VALL: dir = BUF_RIGHT; break;
 			case BUF_HALL: dir = BUF_DOWN;  break;
@@ -49,8 +48,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 				goto fin;
 		}
 
-		prev_buf = buf_sel;
-
+		buffer_t *prev_buf = buf_sel;
 		for(i = 1; i < argc; i++){
 			buffer_t *b;
 			int err;
@@ -69,4 +67,10 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 fin:
 	if(off)
 		buf_sel->ui_pos.y = off;
+}
+
+void buffers_term(void)
+{
+	if(buf_sel)
+		buffer_free(buf_sel), buf_sel = NULL;
 }
