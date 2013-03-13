@@ -214,7 +214,7 @@ void list_delbetween(list_t **pl,
 	}else{
 		list_t *l = *seeked;
 
-		if((unsigned)to->x > l->len_line)
+		if(!l->len_line || (unsigned)to->x > l->len_line)
 			return;
 
 		size_t diff = to->x - from->x;
@@ -222,7 +222,7 @@ void list_delbetween(list_t **pl,
 		memmove(
 				l->line + from->x,
 				l->line + to->x,
-				l->len_line - from->x);
+				l->len_line - from->x - 1);
 
 		l->len_line -= diff;
 	}
