@@ -68,6 +68,8 @@ int m_move(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *t
 {
 	to->y += m->pos.y * DEFAULT_REPEAT(repeat);
 	to->x += m->pos.x * DEFAULT_REPEAT(repeat);
+	if(to->x < 0) to->x = 0;
+	if(to->y < 0) to->y = 0;
 	return MOTION_SUCCESS;
 }
 
