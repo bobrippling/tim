@@ -94,30 +94,41 @@ int m_sol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to
 	return MOTION_SUCCESS;
 }
 
+static list_t *advance_line(list_t *l, unsigned *pn, const int dir)
+{
+	*pn += dir;
+	return dir > 0 ? l->next : l->prev;
+}
+
 int m_para(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
 	unsigned n = 0;
 
-	/* TODO: reverse */
+	*to = buf->ui_pos;
 
 	if(!l)
-		return MOTION_FAILURE;
+		goto limit;
 
 	for(repeat = DEFAULT_REPEAT(repeat);
 			repeat > 0;
 			repeat--)
 	{
 		/* while in space, find non-space */
-		for(; !l->line || isallspace(l->line); l = l->next, n++);
+		for(; l && (!l->line || isallspace(l->line)); l = advance_line(l, &n, m->i));
 
 		/* while in non-space, find space */
-		for(; l->line && !isallspace(l->line); l = l->next, n++);
+		for(; l && (l->line && !isallspace(l->line)); l = advance_line(l, &n, m->i));
+
+		if(!l)
+			goto limit;
 	}
 
-	*to = buf->ui_pos;
 	to->y += n;
 
+	return MOTION_SUCCESS;
+limit:
+	to->y = m->i > 0 ? buffer_nlines(buf) : 0;
 	return MOTION_SUCCESS;
 }
 

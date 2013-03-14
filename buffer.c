@@ -165,6 +165,11 @@ list_t *buffer_current_line(const buffer_t *b)
 	return list_seek(b->head, b->ui_pos.y, 0);
 }
 
+unsigned buffer_nlines(const buffer_t *b)
+{
+	return list_count(b->head);
+}
+
 const char *buffer_shortfname(const char *s)
 {
 #define SHORT_LEN_HALF 14

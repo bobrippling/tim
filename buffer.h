@@ -45,6 +45,8 @@ void buffer_insline(buffer_t *, int dir);
 
 list_t *buffer_current_line(const buffer_t *);
 
+unsigned buffer_nlines(const buffer_t *);
+
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);
 void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
