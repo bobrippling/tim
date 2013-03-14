@@ -51,7 +51,7 @@ list_t *list_new_file(FILE *f)
 	l = list_new(NULL);
 
 	while((ch = fgetc(f)) != EOF)
-		list_inschar(l, &x, &y, ch);
+		list_inschar(&l, &x, &y, ch);
 
 	return l;
 #endif
@@ -69,6 +69,13 @@ void list_free(list_t *l)
 static
 list_t **list_seekp(list_t **pl, int y, int creat)
 {
+	if(!*pl){
+		if(creat)
+			*pl = list_new(NULL);
+		else
+			return NULL;
+	}
+
 	while(y > 0){
 		if(!(*pl)->next){
 			if(creat)
@@ -90,11 +97,12 @@ list_t *list_seek(list_t *l, int y, int creat)
 	return p ? *p : NULL;
 }
 
-void list_inschar(list_t *l, int *x, int *y, char ch)
+void list_inschar(list_t **pl, int *x, int *y, char ch)
 {
+	list_t *l;
 	int i;
 
-	l = list_seek(l, *y, 1);
+	l = *(pl = list_seekp(pl, *y, 1));
 
 	if((unsigned)*x >= l->len_malloc){
 		const int old_len = l->len_malloc;
@@ -175,7 +183,8 @@ void list_dellines(list_t **pl, list_t *prev, unsigned n)
 
 	list_t *l = *pl;
 
-	assert(l);
+	if(!l)
+		return;
 
 	if(n == 1){
 		list_t *adv = l->next;
@@ -210,7 +219,7 @@ void list_delbetween(list_t **pl,
 
 	list_t **seeked = list_seekp(pl, from->y, 0);
 
-	if(!seeked)
+	if(!seeked || !*seeked)
 		return;
 
 	if(linewise){
@@ -242,7 +251,8 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 		/* special case */
 		l = *pl;
 		(*pl = list_new(NULL))->next = l;
-		l->prev = *pl;
+		if(l)
+			l->prev = *pl;
 		return;
 	}
 

@@ -108,7 +108,7 @@ const char *buffer_fname(const buffer_t *b)
 
 void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
 {
-	list_inschar(buf->head, x, y, ch);
+	list_inschar(&buf->head, x, y, ch);
 }
 
 void buffer_delchar(buffer_t *buf, int *x, int *y)
