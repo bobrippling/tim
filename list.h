@@ -1,13 +1,15 @@
 #ifndef LIST_H
 #define LIST_H
 
-typedef struct list
+typedef struct list_ list_t;
+
+struct list_
 {
 	char *line;
 	size_t len_line, len_malloc;
 
-	struct list *next;
-} list_t;
+	list_t *next;
+};
 
 list_t *list_new(void);
 list_t *list_new_file(FILE *);

@@ -43,7 +43,7 @@ void buffer_delbetween(buffer_t *buf,
 
 void buffer_insline(buffer_t *, int dir);
 
-struct list *buffer_current_line(const buffer_t *);
+list_t *buffer_current_line(const buffer_t *);
 
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);

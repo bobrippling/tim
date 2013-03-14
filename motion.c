@@ -96,7 +96,7 @@ int m_sol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to
 
 static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, const buffer_t *buf, point_t *to)
 {
-	struct list *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf);
 
 	if(!l)
 		goto failed;
