@@ -94,6 +94,33 @@ int m_sol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to
 	return MOTION_SUCCESS;
 }
 
+int m_para(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+{
+	list_t *l = buffer_current_line(buf);
+	unsigned n = 0;
+
+	/* TODO: reverse */
+
+	if(!l)
+		return MOTION_FAILURE;
+
+	for(repeat = DEFAULT_REPEAT(repeat);
+			repeat > 0;
+			repeat--)
+	{
+		/* while in space, find non-space */
+		for(; !l->line || isallspace(l->line); l = l->next, n++);
+
+		/* while in non-space, find space */
+		for(; l->line && !isallspace(l->line); l = l->next, n++);
+	}
+
+	*to = buf->ui_pos;
+	to->y += n;
+
+	return MOTION_SUCCESS;
+}
+
 static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
