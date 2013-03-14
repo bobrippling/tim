@@ -123,7 +123,7 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 
 			if(cut_len > 0){
 				cut = umalloc(cut_len);
-				memcpy(cut, l->line + *x, cut_len);
+				memcpy(cut, l->line + *x + 1, cut_len);
 			}else{
 				cut = NULL;
 				cut_len = 0;
