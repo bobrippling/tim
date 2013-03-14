@@ -8,10 +8,10 @@ struct list_
 	char *line;
 	size_t len_line, len_malloc;
 
-	list_t *next;
+	list_t *next, *prev;
 };
 
-list_t *list_new(void);
+list_t *list_new(list_t *prev);
 list_t *list_new_file(FILE *);
 
 list_t *list_seek(list_t *l, int y, int creat);

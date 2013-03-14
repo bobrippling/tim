@@ -18,7 +18,7 @@ void buffer_free(buffer_t *b)
 buffer_t *buffer_new()
 {
 	buffer_t *b = umalloc(sizeof *b);
-	b->head = list_new();
+	b->head = list_new(NULL);
 	return b;
 }
 

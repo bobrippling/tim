@@ -7,9 +7,10 @@
 #include "list.h"
 #include "mem.h"
 
-list_t *list_new()
+list_t *list_new(list_t *prev)
 {
 	list_t *l = umalloc(sizeof *l);
+	l->prev = prev;
 	return l;
 }
 
@@ -47,7 +48,7 @@ list_t *list_new_file(FILE *f)
 	list_t *l;
 
 	y = x = 0;
-	l = list_new();
+	l = list_new(NULL);
 
 	while((ch = fgetc(f)) != EOF)
 		list_inschar(l, &x, &y, ch);
@@ -71,7 +72,7 @@ list_t **list_seekp(list_t **pl, int y, int creat)
 	while(y > 0){
 		if(!(*pl)->next){
 			if(creat)
-				(*pl)->next = list_new();
+				(*pl)->next = list_new(*pl);
 			else
 				return NULL;
 		}
@@ -116,7 +117,6 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 	if(ch == '\n' || ch == '\r'){
 		char *cut;
 		int cut_len;
-		list_t *next;
 
 		if(l->line){
 			cut_len = l->len_line - *x;
@@ -135,9 +135,11 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 			cut_len = 0;
 		}
 
-		next = l->next;
-		l->next = list_new();
+		list_t *next = l->next;
+		l->next = list_new(l);
 		l->next->next = next;
+		if(next)
+			next->prev = l->next;
 
 		l = l->next;
 		l->line = cut;
@@ -169,7 +171,7 @@ void list_delchar(list_t *l, int *x, int *y)
 }
 
 static
-void list_dellines(list_t **pl, unsigned n)
+void list_dellines(list_t **pl, list_t *prev, unsigned n)
 {
 	if(n == 0)
 		return;
@@ -179,8 +181,10 @@ void list_dellines(list_t **pl, unsigned n)
 	assert(l);
 
 	if(n == 1){
-		*pl = l->next;
+		list_t *adv = l->next;
 		l->next = NULL;
+
+		*pl = adv;
 
 	}else{
 		list_t *end_m1 = list_seek(l, n - 2, 0);
@@ -193,6 +197,9 @@ void list_dellines(list_t **pl, unsigned n)
 			*pl = NULL;
 		}
 	}
+
+	if(*pl)
+		(*pl)->prev = prev;
 
 	list_free(l);
 }
@@ -210,7 +217,7 @@ void list_delbetween(list_t **pl,
 		return;
 
 	if(linewise){
-		list_dellines(seeked, to->y - from->y + 1);
+		list_dellines(seeked, (*seeked)->prev, to->y - from->y + 1);
 	}else{
 		list_t *l = *seeked;
 
@@ -237,7 +244,8 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	if(dir < 0 && *y == 0){
 		/* special case */
 		l = *pl;
-		(*pl = list_new())->next = l;
+		(*pl = list_new(NULL))->next = l;
+		l->prev = *pl;
 		return;
 	}
 
@@ -247,8 +255,10 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	l = list_seek(*pl, *y, 1);
 
 	save = l->next;
-	l->next = list_new();
+	l->next = list_new(l);
 	l->next->next = save;
+	if(save)
+		save->prev = l->next;
 
 	++*y;
 }
