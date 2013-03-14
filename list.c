@@ -135,11 +135,8 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 			cut_len = 0;
 		}
 
-		list_t *next = l->next;
-		l->next = list_new(l);
-		l->next->next = next;
-		if(next)
-			next->prev = l->next;
+		/* insert a line after */
+		list_insline(&l, &(int){0}, &(int){0}, 1);
 
 		l = l->next;
 		l->line = cut;
