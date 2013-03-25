@@ -153,7 +153,7 @@ void filter_cmd(int *pargc, char ***pargv)
 	}
 }
 
-void k_cmd(const keyarg_u *arg, unsigned repeat)
+void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
 	int y, x;
 
@@ -234,18 +234,18 @@ cancel:
 	nc_set_yx(y, x);
 }
 
-void k_redraw(const keyarg_u *a, unsigned repeat)
+void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	(void)a;
 	ui_redraw();
 }
 
-void k_set_mode(const keyarg_u *a, unsigned repeat)
+void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	ui_mode = a->i;
 }
 
-void k_scroll(const keyarg_u *a, unsigned repeat)
+void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf = buffers_cur();
 
@@ -263,7 +263,7 @@ void k_scroll(const keyarg_u *a, unsigned repeat)
 	ui_cur_changed();
 }
 
-void k_winsel(const keyarg_u *a, unsigned repeat)
+void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf;
 	char dir;
@@ -295,7 +295,7 @@ void k_winsel(const keyarg_u *a, unsigned repeat)
 	}
 }
 
-void k_show(const keyarg_u *a, unsigned repeat)
+void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf = buffers_cur();
 	(void)a;
@@ -306,14 +306,14 @@ void k_show(const keyarg_u *a, unsigned repeat)
 			buf->ui_pos.x, buf->ui_pos.y);
 }
 
-void k_open(const keyarg_u *a, unsigned repeat)
+void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_insline(buffers_cur(), a->i);
 	ui_redraw();
 	ui_cur_changed();
 }
 
-void k_motion(const keyarg_u *a, unsigned repeat)
+void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	motion_repeat mr = MOTION_REPEAT();
 	mr.motion = &a->motion;
@@ -321,15 +321,29 @@ void k_motion(const keyarg_u *a, unsigned repeat)
 	motion_apply_buf(&mr, buffers_cur());
 }
 
-void k_del(const keyarg_u *a, unsigned repeat)
+void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	int ch = nc_getch();
-	motion_repeat mr;
-	if(motion_repeat_read(&mr, &ch, 0)){
+	int ch = nc_getch(), fallback = 0;
+	motion_repeat mr = { 0, 0 };
+
+	if(motion_repeat_read(&mr, &ch, 0) || (fallback = ch == from_ch)){
+		motion m_doubletap = {
+			.func = m_move,
+			.how = M_LINEWISE,
+		};
+
 		buffer_t *b = buffers_cur();
 		point_t to, from;
 
 		mr.repeat = DEFAULT_REPEAT(mr.repeat) * DEFAULT_REPEAT(repeat);
+
+		if(fallback){
+			/* dd - stay where we are, +the repeat */
+			m_doubletap.arg.pos.y = mr.repeat - 1;
+			mr.repeat = 0;
+			mr.motion = &m_doubletap;
+		}
+
 		if(!motion_apply_buf_dry(&mr, b, &to))
 			return;
 

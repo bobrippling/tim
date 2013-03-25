@@ -5,7 +5,7 @@
 
 typedef union keyarg_u keyarg_u;
 
-typedef void key_func(const keyarg_u *, unsigned repeat);
+typedef void key_func(const keyarg_u *, unsigned repeat, const int ch);
 
 union keyarg_u
 {
