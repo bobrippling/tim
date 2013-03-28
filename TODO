@@ -1,4 +1,5 @@
-memory leak - buffer_new()
+M_NONE for deletions that span lines only applies the change in x, to the current line.
+e.g. d/a<CR> where "a" is on the next line
 
 R - multi-char replacement
 
