@@ -15,6 +15,7 @@
 #include "ncurses.h"
 #include "mem.h"
 #include "cmds.h"
+#include "prompt.h"
 
 #include "buffers.h"
 
@@ -155,60 +156,13 @@ void filter_cmd(int *pargc, char ***pargv)
 
 void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	int y, x;
-
-	int reading = 1;
-	int i = 0;
-	int len = 10;
-	char *cmd = umalloc(len);
+	int i;
 	char **argv = NULL;
 	int argc = 0;
+	char *cmd = prompt();
 
-	(void)arg;
-
-	nc_get_yx(&y, &x);
-
-	nc_set_yx(nc_LINES() - 1, 0);
-	nc_addch(':');
-	nc_clrtoeol();
-
-	while(reading){
-		int ch = nc_getch();
-
-		switch(ch){
-			case key_esc:
-				goto cancel;
-
-			case CTRL_AND('?'):
-			case CTRL_AND('H'):
-			case 263:
-			case 127:
-				/* backspace */
-				if(i == 0)
-					goto cancel;
-				cmd[--i] = '\0';
-				nc_set_yx(nc_LINES() - 1, i + 1);
-				break;
-
-			case '\n':
-			case '\r':
-				reading = 0;
-				break;
-
-			case CTRL_AND('u'):
-				cmd[i = 0] = '\0';
-				nc_set_yx(nc_LINES() - 1, i + 1);
-				break;
-
-			default:
-				cmd[i++] = ch;
-				nc_addch(ch);
-				if(i == len)
-					cmd = urealloc(cmd, len *= 2);
-				cmd[i] = '\0';
-				break;
-		}
-	}
+	if(!cmd)
+		goto cancel;
 
 	parse_cmd(cmd, &argc, &argv);
 
@@ -231,7 +185,6 @@ cancel:
 	for(i = 0; i < argc; i++)
 		free(argv[i]);
 	free(argv);
-	nc_set_yx(y, x);
 }
 
 void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)

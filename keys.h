@@ -1,8 +1,6 @@
 #ifndef KEYS_H
 #define KEYS_H
 
-#define key_esc '\x1b'
-
 typedef union keyarg_u keyarg_u;
 
 typedef void key_func(const keyarg_u *, unsigned repeat, const int ch);
