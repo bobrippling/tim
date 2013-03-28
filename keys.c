@@ -159,7 +159,7 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	int i;
 	char **argv = NULL;
 	int argc = 0;
-	char *cmd = prompt();
+	char *cmd = prompt(':');
 
 	if(!cmd)
 		goto cancel;

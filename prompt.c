@@ -6,7 +6,7 @@
 #include "ncurses.h"
 #include "mem.h"
 
-char *prompt(void)
+char *prompt(char promp)
 {
 	int reading = 1;
 	int len = 10;
@@ -17,7 +17,7 @@ char *prompt(void)
 	nc_get_yx(&y, &x);
 
 	nc_set_yx(nc_LINES() - 1, 0);
-	nc_addch(':');
+	nc_addch(promp);
 	nc_clrtoeol();
 
 	while(reading){

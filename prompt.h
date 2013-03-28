@@ -1,6 +1,6 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
-char *prompt(void);
+char *prompt(char);
 
 #endif

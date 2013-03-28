@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "pos.h"
 #include "list.h"
@@ -10,6 +11,7 @@
 #include "ui.h"
 #include "ncurses.h"
 #include "str.h"
+#include "prompt.h"
 
 #define UI_X   buf->ui_pos.x
 #define UI_Y   buf->ui_pos.y
@@ -205,6 +207,17 @@ int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *t
 			last_find_ch = nc_getch(),
 			last_find_type = m->find_type,
 			repeat, buf, to);
+}
+
+int m_search(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+{
+	char *target = prompt('/');
+	if(!target)
+		return MOTION_FAILURE;
+
+	int found = buffer_find(buf, target, to);
+	free(target);
+	return found;
 }
 
 int motion_apply_buf_dry(const motion_repeat *mr, const buffer_t *buf, point_t *out)

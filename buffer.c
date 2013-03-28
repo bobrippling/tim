@@ -204,3 +204,24 @@ const char *buffer_shortfname(const char *s)
 
 	return s;
 }
+
+int buffer_find(const buffer_t *buf, const char *search, point_t *at)
+{
+	point_t loc = buf->ui_pos;
+
+	for(list_t *l = list_seek(buf->head, loc.y, 0);
+			l;
+			l = l->next, loc.y++)
+	{
+		if(!l->line)
+			continue;
+
+		char *p;
+		if((p = strstr(l->line, search))){
+			at->y = loc.y;
+			at->x = p - l->line;
+			return 1;
+		}
+	}
+	return 0;
+}
