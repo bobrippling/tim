@@ -123,6 +123,20 @@ void buffer_delbetween(buffer_t *buf,
 	list_delbetween(&buf->head, from, to, linewise);
 }
 
+void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
+{
+	char *with = umalloc(n + 1);
+
+	memset(with, ch, n);
+	with[n] = '\0';
+
+	list_replace_at(buf->head,
+			&buf->ui_pos.x, buf->ui_pos.y,
+			with);
+
+	free(with);
+}
+
 void buffer_insline(buffer_t *buf, int dir)
 {
 	list_insline(&buf->head, &buf->ui_pos.x, &buf->ui_pos.y, dir);

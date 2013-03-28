@@ -57,6 +57,9 @@ const ikey_t keys[] = {
 
 	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
 
+	{ 'r',            k_replace,    { 0 },         UI_NORMAL },
+	{ 'R',            k_replace,    { 1 },         UI_NORMAL },
+
 	INS_KEY('i'),
 	INS_KEY('I'),
 	INS_KEY('a'),

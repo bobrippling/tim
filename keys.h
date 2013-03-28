@@ -40,5 +40,6 @@ key_func k_show;
 key_func k_open;
 key_func k_del;
 key_func k_motion;
+key_func k_replace;
 
 #endif

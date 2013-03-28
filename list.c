@@ -270,6 +270,26 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	++*y;
 }
 
+void list_replace_at(list_t *l, int *px, int y, char *with)
+{
+	l = list_seek(l, y, 1);
+
+	const int with_len = strlen(with);
+	int x = *px;
+
+	if((unsigned)(x + with_len) >= l->len_malloc){
+		size_t new_len = x + with_len + 1;
+		l->line = urealloc(l->line, new_len);
+		memset(l->line + l->len_malloc, ' ', new_len - l->len_malloc);
+		l->len_line = l->len_malloc = new_len;
+	}
+
+	char *p = l->line + x;
+	memcpy(p, with, with_len);
+
+	*px += with_len - 1;
+}
+
 int list_count(list_t *l)
 {
 	int i;

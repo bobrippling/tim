@@ -313,6 +313,26 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
+void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	if(a->i == 1){
+		// TODO: repeated
+	}else{
+		/* single char */
+		int ch = nc_getch();
+
+		if(ch == '\033')
+			return;
+
+		buffer_replace_chars(
+				buffers_cur(),
+				ch,
+				DEFAULT_REPEAT(repeat));
+	}
+	ui_redraw();
+	ui_cur_changed();
+}
+
 void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	motion_repeat mr = MOTION_REPEAT();

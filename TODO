@@ -1,5 +1,8 @@
 memory leak - buffer_new()
 
+/ motion
+R - multi-char replacement
+
 dd, yy, cc
 s
 

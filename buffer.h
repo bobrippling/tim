@@ -41,6 +41,8 @@ void buffer_delchar(buffer_t *, int *x, int *y);
 void buffer_delbetween(buffer_t *buf,
 		point_t const *from, point_t const *to, int linewise);
 
+void buffer_replace_chars(buffer_t *, int ch, unsigned n);
+
 void buffer_insline(buffer_t *, int dir);
 
 list_t *buffer_current_line(const buffer_t *);
