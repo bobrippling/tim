@@ -10,6 +10,7 @@
 #include "ui.h"
 #include "external.h"
 
+#ifdef FANCY_TERM
 static int term_canon(int on)
 {
 	struct termios this;
@@ -24,6 +25,7 @@ static int term_canon(int on)
 
 	return 0 == tcsetattr(0, 0, &this);
 }
+#endif
 
 int shellout(const char *cmd)
 {
@@ -43,6 +45,7 @@ int shellout(const char *cmd)
 
 	r = system(shcmd);
 
+#ifdef FANCY_TERM
 	if(term_canon(0)){
 		int unget;
 
@@ -53,13 +56,16 @@ int shellout(const char *cmd)
 		fputc('\n', stderr);
 		ungetch(unget);
 	}else{
+#endif
 		fprintf(stderr, "enter to continue...");
 		for(;;){
 			int c = getchar();
 			if(c == EOF || c == '\n')
 				break;
 		}
+#ifdef FANCY_TERM
 	}
+#endif
 
 	ui_init();
 
