@@ -226,18 +226,40 @@ void list_delbetween(list_t **pl,
 		list_dellines(seeked, (*seeked)->prev, to->y - from->y + 1);
 	}else{
 		list_t *l = *seeked;
+		size_t line_change = to->y - from->y;
 
-		if(!l->len_line || (unsigned)to->x > l->len_line)
-			return;
+		if(line_change > 1)
+			list_dellines(&l->next, l, line_change);
 
-		size_t diff = to->x - from->x;
+		if(line_change > 0){
+			/* join the lines */
+			list_t *next = l->next;
+			size_t nextlen = next->len_line - to->x;
+			size_t fulllen = from->x + nextlen;
 
-		memmove(
-				l->line + from->x,
-				l->line + to->x,
-				l->len_line - from->x - 1);
+			if(l->len_malloc < fulllen)
+				l->line = urealloc(l->line, l->len_malloc = fulllen);
 
-		l->len_line -= diff;
+			memcpy(l->line + from->x,
+					next->line + to->x,
+					nextlen);
+			l->len_line = fulllen;
+
+			list_dellines(&l->next, l, 1);
+
+		}else{
+			if(!l->len_line || (unsigned)to->x > l->len_line)
+				return;
+
+			size_t diff = to->x - from->x;
+
+			memmove(
+					l->line + from->x,
+					l->line + to->x,
+					l->len_line - from->x - 1);
+
+			l->len_line -= diff;
+		}
 	}
 }
 
