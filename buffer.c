@@ -205,23 +205,54 @@ const char *buffer_shortfname(const char *s)
 	return s;
 }
 
-int buffer_find(const buffer_t *buf, const char *search, point_t *at)
+static char *strrevstr(char *haystack, unsigned off, const char *needle)
+{
+	const size_t nlen = strlen(needle);
+
+	for(char *p = haystack + off;
+			p >= haystack;
+			p--)
+	{
+		if(!strncmp(p, needle, nlen))
+			return p;
+	}
+
+	return NULL;
+}
+
+static char *buffer_find2(
+		char *haystack, const char *needle,
+		unsigned off, int rev)
+{
+	return rev
+		? strrevstr(haystack, off, needle)
+		: strstr(haystack + off, needle);
+}
+
+int buffer_find(const buffer_t *buf, const char *search, point_t *at, int rev)
 {
 	point_t loc = buf->ui_pos;
 
-	for(list_t *l = list_seek(buf->head, loc.y, 0);
-			l;
-			l = l->next, loc.y++)
-	{
-		if(!l->line)
-			continue;
+	unsigned off = at->x > 0 ? at->x - rev : 0;
 
+	list_t *l = list_seek(buf->head, loc.y, 0);
+	while(l){
 		char *p;
-		if((p = strstr(l->line, search))){
-			at->y = loc.y;
+		if(off < l->len_line
+		&& (p = buffer_find2(l->line, search, off, rev)))
+		{
 			at->x = p - l->line;
+			at->y = loc.y;
 			return 1;
 		}
+
+		if(rev)
+			l = l->prev, loc.y--;
+		else
+			l = l->next, loc.y++;
+
+		off = rev ? l->len_line - 1 : 0;
 	}
+
 	return 0;
 }

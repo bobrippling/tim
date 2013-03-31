@@ -211,11 +211,11 @@ int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *t
 
 int m_search(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
-	char *target = prompt('/');
+	char *target = prompt(m->i ? '?' : '/');
 	if(!target)
 		return MOTION_FAILURE;
 
-	int found = buffer_find(buf, target, to);
+	int found = buffer_find(buf, target, to, m->i);
 	free(target);
 	return found;
 }
