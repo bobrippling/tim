@@ -1,21 +1,19 @@
-M_NONE for deletions that span lines only applies the change in x, to the current line.
-e.g. d/a<CR> where "a" is on the next line
-
-R - multi-char replacement
-
-dd, yy, cc
-s
-%
-
-n, N
+keys:
+	check:
+		dd, yy, cc
+	s
+	R - multi-char replacement
 
 motions:
-	{
+	%
+	n, N
 	[[
 	i:
 		iw
 		i{
 
-:! / cmd parsing
-save-check  on :q/e
-exist-check on :w
+cmds:
+	:! / cmd parsing
+	save-check  on :q/e
+	exist-check on :w
+	:e - limit cursor to (x, max_lines) when loading a new file
