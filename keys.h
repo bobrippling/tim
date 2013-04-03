@@ -39,5 +39,6 @@ key_func k_open;
 key_func k_del;
 key_func k_motion;
 key_func k_replace;
+key_func k_case;
 
 #endif

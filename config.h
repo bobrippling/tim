@@ -70,6 +70,10 @@ const ikey_t keys[] = {
 	INS_KEY('o'),
 	INS_KEY('O'),
 
+	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL },
+/*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL },*/
+/*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL },*/
+
 	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL }, /* k_set_mode instead? */
 
 	{ CTRL_AND('l'),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL },
