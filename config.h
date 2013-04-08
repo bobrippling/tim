@@ -58,7 +58,11 @@ const ikey_t keys[] = {
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
 	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
 
+	/* TODO: C = c$, D = d$ */
 	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
+	{ 'c',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
+	{ 'c',            k_set_mode,   { UI_INSERT }, UI_NORMAL },
+	/* FIXME: only if the previous succeeds, i.e. not c^[ */
 
 	{ 'r',            k_replace,    { 0 },         UI_NORMAL },
 	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL },
