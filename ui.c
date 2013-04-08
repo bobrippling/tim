@@ -65,14 +65,15 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		int first_ch = nc_getch();
+		const int first_ch = nc_getch();
 		motion_repeat mr = MOTION_REPEAT();
 
 		int found = 0;
 
 		if(ui_mode == UI_NORMAL){
 			int skip = 0;
-			while(motion_repeat_read(&mr, &first_ch, skip))
+			int ch = first_ch;
+			while(motion_repeat_read(&mr, &ch, skip))
 				skip++, motion_apply_buf(&mr, buffers_cur());
 
 			found = skip > 0;
