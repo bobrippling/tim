@@ -79,7 +79,7 @@ void ui_main()
 		}
 
 		for(int i = 0; keys[i].ch; i++)
-			if(keys[i].mode & ui_mode && keys[i].ch == first_ch){
+			if(keys[i].mode == ui_mode && keys[i].ch == first_ch){
 				keys[i].func(&keys[i].arg, mr.repeat, first_ch);
 				found = 1;
 			}

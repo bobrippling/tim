@@ -53,7 +53,7 @@ const ikey_t keys[] = {
 	/* order is important */
 	/* char, func, arg, mode */
 	{ '\033',         k_motion,     { .motion = { m_move, .arg.pos = { -1, 0 }}}, UI_INSERT },
-	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_NORMAL | UI_INSERT },
+	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_INSERT },
 
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
 	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
