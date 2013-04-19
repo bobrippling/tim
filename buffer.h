@@ -40,6 +40,8 @@ void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
 void buffer_delbetween(buffer_t *buf,
 		point_t const *from, point_t const *to, int linewise);
+void buffer_joinbetween(buffer_t *buf,
+		point_t const *from, point_t const *to, int linewise);
 
 void buffer_replace_chars(buffer_t *, int ch, unsigned n);
 

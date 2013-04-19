@@ -294,7 +294,9 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 	motion_apply_buf(&mr, buffers_cur());
 }
 
-void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
+static void around_motion(
+		const keyarg_u *a, unsigned repeat, const int from_ch,
+		void action(buffer_t *, point_t const *, point_t const *, int))
 {
 	int ch = nc_getch(), fallback = 0;
 	motion_repeat mr = { 0, 0 };
@@ -336,11 +338,21 @@ void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(!(mr.motion->how & M_EXCLUSIVE))
 			mr.motion->how & M_LINEWISE ? ++to.y : ++to.x;
 
-		buffer_delbetween(b, &from, &to, mr.motion->how & M_LINEWISE);
+		action(b, &from, &to, mr.motion->how & M_LINEWISE);
 
 		b->ui_pos = from;
 
 		ui_redraw();
 		ui_cur_changed();
 	}
+}
+
+void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	around_motion(a, repeat, from_ch, buffer_delbetween);
+}
+
+void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	around_motion(a, repeat, from_ch, buffer_joinbetween);
 }

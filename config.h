@@ -64,6 +64,8 @@ const ikey_t keys[] = {
 	{ 'c',            k_set_mode,   { UI_INSERT }, UI_NORMAL },
 	/* FIXME: only if the previous succeeds, i.e. not c^[ */
 
+	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL },
+
 	{ 'r',            k_replace,    { 0 },         UI_NORMAL },
 	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL },
 

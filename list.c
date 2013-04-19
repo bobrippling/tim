@@ -263,6 +263,43 @@ void list_delbetween(list_t **pl,
 	}
 }
 
+void list_joinbetween(list_t **pl,
+		point_t const *from, point_t const *to,
+		int linewise)
+{
+	if(from->y == to->y)
+		return;
+
+	assert(from->y < to->y);
+
+	list_t *l, *start = list_seek(*pl, from->y, 0);
+	int i;
+
+	for(l = start->next, i = from->y + 1;
+			l && i < to->y;
+			l = l->next, i++)
+	{
+		if(!l->line)
+			continue;
+
+		const size_t orig = start->len_line;
+		const size_t target = start->len_line + l->len_line + 1;
+
+		if(start->len_malloc < target)
+			start->len_malloc = target;
+
+		start->line = urealloc(
+				start->line,
+				start->len_malloc);
+
+		memcpy(start->line + orig, l->line, l->len_line + 1 /* copy the nul */);
+		start->len_line = target - 1;
+	}
+
+	if(i > from->y)
+		list_dellines(&start->next, start, i - from->y);
+}
+
 void list_insline(list_t **pl, int *x, int *y, int dir)
 {
 	list_t *l, *save;

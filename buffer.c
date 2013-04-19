@@ -123,6 +123,12 @@ void buffer_delbetween(buffer_t *buf,
 	list_delbetween(&buf->head, from, to, linewise);
 }
 
+void buffer_joinbetween(buffer_t *buf,
+		point_t const *from, point_t const *to, int linewise)
+{
+	list_joinbetween(&buf->head, from, to, linewise);
+}
+
 void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 {
 	char *with = umalloc(n + 1);
