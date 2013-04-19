@@ -17,11 +17,13 @@ cmds.o: cmds.c cmds.h ui.h pos.h list.h buffer.h buffers.h external.h \
  mem.h
 external.o: external.c mem.h ui.h external.h
 keys.o: keys.c pos.h list.h buffer.h ui.h motion.h keys.h ncurses.h mem.h \
- cmds.h buffers.h config.h
-list.o: list.c pos.h list.h mem.h
+ cmds.h prompt.h buffers.h config.h
+list.o: list.c pos.h list.h mem.h str.h
 main.o: main.c ui.h pos.h list.h buffer.h buffers.h
 mem.o: mem.c mem.h
-motion.o: motion.c pos.h list.h buffer.h motion.h ui.h ncurses.h str.h
+motion.o: motion.c pos.h list.h buffer.h motion.h ui.h ncurses.h str.h \
+ prompt.h
 ncurses.o: ncurses.c ncurses.h
+prompt.o: prompt.c prompt.h ncurses.h mem.h
 str.o: str.c str.h
 ui.o: ui.c pos.h ui.h ncurses.h list.h buffer.h motion.h keys.h buffers.h

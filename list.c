@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 
 #include "pos.h"
 #include "list.h"
 #include "mem.h"
+#include "str.h"
 
 list_t *list_new(list_t *prev)
 {
@@ -275,6 +277,9 @@ void list_joinbetween(list_t **pl,
 	list_t *l, *start = list_seek(*pl, from->y, 0);
 	int i;
 
+	if(start->line)
+		str_rtrim(start->line, &start->len_line);
+
 	for(l = start->next, i = from->y + 1;
 			l && i < to->y;
 			l = l->next, i++)
@@ -282,8 +287,10 @@ void list_joinbetween(list_t **pl,
 		if(!l->line)
 			continue;
 
-		const size_t orig = start->len_line;
-		const size_t target = start->len_line + l->len_line + 1;
+		str_ltrim(l->line, &l->len_line);
+
+		/* + 1 for \0, +1 for ' ' */
+		const size_t target = start->len_line + l->len_line + 2;
 
 		if(start->len_malloc < target)
 			start->len_malloc = target;
@@ -292,8 +299,13 @@ void list_joinbetween(list_t **pl,
 				start->line,
 				start->len_malloc);
 
-		memcpy(start->line + orig, l->line, l->len_line + 1 /* copy the nul */);
-		start->len_line = target - 1;
+		start->line[start->len_line++] = ' ';
+
+		memcpy(start->line + start->len_line,
+				l->line,
+				l->len_line);
+
+		start->len_line += l->len_line;
 	}
 
 	if(i > from->y)
