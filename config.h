@@ -60,9 +60,7 @@ const ikey_t keys[] = {
 
 	/* TODO: C = c$, D = d$ */
 	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
-	{ 'c',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
-	{ 'c',            k_set_mode,   { UI_INSERT }, UI_NORMAL },
-	/* FIXME: only if the previous succeeds, i.e. not c^[ */
+	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL },
 
 	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL },
 

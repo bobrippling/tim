@@ -294,7 +294,7 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 	motion_apply_buf(&mr, buffers_cur());
 }
 
-static void around_motion(
+static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
 		void action(buffer_t *, point_t const *, point_t const *, int))
 {
@@ -320,7 +320,7 @@ static void around_motion(
 		}
 
 		if(!motion_apply_buf_dry(&mr, b, &to))
-			return;
+			return 0;
 
 		from = b->ui_pos;
 
@@ -344,12 +344,22 @@ static void around_motion(
 
 		ui_redraw();
 		ui_cur_changed();
+
+		return 1;
 	}
+
+	return 0;
 }
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion(a, repeat, from_ch, buffer_delbetween);
+}
+
+void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	if(around_motion(a, repeat, from_ch, buffer_delbetween))
+		k_set_mode(&(keyarg_u){ UI_INSERT }, 0, 0);
 }
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
