@@ -40,5 +40,6 @@ key_func k_del, k_change;
 key_func k_motion;
 key_func k_replace;
 key_func k_join;
+key_func k_indent;
 
 #endif

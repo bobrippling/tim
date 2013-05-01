@@ -64,6 +64,9 @@ const ikey_t keys[] = {
 
 	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL },
 
+	{ '>',            k_indent,     { +1 },  UI_NORMAL },
+	{ '<',            k_indent,     { -1 },  UI_NORMAL },
+
 	{ 'r',            k_replace,    { 0 },         UI_NORMAL },
 	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL },
 

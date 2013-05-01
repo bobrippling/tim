@@ -366,3 +366,9 @@ void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion(a, repeat, from_ch, buffer_joinbetween);
 }
+
+void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	around_motion(a, repeat, from_ch,
+			a->i > 0 ? buffer_indent : buffer_unindent);
+}

@@ -8,6 +8,8 @@
 #include "buffer.h"
 #include "mem.h"
 
+#define TODO() fprintf(stderr, "TODO! %s\n", __func__)
+
 void buffer_free(buffer_t *b)
 {
 	list_free(b->head);
@@ -127,6 +129,19 @@ void buffer_joinbetween(buffer_t *buf,
 		point_t const *from, point_t const *to, int linewise)
 {
 	list_joinbetween(&buf->head, from, to);
+}
+
+/* TODO: buffer_foreach_line(buf, from, to, ^{ indent/unindent }) */
+void buffer_indent(buffer_t *buf,
+		point_t const *from, point_t const *to, int linewise)
+{
+	TODO();
+}
+
+void buffer_unindent(buffer_t *buf,
+		point_t const *from, point_t const *to, int linewise)
+{
+	TODO();
 }
 
 void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)

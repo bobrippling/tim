@@ -41,7 +41,9 @@ void buffer_delchar(buffer_t *, int *x, int *y);
 
 typedef void buffer_action(buffer_t *, point_t const *, point_t const *, int);
 buffer_action buffer_delbetween,
-              buffer_joinbetween;
+              buffer_joinbetween,
+              buffer_indent,
+              buffer_unindent;
 
 void buffer_replace_chars(buffer_t *, int ch, unsigned n);
 
