@@ -126,7 +126,7 @@ void buffer_delbetween(buffer_t *buf,
 void buffer_joinbetween(buffer_t *buf,
 		point_t const *from, point_t const *to, int linewise)
 {
-	list_joinbetween(&buf->head, from, to, linewise);
+	list_joinbetween(&buf->head, from, to);
 }
 
 void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)

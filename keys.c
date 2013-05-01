@@ -296,7 +296,7 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
-		void action(buffer_t *, point_t const *, point_t const *, int))
+		buffer_action *action)
 {
 	int ch = nc_getch(), fallback = 0;
 	motion_repeat mr = { 0, 0 };

@@ -27,8 +27,7 @@ void    list_delbetween(list_t **pl,
 
 void    list_joinbetween(list_t **pl,
                         point_t const *from,
-                        point_t const *to,
-                        int linewise);
+                        point_t const *to);
 
 void    list_replace_at(list_t *, int *px, int *py, char *with);
 
