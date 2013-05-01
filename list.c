@@ -99,6 +99,46 @@ list_t *list_seek(list_t *l, int y, int creat)
 	return p ? *p : NULL;
 }
 
+static int list_evalnewlines(list_t *l)
+{
+	if(l->len_line == 0)
+		return 0;
+
+	int r = 0;
+	for(size_t i = l->len_line - 1; ; i--){
+		char ch = l->line[i];
+
+		if(ch == '\n' || ch == '\r'){
+			int cut_len = l->len_line - i;
+			char *cut;
+			if(cut_len > 0){
+				cut = umalloc(cut_len);
+				memcpy(cut, l->line + i + 1, cut_len);
+			}else{
+				cut = NULL;
+				cut_len = 0;
+			}
+
+			l->len_line = i;
+
+			/* insert a line after */
+			list_insline(&l, &(int){0}, &(int){0}, 1);
+
+			list_t *nl = l->next;
+			nl->line = cut;
+			nl->len_malloc = cut_len;
+			nl->len_line = cut_len - 1;
+
+			r = 1; /* we replaced */
+		}
+
+		if(i == 0)
+			break;
+	}
+
+	return r;
+}
+
 void list_inschar(list_t **pl, int *x, int *y, char ch)
 {
 	list_t *l;
@@ -124,40 +164,12 @@ void list_inschar(list_t **pl, int *x, int *y, char ch)
 		memmove(l->line + *x + 1, l->line + *x, l->len_malloc - *x - 1);
 	}
 
-	if(ch == '\n' || ch == '\r'){
-		char *cut;
-		int cut_len;
-
-		if(l->line){
-			cut_len = l->len_line - *x;
-
-			if(cut_len > 0){
-				cut = umalloc(cut_len);
-				memcpy(cut, l->line + *x + 1, cut_len);
-			}else{
-				cut = NULL;
-				cut_len = 0;
-			}
-
-			l->len_line = *x;
-		}else{
-			cut = NULL;
-			cut_len = 0;
-		}
-
-		/* insert a line after */
-		list_insline(&l, &(int){0}, &(int){0}, 1);
-
-		l = l->next;
-		l->line = cut;
-		l->len_malloc = l->len_line = cut_len;
-
+	l->line[*x] = ch;
+	l->len_line++;
+	if(list_evalnewlines(l)){
 		*x = 0;
 		++*y;
-
 	}else{
-		l->line[*x] = ch;
-		l->len_line++;
 		++*x;
 	}
 }
@@ -341,9 +353,9 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	++*y;
 }
 
-void list_replace_at(list_t *l, int *px, int y, char *with)
+void list_replace_at(list_t *l, int *px, int *py, char *with)
 {
-	l = list_seek(l, y, 1);
+	l = list_seek(l, *py, 1);
 
 	const int with_len = strlen(with);
 	int x = *px;
@@ -358,7 +370,13 @@ void list_replace_at(list_t *l, int *px, int y, char *with)
 	char *p = l->line + x;
 	memcpy(p, with, with_len);
 
-	*px += with_len - 1;
+	/* convert r\n to newlines */
+	if(list_evalnewlines(l)){
+		*px = 0;
+		++*py;
+	}else{
+		*px += with_len - 1;
+	}
 }
 
 int list_count(list_t *l)

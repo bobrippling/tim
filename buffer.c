@@ -137,7 +137,7 @@ void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 	with[n] = '\0';
 
 	list_replace_at(buf->head,
-			&buf->ui_pos.x, buf->ui_pos.y,
+			&buf->ui_pos.x, &buf->ui_pos.y,
 			with);
 
 	free(with);

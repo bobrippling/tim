@@ -30,7 +30,7 @@ void    list_joinbetween(list_t **pl,
                         point_t const *to,
                         int linewise);
 
-void    list_replace_at(list_t *, int *px, int y, char *with);
+void    list_replace_at(list_t *, int *px, int *py, char *with);
 
 void    list_insline(list_t **, int *x, int *y, int dir);
 
