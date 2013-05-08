@@ -51,9 +51,9 @@ void nc_term()
 	endwin();
 }
 
-void nc_cls()
+void nc_clearall()
 {
-	erase();
+	clear();
 }
 
 void nc_vstatus(const char *fmt, va_list l)

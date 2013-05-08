@@ -239,3 +239,8 @@ void ui_redraw()
 
 	nc_set_yx(save_y, save_x);
 }
+
+void ui_clear(void)
+{
+	nc_clearall();
+}

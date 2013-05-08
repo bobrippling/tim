@@ -5,7 +5,7 @@
 
 void nc_init(void);
 void nc_term(void);
-void nc_cls(void);
+void nc_clearall(void);
 
 int nc_getch(void);
 void nc_addch(char);

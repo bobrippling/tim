@@ -19,6 +19,7 @@ void ui_term(void);
 
 void ui_redraw(void);
 void ui_cur_changed(void);
+void ui_clear(void); /* full clear, for ^L */
 
 void ui_status(const char *fmt, ...) tim_printf(1, 2);
 

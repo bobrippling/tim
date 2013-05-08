@@ -190,6 +190,7 @@ cancel:
 void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	(void)a;
+	ui_clear();
 	ui_redraw();
 }
 
