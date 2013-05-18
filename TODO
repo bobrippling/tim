@@ -12,6 +12,7 @@ keys:
 		dd, yy, cc
 	s
 	R - multi-char replacement
+	k_format, k_paste, k_undo, k_yank
 
 motions:
 	%
