@@ -26,6 +26,10 @@ void list_joinregion(list_t **pl, const region_t *);
 
 void list_replace_at(list_t *, int *px, int *py, char *with);
 
+int list_filter(
+		list_t **pl, const region_t *,
+		const char *cmd);
+
 void list_insline(list_t **, int *x, int *y, int dir);
 
 int list_count(list_t *);

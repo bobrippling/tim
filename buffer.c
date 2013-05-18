@@ -157,6 +157,13 @@ void buffer_joinregion(buffer_t *buf, const region_t *region, point_t *out)
 		out->x = mid;
 }
 
+int buffer_filter(
+		buffer_t *buf, const region_t *reg,
+		const char *cmd)
+{
+	return list_filter(&buf->head, reg, cmd);
+}
+
 /* TODO: buffer_foreach_line(buf, from, to, ^{ indent/unindent }) */
 void buffer_indent(buffer_t *buf, const region_t *region, point_t *out)
 {

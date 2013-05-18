@@ -82,6 +82,11 @@ buffer_action buffer_delregion,
               buffer_indent,
               buffer_unindent;
 
+int buffer_filter(
+		buffer_t *,
+		const region_t *,
+		const char *cmd);
+
 void buffer_replace_chars(buffer_t *, int ch, unsigned n);
 
 void buffer_insline(buffer_t *, int dir);

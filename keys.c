@@ -301,9 +301,21 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 	motion_apply_buf(&a->motion.m, a->motion.repeat, buffers_cur());
 }
 
+typedef union
+{
+	const char *s;
+	buffer_action *f;
+} key_action_u;
+
+typedef void motion_action(
+		buffer_t *, region_t *region,
+		point_t *out,
+		const key_action_u *);
+
 static int around_motion(
-		const keyarg_u *a, unsigned repeat, const int from_ch,
-		buffer_action *action, region_t *used_region)
+		unsigned repeat, const int from_ch,
+		region_t *used_region,
+		motion_action *action, const key_action_u *u)
 {
 	motion m_doubletap = {
 		.func = m_move,
@@ -363,7 +375,7 @@ static int around_motion(
 
 		/* reset cursor to beginning, then allow adjustments */
 		*b->ui_pos = r.begin;
-		action(b, &r, b->ui_pos);
+		action(b, &r, b->ui_pos, u);
 
 		ui_set_bufmode(UI_NORMAL);
 
@@ -376,36 +388,67 @@ static int around_motion(
 	return 0;
 }
 
+static void forward_buffer(
+		buffer_t *buf, region_t *region,
+		point_t *out,
+		const key_action_u *ku)
+{
+	ku->f(buf, region, out);
+}
+
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_delregion, NULL);
+	around_motion(repeat, from_ch,
+			NULL, forward_buffer,
+			&(key_action_u){ .f = buffer_delregion });
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	region_t r;
 
-	if(around_motion(a, repeat, from_ch, buffer_delregion, &r)){
+	if(around_motion(repeat, from_ch,
+				&r, forward_buffer,
+				&(key_action_u){ .f = buffer_delregion }))
+	{
 		buffer_t *buf = buffers_cur();
 		buf->col_insert_height = r.end.y - r.begin.y + 1;
-
 		ui_set_bufmode(r.type == REGION_COL ? UI_INSERT_COL : UI_INSERT);
 	}
 }
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_joinregion, NULL);
+	around_motion(repeat, from_ch,
+			NULL, forward_buffer,
+			&(key_action_u){ .f = buffer_joinregion});
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch,
-			a->i > 0 ? buffer_indent : buffer_unindent, NULL);
+	around_motion(repeat, from_ch,
+			NULL, forward_buffer,
+			&(key_action_u){ .f = buffer_indent});
 }
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_togglev(buffers_cur());
 	ui_cur_changed();
+}
+
+static void filter(
+		buffer_t *buf,
+		region_t *region,
+		point_t *out,
+		const key_action_u *ku)
+{
+	/* filter range through `ku->cmd` */
+	if(buffer_filter(buf, region, ku->s))
+		ui_status("filter: %s", strerror(errno));
+}
+
+void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	around_motion(repeat, from_ch, NULL, filter, &(key_action_u){ .s = a->s });
 }
