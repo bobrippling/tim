@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <wordexp.h>
+#include <errno.h>
 
 #include "pos.h"
 #include "region.h"
