@@ -13,13 +13,13 @@ union keyarg_u
 	point_t pos;
 };
 
-typedef struct ikey_t
+typedef struct nkey_t
 {
 	char ch;
 	key_func *func;
 	keyarg_u arg;
 	enum ui_mode mode;
-} ikey_t;
+} nkey_t;
 
 typedef struct motionkey_t
 {

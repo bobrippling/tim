@@ -59,7 +59,7 @@ void ui_inschar(char ch)
 
 void ui_main()
 {
-	extern ikey_t keys[];
+	extern nkey_t nkeys[];
 
 	ui_redraw(); /* this first, to frame buf_sel */
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
@@ -79,9 +79,9 @@ void ui_main()
 			found = skip > 0;
 		}
 
-		for(int i = 0; keys[i].ch; i++)
-			if(keys[i].mode == ui_mode && keys[i].ch == first_ch){
-				keys[i].func(&keys[i].arg, mr.repeat, first_ch);
+		for(int i = 0; nkeys[i].ch; i++)
+			if(nkeys[i].mode == ui_mode && nkeys[i].ch == first_ch){
+				nkeys[i].func(&nkeys[i].arg, mr.repeat, first_ch);
 				found = 1;
 			}
 

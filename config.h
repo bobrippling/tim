@@ -49,7 +49,7 @@ const motionkey_t motion_keys[] = {
 #define INS_KEY(k) \
 	{ k, k_set_mode, { UI_INSERT }, UI_NORMAL }
 
-const ikey_t keys[] = {
+const nkey_t nkeys[] = {
 	/* order is important */
 	/* char, func, arg, mode */
 	{ '\033',         k_motion,     { .motion = { m_move, .arg.pos = { -1, 0 }}}, UI_INSERT },
