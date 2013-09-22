@@ -288,6 +288,9 @@ void list_joinbetween(list_t **pl,
 	list_t *l, *start = list_seek(*pl, from->y, 0);
 	int i;
 
+	if(!start)
+		return;
+
 	if(start->line)
 		str_rtrim(start->line, &start->len_line);
 
