@@ -14,6 +14,9 @@ const motionkey_t motion_keys[] = {
 	{ 'A',            { m_eol,  MOTION_ARG_NONE, M_LINEWISE } },
 	{ 'A',            { m_move, { .pos = { 1, 0 } }, M_LINEWISE } },
 
+	{ 'w',            { m_word, {  1 }, M_EXCLUSIVE } },
+	{ 'b',            { m_word, { -1 }, M_EXCLUSIVE } },
+
 	{ 'j',            { m_move, { .pos = {  0,  1 } }, M_LINEWISE } },
 	{ 'k',            { m_move, { .pos = {  0, -1 } }, M_LINEWISE } },
 	{ 'h',            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },

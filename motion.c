@@ -134,6 +134,57 @@ limit:
 	return MOTION_SUCCESS;
 }
 
+static int word_state(const list_t *l, int x)
+{
+	return l && (unsigned)x < l->len_line
+		? isalnum(l->line[x])
+		: /* not-a-word */0;
+}
+
+static int m_word1(const int dir, const buffer_t *buf, point_t *to)
+{
+	list_t *l = buffer_current_line(buf);
+
+	const int state_1 = word_state(l, to->x);
+
+	/* skip until the state changes */
+	for(;;){
+		if(!l)
+			return MOTION_FAILURE;
+
+		to->x += dir;
+
+		/* bounds check */
+		if(dir > 0 ? (unsigned)to->x >= l->len_line : to->x < 0){
+			to->y += dir;
+			if(dir < 0){
+				if(to->y < 0)
+					return MOTION_FAILURE;
+
+				l = l->prev;
+				to->x = l->len_line ? l->len_line - 1 : 0;
+			}else{
+				l = l->next;
+				to->x = 0;
+			}
+		}
+
+		if(word_state(l, to->x) != state_1)
+			return MOTION_SUCCESS;
+	}
+}
+
+int m_word(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
+{
+	const int dir = m->i;
+
+	for(repeat = DEFAULT_REPEAT(repeat); repeat > 0; repeat--)
+		if(m_word1(dir, buf, to) == MOTION_FAILURE)
+			return MOTION_FAILURE;
+
+	return MOTION_SUCCESS;
+}
+
 static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
