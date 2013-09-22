@@ -7,6 +7,7 @@
 #include "list.h"
 #include "buffer.h"
 #include "mem.h"
+#include "yank.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
@@ -123,7 +124,21 @@ void buffer_delbetween(buffer_t *buf,
 		int linewise)
 {
 	list_t *del = list_delbetween(&buf->head, from, to, linewise);
-	// TODO: save del
+
+	yank_push(del);
+}
+
+void buffer_inslist(buffer_t *buf, list_t *l)
+{
+	list_t *bl = buffer_current_line(buf);
+
+	list_t *tail = list_tail(l);
+
+	tail->next = bl->next;
+	tail->next->prev = tail;
+
+	bl->next = l;
+	l->prev = bl;
 }
 
 void buffer_joinbetween(buffer_t *buf,

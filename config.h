@@ -65,6 +65,9 @@ const nkey_t nkeys[] = {
 	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
 	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL },
 
+	{ 'p',            k_put, KEY_ARG_NONE, UI_NORMAL },
+	/* TODO: P */
+
 	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL },
 
 	{ '>',            k_indent,     { +1 },  UI_NORMAL },

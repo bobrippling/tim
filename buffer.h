@@ -49,6 +49,8 @@ buffer_action buffer_delbetween,
               buffer_indent,
               buffer_unindent;
 
+void buffer_inslist(buffer_t *, list_t *);
+
 void buffer_replace_chars(buffer_t *, int ch, unsigned n);
 
 void buffer_insline(buffer_t *, int dir);

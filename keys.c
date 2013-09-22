@@ -8,6 +8,7 @@
 #include "pos.h"
 #include "list.h"
 #include "buffer.h"
+#include "yank.h"
 
 #include "ui.h"
 #include "motion.h"
@@ -372,4 +373,11 @@ void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion(a, repeat, from_ch,
 			a->i > 0 ? buffer_indent : buffer_unindent);
+}
+
+void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	list_t *yank = yank_top();
+
+	buffer_inslist(buffers_cur(), yank);
 }
