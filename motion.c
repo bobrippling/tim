@@ -134,18 +134,38 @@ limit:
 	return MOTION_SUCCESS;
 }
 
-static int word_state(const list_t *l, int x)
+enum word_state
 {
-	return l && (unsigned)x < l->len_line
-		? isalnum(l->line[x])
-		: /* not-a-word */0;
+	W_WORD, W_PUNCT, W_SPACE, W_NONE
+};
+
+static enum word_state word_state(const list_t *l, int x)
+{
+	if(l && (unsigned)x < l->len_line){
+		const char ch = l->line[x];
+
+		if(isspace(ch))
+			return W_SPACE;
+		else if(isalnum(ch) || ch == '_')
+			return W_WORD;
+		else if(ispunct(ch))
+			return W_PUNCT;
+	}
+
+	return W_NONE;
+}
+
+static int word_state_eq(enum word_state a, enum word_state b)
+{
+	/* treat punct and space as equal for moving around */
+	return (a == W_WORD) == (b == W_WORD);
 }
 
 static int m_word1(const int dir, const buffer_t *buf, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
 
-	const int state_1 = word_state(l, to->x);
+	const enum word_state state_1 = word_state(l, to->x);
 
 	/* skip until the state changes */
 	for(;;){
