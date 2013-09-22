@@ -190,15 +190,15 @@ void list_delchar(list_t *l, int *x, int *y)
 }
 
 static
-void list_dellines(list_t **pl, list_t *prev, unsigned n)
+list_t *list_dellines(list_t **pl, list_t *prev, unsigned n)
 {
 	if(n == 0)
-		return;
+		return NULL;
 
 	list_t *l = *pl;
 
 	if(!l)
-		return;
+		return NULL;
 
 	if(n == 1){
 		list_t *adv = l->next;
@@ -221,10 +221,29 @@ void list_dellines(list_t **pl, list_t *prev, unsigned n)
 	if(*pl)
 		(*pl)->prev = prev;
 
-	list_free(l);
+	return l;
 }
 
-void list_delbetween(list_t **pl,
+list_t *list_tail(list_t *l)
+{
+	for(; l->next; l = l->next);
+	return l;
+}
+
+static list_t *list_append(list_t *accum, list_t *new)
+{
+	if(!accum)
+		return new;
+
+	list_t *last = list_tail(accum);
+
+	last->next = new;
+	new->prev = last;
+
+	return accum;
+}
+
+list_t *list_delbetween(list_t **pl,
 		point_t const *from, point_t const *to,
 		int linewise)
 {
@@ -233,17 +252,21 @@ void list_delbetween(list_t **pl,
 
 	list_t **seeked = list_seekp(pl, from->y, 0);
 
+	list_t *deleted = NULL;
+
 	if(!seeked || !*seeked)
-		return;
+		return deleted;
 
 	if(linewise){
-		list_dellines(seeked, (*seeked)->prev, to->y - from->y + 1);
+		deleted = list_dellines(seeked, (*seeked)->prev, to->y - from->y + 1);
 	}else{
 		list_t *l = *seeked;
 		size_t line_change = to->y - from->y;
 
 		if(line_change > 1)
-			list_dellines(&l->next, l, line_change);
+			deleted = list_append(
+					deleted,
+					list_dellines(&l->next, l, line_change));
 
 		if(line_change > 0){
 			/* join the lines */
@@ -259,13 +282,22 @@ void list_delbetween(list_t **pl,
 					nextlen);
 			l->len_line = fulllen;
 
-			list_dellines(&l->next, l, 1);
+			deleted = list_append(
+					deleted,
+					list_dellines(&l->next, l, 1));
 
 		}else{
 			if(!l->len_line || (unsigned)to->x > l->len_line)
-				return;
+				return deleted;
 
 			size_t diff = to->x - from->x;
+
+			{
+				size_t delamt = l->len_line - from->x - 1;
+				list_t *part = list_new(deleted);
+				part->line = umalloc(delamt + 1);
+				memcpy(part->line, l->line + from->x, delamt);
+			}
 
 			memmove(
 					l->line + from->x,
@@ -275,6 +307,8 @@ void list_delbetween(list_t **pl,
 			l->len_line -= diff;
 		}
 	}
+
+	return deleted;
 }
 
 void list_joinbetween(list_t **pl,

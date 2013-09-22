@@ -122,7 +122,8 @@ void buffer_delbetween(buffer_t *buf,
 		point_t *from, point_t const *to,
 		int linewise)
 {
-	list_delbetween(&buf->head, from, to, linewise);
+	list_t *del = list_delbetween(&buf->head, from, to, linewise);
+	// TODO: save del
 }
 
 void buffer_joinbetween(buffer_t *buf,
