@@ -189,8 +189,15 @@ static int m_word1(const int dir, const buffer_t *buf, point_t *to)
 			}
 		}
 
-		if(word_state(l, to->x) != state_1)
+		if(!word_state_eq(word_state(l, to->x), state_1)){
+			if(dir < 0){
+				enum word_state st = word_state(l, to->x);
+				while(to->x > 0 && word_state(l, to->x - 1) == st)
+					to->x--;
+			}
+
 			return MOTION_SUCCESS;
+		}
 	}
 }
 
