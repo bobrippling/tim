@@ -119,27 +119,33 @@ void buffer_delchar(buffer_t *buf, int *x, int *y)
 }
 
 void buffer_delbetween(buffer_t *buf,
-		point_t const *from, point_t const *to,
+		point_t *from, point_t const *to,
 		int linewise)
 {
 	list_delbetween(&buf->head, from, to, linewise);
 }
 
 void buffer_joinbetween(buffer_t *buf,
-		point_t const *from, point_t const *to, int linewise)
+		point_t *from, point_t const *to, int linewise)
 {
+	list_t *l = list_seek(buf->head, from->y, 0);
+	const int mid = l ? l->len_line : 0;
+
 	list_joinbetween(&buf->head, from, to);
+
+	if(l)
+		from->x = mid;
 }
 
 /* TODO: buffer_foreach_line(buf, from, to, ^{ indent/unindent }) */
 void buffer_indent(buffer_t *buf,
-		point_t const *from, point_t const *to, int linewise)
+		point_t *from, point_t const *to, int linewise)
 {
 	TODO();
 }
 
 void buffer_unindent(buffer_t *buf,
-		point_t const *from, point_t const *to, int linewise)
+		point_t *from, point_t const *to, int linewise)
 {
 	TODO();
 }

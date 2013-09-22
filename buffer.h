@@ -39,7 +39,11 @@ const char *buffer_fname(const buffer_t *);
 void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
 
-typedef void buffer_action(buffer_t *, point_t const *, point_t const *, int);
+typedef void buffer_action(
+		buffer_t *,
+		point_t *,
+		point_t const *, int);
+
 buffer_action buffer_delbetween,
               buffer_joinbetween,
               buffer_indent,
