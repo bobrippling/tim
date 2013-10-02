@@ -42,7 +42,8 @@ void buffer_delchar(buffer_t *, int *x, int *y);
 typedef void buffer_action(
 		buffer_t *,
 		point_t *,
-		point_t const *, int);
+		point_t const *,
+		int linewise);
 
 buffer_action buffer_delbetween,
               buffer_joinbetween,
