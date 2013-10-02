@@ -46,7 +46,7 @@ const motionkey_t motion_keys[] = {
 	{ '/',            { m_search, { 0               }, M_EXCLUSIVE } },
 	{ '?',            { m_search, { 1 /* reverse */ }, M_EXCLUSIVE } },
 
-	{ 0, { 0, MOTION_ARG_NONE, M_NONE } }
+	{ 0 }
 };
 
 #define INS_KEY(k) \
@@ -92,7 +92,7 @@ const nkey_t nkeys[] = {
 	{ CTRL_AND('g'),  k_show,       KEY_ARG_NONE,             UI_NORMAL },
 
 
-	{ 0, NULL, KEY_ARG_NONE, UI_NORMAL }
+	{ 0 }
 };
 
 const cmd_t cmds[] = {
@@ -108,7 +108,7 @@ const cmd_t cmds[] = {
 
 	{ "!",   c_run   },
 
-	{ NULL, NULL },
+	{ NULL }
 };
 
 #endif
