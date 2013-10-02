@@ -163,8 +163,13 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 
 	buf->screen_coord = *r;
 
-	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0); l && y < r->h; l = l->next, y++){
-		const int lim = l->len_line < (unsigned)r->w ? l->len_line : (unsigned)r->w;
+	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0);
+			l && y < r->h;
+			l = l->next, y++)
+	{
+		const int lim = l->len_line < (unsigned)r->w
+			? l->len_line
+			: (unsigned)r->w;
 		int i;
 
 		nc_set_yx(r->y + y, r->x);
