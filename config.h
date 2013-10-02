@@ -5,15 +5,6 @@
 #define MOTION_ARG_NONE     { 0 }
 
 const motionkey_t motion_keys[] = {
-	/* FIXME: insert motions only in insert mode */
-	{ 'I',            { m_sol,  MOTION_ARG_NONE, M_LINEWISE } },
-
-	{ 'a',            { m_move, { .pos = { 1, 0 } }, M_LINEWISE } },
-
-	/* A -> eol, then move right by 1 */
-	{ 'A',            { m_eol,  MOTION_ARG_NONE, M_LINEWISE } },
-	{ 'A',            { m_move, { .pos = { 1, 0 } }, M_LINEWISE } },
-
 	{ 'w',            { m_word, {  1 }, M_EXCLUSIVE } },
 	{ 'b',            { m_word, { -1 }, M_EXCLUSIVE } },
 
@@ -58,10 +49,11 @@ const nkey_t nkeys[] = {
 	{ '\033',         k_motion,     { .motion = { m_move, .arg.pos = { -1, 0 }}}, UI_INSERT },
 	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_INSERT },
 
+	{ 'i',            k_set_mode,   { UI_INSERT }, UI_NORMAL },
+
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
 	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
 
-	/* TODO: C = c$, D = d$ */
 	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
 	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL },
 
@@ -72,13 +64,6 @@ const nkey_t nkeys[] = {
 
 	{ 'r',            k_replace,    { 0 },         UI_NORMAL },
 	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL },
-
-	INS_KEY('i'),
-	INS_KEY('I'),
-	INS_KEY('a'),
-	INS_KEY('A'),
-	INS_KEY('o'),
-	INS_KEY('O'),
 
 	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL }, /* k_set_mode instead? */
 
@@ -91,6 +76,16 @@ const nkey_t nkeys[] = {
 
 	{ CTRL_AND('g'),  k_show,       KEY_ARG_NONE,             UI_NORMAL },
 
+
+	{ 0 }
+};
+
+const keymap_t maps[] = {
+	{ 'I', "^i" },
+	{ 'a', "li" },
+	{ 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
+	{ 'C', "c$" },
+	{ 'D', "d$" },
 
 	{ 0 }
 };

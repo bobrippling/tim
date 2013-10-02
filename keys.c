@@ -16,6 +16,8 @@
 #include "mem.h"
 #include "cmds.h"
 #include "prompt.h"
+#include "map.h"
+#include "io.h"
 
 #include "buffers.h"
 
@@ -52,7 +54,7 @@ int motion_repeat_read(motion_repeat *mr, int *pch, int skip)
 
 		while('0' <= ch && ch <= '9'){
 			mr->repeat = mr->repeat * 10 + ch - '0',
-			ch = nc_getch();
+			ch = io_getch(IO_NOMAP);
 			this_repeat = 1;
 		}
 		*pch = ch;
@@ -273,7 +275,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		// TODO: repeated
 	}else{
 		/* single char */
-		int ch = nc_getch();
+		int ch = io_getch(IO_NOMAP);
 
 		if(ch == '\033')
 			return;
@@ -299,7 +301,7 @@ static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
 		buffer_action *action)
 {
-	int ch = nc_getch(), fallback = 0;
+	int ch = io_getch(IO_NOMAP), fallback = 0;
 	motion_repeat mr = { 0, 0 };
 
 	if(motion_repeat_read(&mr, &ch, 0) || (fallback = ch == from_ch)){

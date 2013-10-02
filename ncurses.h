@@ -7,7 +7,6 @@ void nc_init(void);
 void nc_term(void);
 void nc_clearall(void);
 
-int nc_getch(void);
 void nc_addch(char);
 void nc_addstr(char *);
 
@@ -18,5 +17,8 @@ void nc_set_yx(int y, int x);
 int nc_LINES(void);
 int nc_COLS(void);
 void nc_clrtoeol(void);
+
+/* called by io functions */
+int nc_getch(void);
 
 #endif

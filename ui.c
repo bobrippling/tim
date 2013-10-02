@@ -10,6 +10,7 @@
 #include "motion.h"
 #include "keys.h"
 #include "buffers.h"
+#include "io.h"
 
 enum ui_mode ui_mode;
 int ui_running = 1;
@@ -65,7 +66,10 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		const int first_ch = nc_getch();
+		/* don't want maps unless we're in normal mode */
+		const int first_ch = io_getch(
+				ui_mode == UI_NORMAL ? IO_MAP : IO_NOMAP);
+
 		motion_repeat mr = MOTION_REPEAT();
 
 		int found = 0;

@@ -4,6 +4,7 @@
 #include "prompt.h"
 
 #include "ncurses.h"
+#include "io.h"
 #include "mem.h"
 
 char *prompt(char promp)
@@ -21,7 +22,7 @@ char *prompt(char promp)
 	nc_clrtoeol();
 
 	while(reading){
-		int ch = nc_getch();
+		int ch = io_getch(IO_NOMAP);
 
 		switch(ch){
 			case '\033':

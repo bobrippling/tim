@@ -9,7 +9,7 @@
 #include "buffer.h"
 #include "motion.h"
 #include "ui.h"
-#include "ncurses.h"
+#include "io.h"
 #include "str.h"
 #include "prompt.h"
 
@@ -282,7 +282,7 @@ int m_findnext(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_
 int m_find(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to)
 {
 	return m_findnext2(
-			last_find_ch = nc_getch(),
+			last_find_ch = io_getch(IO_NOMAP),
 			last_find_type = m->find_type,
 			repeat, buf, to);
 }
