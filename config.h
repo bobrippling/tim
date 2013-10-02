@@ -87,6 +87,8 @@ const keymap_t maps[] = {
 	{ 'C', "c$" },
 	{ 'D', "d$" },
 
+	{ 's', "cl" }, /* TODO: change command needs to forward count to the motion */
+
 	{ 0 }
 };
 
