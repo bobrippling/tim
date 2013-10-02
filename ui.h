@@ -13,6 +13,7 @@ enum ui_mode
 	UI_INSERT,
 };
 
+void ui_set_mode(enum ui_mode);
 void ui_init(void);
 void ui_main(void);
 void ui_term(void);

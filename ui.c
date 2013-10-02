@@ -15,9 +15,14 @@
 enum ui_mode ui_mode;
 int ui_running = 1;
 
+void ui_set_mode(enum ui_mode m)
+{
+	ui_mode = m;
+}
+
 void ui_init()
 {
-	ui_mode = UI_NORMAL;
+	ui_set_mode(UI_NORMAL);
 
 	nc_init();
 }

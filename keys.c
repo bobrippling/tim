@@ -198,7 +198,7 @@ void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	ui_mode = a->i;
+	ui_set_mode(a->i);
 }
 
 void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -265,6 +265,7 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_insline(buffers_cur(), a->i);
+	ui_set_mode(UI_INSERT);
 	ui_redraw();
 	ui_cur_changed();
 }
