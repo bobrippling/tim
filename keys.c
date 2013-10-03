@@ -71,15 +71,12 @@ char *parse_arg(const char *arg)
 	/* TODO: ~ substitution */
 	wordexp_t wexp;
 	memset(&wexp, 0, sizeof wexp);
+
 	int r = wordexp(arg, &wexp, WRDE_NOCMD);
-	char *ret;
 
-	if(r){
-		wordfree(&wexp);
-		return ustrdup(arg);
-	}
-
-	ret = join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
+	char *ret = r
+		? ustrdup(arg)
+		: join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
 
 	wordfree(&wexp);
 
