@@ -141,28 +141,30 @@ static int list_evalnewlines(list_t *l)
 
 void list_inschar(list_t **pl, int *x, int *y, char ch)
 {
-	list_t *l;
-	int i;
+	list_t *l = *(pl = list_seekp(pl, *y, 1));
+	int overwrite;
 
-	l = *(pl = list_seekp(pl, *y, 1));
-
-	if((unsigned)*x >= l->len_malloc){
+	/* get space - either we're writing past the end
+	 * or len_line == len_malloc */
+	if((overwrite = (unsigned)*x >= l->len_malloc)
+	|| l->len_line == l->len_malloc)
+	{
 		const int old_len = l->len_malloc;
 
-		l->len_malloc = *x + 1;
+		l->len_malloc = overwrite ? (unsigned)*x + 1 : l->len_malloc + 1;
+
 		l->line = urealloc(l->line, l->len_malloc);
 
 		memset(l->line + old_len, 0, l->len_malloc - old_len);
 
-		for(i = l->len_line; i < *x; i++){
+		for(int i = l->len_line; i < *x; i++)
 			l->line[i] = ' ';
-			l->len_line++;
-		}
-	}else{
-		/* shift stuff up */
-		l->line = urealloc(l->line, ++l->len_malloc);
-		memmove(l->line + *x + 1, l->line + *x, l->len_malloc - *x - 1);
+		l->len_line = *x + 1;
 	}
+
+	/* shift stuff up */
+	if((unsigned)*x < l->len_line)
+		memmove(l->line + *x + 1, l->line + *x, l->len_line - *x);
 
 	l->line[*x] = ch;
 	l->len_line++;
