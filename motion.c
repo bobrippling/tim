@@ -33,7 +33,7 @@ int m_eol(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *to
 {
 	list_t *l = buffer_current_line(buf);
 
-	to->x = l ? l->len_line - 1 : 0;
+	to->x = l && l->len_line > 0 ? l->len_line - 1 : 0;
 	return MOTION_SUCCESS;
 }
 
