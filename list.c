@@ -267,12 +267,17 @@ void list_delbetween(list_t **pl,
 			if(!l->len_line || (unsigned)to->x > l->len_line)
 				return;
 
+			unsigned to_x = to->x;
+			if(to_x == l->len_line)
+				/* can't be negative - checked above */
+				to_x = l->len_line - 1;
+
 			size_t diff = to->x - from->x;
 
 			memmove(
 					l->line + from->x,
-					l->line + to->x,
-					l->len_line - from->x - 1);
+					l->line + to_x,
+					l->len_line - to_x);
 
 			l->len_line -= diff;
 		}
