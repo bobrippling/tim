@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>
+#include <assert.h>
 
 #include "pos.h"
 #include "list.h"
@@ -135,6 +137,36 @@ void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 			with);
 
 	free(with);
+}
+
+static int ctoggle(int c)
+{
+	return islower(c) ? toupper(c) : tolower(c);
+}
+
+void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
+{
+	list_t *l = list_seek(buf->head, buf->ui_pos.y, 0);
+
+	int (*f)(int) = NULL;
+
+	switch(tog_type){
+		case CASE_TOGGLE: f = ctoggle; break;
+		case CASE_UPPER:  f = toupper; break;
+		case CASE_LOWER:  f = tolower; break;
+	}
+	assert(f);
+
+	unsigned i;
+	for(i = buf->ui_pos.x; n > 0; n--, i++){
+		if(i >= l->len_line)
+			break;
+
+		char *p = &l->line[i];
+		*p = f(*p);
+	}
+
+	buf->ui_pos.x = i;
 }
 
 void buffer_insline(buffer_t *buf, int dir)
