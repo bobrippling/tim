@@ -74,6 +74,7 @@ void ui_main()
 		/* don't want maps unless we're in normal mode */
 		const int first_ch = io_getch(
 				ui_mode == UI_NORMAL ? IO_MAP : IO_NOMAP);
+		int last_ch = first_ch;
 
 		motion_repeat mr = MOTION_REPEAT();
 
@@ -81,16 +82,15 @@ void ui_main()
 
 		if(ui_mode == UI_NORMAL){
 			int skip = 0;
-			int ch = first_ch;
-			while(motion_repeat_read(&mr, &ch, skip))
+			while(motion_repeat_read(&mr, &last_ch, skip))
 				skip++, motion_apply_buf(&mr, buffers_cur());
 
 			found = skip > 0;
 		}
 
 		for(int i = 0; nkeys[i].ch; i++)
-			if(nkeys[i].mode == ui_mode && nkeys[i].ch == first_ch){
-				nkeys[i].func(&nkeys[i].arg, mr.repeat, first_ch);
+			if(nkeys[i].mode == ui_mode && nkeys[i].ch == last_ch){
+				nkeys[i].func(&nkeys[i].arg, mr.repeat, last_ch);
 				found = 1;
 			}
 

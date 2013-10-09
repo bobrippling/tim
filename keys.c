@@ -36,8 +36,7 @@ const motion *motion_find(int first_ch, int skip)
 int motion_repeat_read(motion_repeat *mr, int *pch, int skip)
 {
 	int ch = *pch;
-
-	mr->repeat = 0;
+	int had_repeat = 0;
 
 	/* attempt to get a motion from this */
 	for(;;){
@@ -49,8 +48,10 @@ int motion_repeat_read(motion_repeat *mr, int *pch, int skip)
 			return 1;
 		}
 
-		if(ch == '0' && !mr->repeat)
+		if(ch == '0' && !had_repeat)
 			return 0;
+
+		had_repeat = 1;
 
 		while('0' <= ch && ch <= '9'){
 			mr->repeat = mr->repeat * 10 + ch - '0',
