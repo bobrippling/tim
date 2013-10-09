@@ -267,6 +267,16 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
+void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	repeat = DEFAULT_REPEAT(repeat);
+
+	buffer_case(buffers_cur(), a->i, repeat);
+
+	ui_redraw();
+	ui_cur_changed();
+}
+
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	if(a->i == 1){

@@ -18,6 +18,7 @@ union motion_arg
 		F_REV = 1 << 1, /* 'F' or 'T' */
 	} find_type;
 	point_t pos;
+	enum case_tog case_type;
 };
 
 motion_func m_eof, m_eol, m_eos, m_goto, m_mos, m_move, m_sof, m_sol, m_sos;

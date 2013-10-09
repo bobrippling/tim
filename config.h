@@ -67,6 +67,10 @@ const nkey_t nkeys[] = {
 
 	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL }, /* k_set_mode instead? */
 
+	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL },
+/*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL },*/
+/*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL },*/
+
 	{ CTRL_AND('l'),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL },
 
 	{ CTRL_AND('e'),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL },

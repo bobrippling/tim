@@ -11,6 +11,13 @@ enum buffer_neighbour
 	BUF_DOWN
 };
 
+enum case_tog
+{
+	CASE_TOGGLE,
+	CASE_UPPER,
+	CASE_LOWER,
+};
+
 struct buffer
 {
 	list_t *head;
@@ -57,6 +64,10 @@ void buffer_insline(buffer_t *, int dir);
 list_t *buffer_current_line(const buffer_t *);
 
 unsigned buffer_nlines(const buffer_t *);
+
+void buffer_case(
+		buffer_t *, enum case_tog,
+		unsigned repeat);
 
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);
