@@ -152,8 +152,8 @@ void ui_cur_changed()
 		need_redraw = 1;
 	}
 
-	nc_set_yx(buf->screen_coord.y + buf->ui_pos->y - buf->ui_start.y,
-			      buf->screen_coord.x + buf->ui_pos->x - buf->ui_start.x);
+	point_t cursor = buffer_toscreen(buf, buf->ui_pos);
+	nc_set_yx(cursor.y, cursor.x);
 
 	if(need_redraw)
 		ui_redraw();

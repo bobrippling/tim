@@ -80,4 +80,6 @@ const char *buffer_shortfname(const char *); /* internal fname buffer */
 
 int buffer_find(const buffer_t *, const char *, point_t *, int rev);
 
+point_t buffer_toscreen(const buffer_t *, point_t const *);
+
 #endif

@@ -316,3 +316,11 @@ int buffer_find(const buffer_t *buf, const char *search, point_t *at, int rev)
 
 	return 0;
 }
+
+point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
+{
+	return (point_t){
+		buf->screen_coord.x + pt->x - buf->ui_start.x,
+		buf->screen_coord.y + pt->y - buf->ui_start.y
+	};
+}
