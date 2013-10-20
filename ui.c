@@ -15,16 +15,37 @@
 enum ui_mode ui_mode;
 int ui_running = 1;
 
+static const char *ui_mode_str(enum ui_mode m)
+{
+	switch(m){
+		case UI_NORMAL: return "NORMAL";
+		case UI_INSERT: return "INSERT";
+		case UI_VISUAL_LN: return "VISUAL";
+	}
+	return "?";
+}
+
 void ui_set_mode(enum ui_mode m)
 {
-	ui_mode = m;
+	/* only a single bit */
+	if(m & (m - 1)){
+		ui_status("bad mode 0x%x", m);
+	}else{
+		buffer_t *buf = buffers_cur();
+
+		ui_mode = m;
+
+		if(m == UI_VISUAL_LN)
+			buf->ui_vpos = buf->ui_npos;
+
+		ui_status("%s", ui_mode_str(m));
+	}
 }
 
 void ui_init()
 {
-	ui_set_mode(UI_NORMAL);
-
 	nc_init();
+	ui_set_mode(UI_NORMAL);
 }
 
 void ui_status(const char *fmt, ...)
@@ -71,16 +92,16 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		/* don't want maps unless we're in normal mode */
+		/* don't want maps if in insert mode */
 		const int first_ch = io_getch(
-				ui_mode == UI_NORMAL ? IO_MAP : IO_NOMAP);
+				ui_mode == UI_INSERT ? IO_NOMAP : IO_MAP);
 		int last_ch = first_ch;
 
 		motion_repeat mr = MOTION_REPEAT();
 
 		int found = 0;
 
-		if(ui_mode == UI_NORMAL){
+		if(ui_mode != UI_INSERT){
 			int skip = 0;
 			while(motion_repeat_read(&mr, &last_ch, skip))
 				skip++, motion_apply_buf(&mr, buffers_cur());
@@ -89,7 +110,7 @@ void ui_main()
 		}
 
 		for(int i = 0; nkeys[i].ch; i++)
-			if(nkeys[i].mode == ui_mode && nkeys[i].ch == last_ch){
+			if(nkeys[i].mode & ui_mode && nkeys[i].ch == last_ch){
 				nkeys[i].func(&nkeys[i].arg, mr.repeat, last_ch);
 				found = 1;
 			}

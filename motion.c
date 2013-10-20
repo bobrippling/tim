@@ -309,7 +309,7 @@ int motion_apply_buf(const motion_repeat *mr, buffer_t *buf)
 	point_t to;
 
 	if(motion_apply_buf_dry(mr, buf, &to)){
-		if(memcmp(&buf->ui_pos, &to, sizeof to)){
+		if(memcmp(buf->ui_pos, &to, sizeof to)){
 			*buf->ui_pos = to;
 			ui_cur_changed();
 		}

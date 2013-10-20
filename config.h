@@ -47,38 +47,40 @@ const nkey_t nkeys[] = {
 	/* order is important */
 	/* char, func, arg, mode */
 	{ '\033',         k_motion,     { .motion = { m_move, .arg.pos = { -1, 0 }}}, UI_INSERT },
-	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_INSERT },
+	{ '\033',         k_set_mode,   { UI_NORMAL }, UI_INSERT | UI_VISUAL_LN },
 
 	{ 'i',            k_set_mode,   { UI_INSERT }, UI_NORMAL },
 
-	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
-	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
+	{ 'V',            k_set_mode,   { UI_VISUAL_LN }, UI_NORMAL },
 
-	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
-	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL },
+	{ 'o',            k_open,       {  1 },                   UI_NORMAL | UI_VISUAL_LN },
+	{ 'O',            k_open,       { -1 },                   UI_NORMAL | UI_VISUAL_LN },
 
-	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL },
+	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_LN },
+	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_LN },
 
-	{ '>',            k_indent,     { +1 },  UI_NORMAL },
-	{ '<',            k_indent,     { -1 },  UI_NORMAL },
+	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_LN },
 
-	{ 'r',            k_replace,    { 0 },         UI_NORMAL },
-	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL },
+	{ '>',            k_indent,     { +1 },  UI_NORMAL | UI_VISUAL_LN },
+	{ '<',            k_indent,     { -1 },  UI_NORMAL | UI_VISUAL_LN },
 
-	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL }, /* k_set_mode instead? */
+	{ 'r',            k_replace,    { 0 },         UI_NORMAL | UI_VISUAL_LN },
+	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL | UI_VISUAL_LN },
 
-	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL },
-/*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL },*/
-/*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL },*/
+	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_LN }, /* k_set_mode instead? */
 
-	{ CTRL_AND('l'),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL },
+	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL | UI_VISUAL_LN },
+/*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_LN },*/
+/*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL | UI_VISUAL_LN },*/
 
-	{ CTRL_AND('e'),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL },
-	{ CTRL_AND('y'),  k_scroll,     { .pos = { 0, -2 } },     UI_NORMAL },
+	{ CTRL_AND('l'),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_LN },
 
-	{ CTRL_AND('w'),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL },
+	{ CTRL_AND('e'),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL | UI_VISUAL_LN },
+	{ CTRL_AND('y'),  k_scroll,     { .pos = { 0, -2 } },     UI_NORMAL | UI_VISUAL_LN },
 
-	{ CTRL_AND('g'),  k_show,       KEY_ARG_NONE,             UI_NORMAL },
+	{ CTRL_AND('w'),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_LN },
+
+	{ CTRL_AND('g'),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_LN },
 
 
 	{ 0 }

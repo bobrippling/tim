@@ -9,8 +9,9 @@
 
 enum ui_mode
 {
-	UI_NORMAL,
-	UI_INSERT,
+	UI_NORMAL = 1 << 0,
+	UI_INSERT = 1 << 1,
+	UI_VISUAL_LN = 1 << 2,
 };
 
 void ui_set_mode(enum ui_mode);
