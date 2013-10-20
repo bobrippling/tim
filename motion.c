@@ -107,7 +107,7 @@ int m_para(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t *t
 	list_t *l = buffer_current_line(buf);
 	unsigned n = 0;
 
-	*to = buf->ui_pos;
+	*to = *buf->ui_pos;
 
 	if(!l)
 		goto limit;
@@ -219,7 +219,7 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, cons
 	if(!l)
 		goto failed;
 
-	point_t bpos = buf->ui_pos;
+	point_t bpos = *buf->ui_pos;
 
 	if(!(ftype & F_REV)){
 		bpos.x++;
@@ -300,7 +300,7 @@ int m_search(motion_arg const *m, unsigned repeat, const buffer_t *buf, point_t 
 
 int motion_apply_buf_dry(const motion_repeat *mr, const buffer_t *buf, point_t *out)
 {
-	*out = buf->ui_pos;
+	*out = *buf->ui_pos;
 	return mr->motion->func(&mr->motion->arg, mr->repeat, buf, out);
 }
 
@@ -310,7 +310,7 @@ int motion_apply_buf(const motion_repeat *mr, buffer_t *buf)
 
 	if(motion_apply_buf_dry(mr, buf, &to)){
 		if(memcmp(&buf->ui_pos, &to, sizeof to)){
-			buf->ui_pos = to;
+			*buf->ui_pos = to;
 			ui_cur_changed();
 		}
 		return MOTION_SUCCESS;

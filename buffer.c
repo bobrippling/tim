@@ -23,6 +23,7 @@ buffer_t *buffer_new()
 {
 	buffer_t *b = umalloc(sizeof *b);
 	b->head = list_new(NULL);
+	b->ui_pos = &b->ui_npos;
 	return b;
 }
 
@@ -160,7 +161,7 @@ void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 	with[n] = '\0';
 
 	list_replace_at(buf->head,
-			&buf->ui_pos.x, &buf->ui_pos.y,
+			&buf->ui_pos->x, &buf->ui_pos->y,
 			with);
 
 	free(with);
@@ -173,7 +174,7 @@ static int ctoggle(int c)
 
 void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
 {
-	list_t *l = list_seek(buf->head, buf->ui_pos.y, 0);
+	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
 
 	int (*f)(int) = NULL;
 
@@ -185,7 +186,7 @@ void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
 	assert(f);
 
 	unsigned i;
-	for(i = buf->ui_pos.x; n > 0; n--, i++){
+	for(i = buf->ui_pos->x; n > 0; n--, i++){
 		if(i >= l->len_line)
 			break;
 
@@ -193,12 +194,12 @@ void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
 		*p = f(*p);
 	}
 
-	buf->ui_pos.x = i;
+	buf->ui_pos->x = i;
 }
 
 void buffer_insline(buffer_t *buf, int dir)
 {
-	list_insline(&buf->head, &buf->ui_pos.x, &buf->ui_pos.y, dir);
+	list_insline(&buf->head, &buf->ui_pos->x, &buf->ui_pos->y, dir);
 }
 
 buffer_t *buffer_topleftmost(buffer_t *b)
@@ -235,7 +236,7 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new
 
 list_t *buffer_current_line(const buffer_t *b)
 {
-	return list_seek(b->head, b->ui_pos.y, 0);
+	return list_seek(b->head, b->ui_pos->y, 0);
 }
 
 unsigned buffer_nlines(const buffer_t *b)
@@ -290,7 +291,7 @@ static char *buffer_find2(
 
 int buffer_find(const buffer_t *buf, const char *search, point_t *at, int rev)
 {
-	point_t loc = buf->ui_pos;
+	point_t loc = *buf->ui_pos;
 
 	unsigned off = at->x > 0 ? at->x - rev : 0;
 

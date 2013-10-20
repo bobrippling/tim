@@ -66,7 +66,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 
 fin:
 	if(off)
-		buf_sel->ui_pos.y = off;
+		buf_sel->ui_pos->y = off;
 }
 
 void buffers_term(void)

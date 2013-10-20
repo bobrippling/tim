@@ -50,12 +50,12 @@ void ui_inschar(char ch)
 		case CTRL_AND('?'):
 		case CTRL_AND('H'):
 		case 127:
-			if(buf->ui_pos.x > 0)
-				buffer_delchar(buffers_cur(), &buf->ui_pos.x, &buf->ui_pos.y);
+			if(buf->ui_pos->x > 0)
+				buffer_delchar(buffers_cur(), &buf->ui_pos->x, &buf->ui_pos->y);
 			break;
 
 		default:
-			buffer_inschar(buffers_cur(), &buf->ui_pos.x, &buf->ui_pos.y, ch);
+			buffer_inschar(buffers_cur(), &buf->ui_pos->x, &buf->ui_pos->y, ch);
 			break;
 	}
 
@@ -117,22 +117,22 @@ void ui_cur_changed()
 	buffer_t *buf = buffers_cur();
 	const int nl = buf->screen_coord.h;
 
-	if(buf->ui_pos.x < 0)
-		buf->ui_pos.x = 0;
+	if(buf->ui_pos->x < 0)
+		buf->ui_pos->x = 0;
 
-	if(buf->ui_pos.y < 0)
-		buf->ui_pos.y = 0;
+	if(buf->ui_pos->y < 0)
+		buf->ui_pos->y = 0;
 
-	if(buf->ui_pos.y > buf->ui_start.y + nl - 1){
-		buf->ui_start.y = buf->ui_pos.y - nl + 1;
+	if(buf->ui_pos->y > buf->ui_start.y + nl - 1){
+		buf->ui_start.y = buf->ui_pos->y - nl + 1;
 		need_redraw = 1;
-	}else if(buf->ui_pos.y < buf->ui_start.y){
-		buf->ui_start.y = buf->ui_pos.y;
+	}else if(buf->ui_pos->y < buf->ui_start.y){
+		buf->ui_start.y = buf->ui_pos->y;
 		need_redraw = 1;
 	}
 
-	nc_set_yx(buf->screen_coord.y + buf->ui_pos.y - buf->ui_start.y,
-			      buf->screen_coord.x + buf->ui_pos.x - buf->ui_start.x);
+	nc_set_yx(buf->screen_coord.y + buf->ui_pos->y - buf->ui_start.y,
+			      buf->screen_coord.x + buf->ui_pos->x - buf->ui_start.x);
 
 	if(need_redraw)
 		ui_redraw();

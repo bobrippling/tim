@@ -22,7 +22,10 @@ struct buffer
 {
 	list_t *head;
 
-	point_t ui_pos;       /* cursor pos in buffer */
+	point_t ui_npos;  /* cursor pos in buffer */
+	point_t ui_vpos;  /* when in visual mode - other point */
+	point_t *ui_pos; /* which one is in use? */
+
 	point_t ui_start;     /* offset into buffer */
 	rect_t  screen_coord; /* buffer pos in screen */
 

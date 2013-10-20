@@ -208,10 +208,10 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 	if(buf->ui_start.y < 0)
 		buf->ui_start.y = 0;
 
-	if(buf->ui_pos.y < buf->ui_start.y)
-		buf->ui_pos.y = buf->ui_start.y;
-	else if(buf->ui_pos.y >= buf->ui_start.y + buf->screen_coord.h)
-		buf->ui_pos.y = buf->ui_start.y + buf->screen_coord.h - 1;
+	if(buf->ui_pos->y < buf->ui_start.y)
+		buf->ui_pos->y = buf->ui_start.y;
+	else if(buf->ui_pos->y >= buf->ui_start.y + buf->screen_coord.h)
+		buf->ui_pos->y = buf->ui_start.y + buf->screen_coord.h - 1;
 
 	ui_redraw();
 	ui_cur_changed();
@@ -257,7 +257,7 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 			buf->fname ? "\"" : "",
 			buf->fname ? buffer_shortfname(buf->fname) : "<no name>",
 			buf->fname ? "\"" : "",
-			buf->ui_pos.x, buf->ui_pos.y);
+			buf->ui_pos->x, buf->ui_pos->y);
 }
 
 void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -334,7 +334,7 @@ static int around_motion(
 		if(!motion_apply_buf_dry(&mr, b, &to))
 			return 0;
 
-		from = b->ui_pos;
+		from = *b->ui_pos;
 
 		/* reverse if negative range */
 		if(to.y < from.y){
@@ -352,7 +352,7 @@ static int around_motion(
 
 		action(b, &from, &to, mr.motion->how & M_LINEWISE);
 
-		b->ui_pos = from;
+		*b->ui_pos = from;
 
 		ui_redraw();
 		ui_cur_changed();
