@@ -56,6 +56,11 @@ void nc_clearall()
 	clear();
 }
 
+void nc_highlight(int y, int x, int on)
+{
+	mvchgat(y, x, 1, A_REVERSE, 0, NULL);
+}
+
 void nc_vstatus(const char *fmt, va_list l)
 {
 	scrollok(stdscr, 0);

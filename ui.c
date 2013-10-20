@@ -132,6 +132,17 @@ void ui_term()
 	nc_term();
 }
 
+static void ui_fill_visual(
+		point_t *nc_a, point_t *nc_b)
+{
+	/* put A before B */
+	point_sort(nc_a, nc_b);
+
+	for(int y = nc_a->y; y <= nc_b->y; y++)
+		for(int x = nc_a->x; x <= nc_b->x; x++)
+			nc_highlight(y, x, 1);
+}
+
 void ui_cur_changed()
 {
 	int need_redraw = 0;
@@ -150,6 +161,20 @@ void ui_cur_changed()
 	}else if(buf->ui_pos->y < buf->ui_start.y){
 		buf->ui_start.y = buf->ui_pos->y;
 		need_redraw = 1;
+	}
+
+	/* visual */
+	switch(ui_mode){
+		case UI_NORMAL:
+		case UI_INSERT:
+			break;
+		case UI_VISUAL_LN:
+		{
+			point_t ncursor = buffer_toscreen(buf, &buf->ui_npos);
+			point_t vcursor = buffer_toscreen(buf, &buf->ui_vpos);
+			ui_fill_visual(&ncursor, &vcursor);
+			break;
+		}
 	}
 
 	point_t cursor = buffer_toscreen(buf, buf->ui_pos);

@@ -16,3 +16,4 @@ external.o: external.c mem.h ui.h external.h
 str.o: str.c str.h
 prompt.o: prompt.c prompt.h ncurses.h io.h map.h mem.h
 io.o: io.c ncurses.h mem.h io.h map.h
+pos.o: pos.c pos.h

@@ -14,4 +14,6 @@ struct point
 	int x, y;
 };
 
+void point_sort(point_t *, point_t *);
+
 #endif
