@@ -1,3 +1,7 @@
+visual mode:
+	exec-region = :%!$repl
+	n number of cursor points - multi/mark insert?
+
 keys:
 	check:
 		dd, yy, cc
