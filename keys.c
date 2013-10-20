@@ -384,3 +384,11 @@ void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 	around_motion(a, repeat, from_ch,
 			a->i > 0 ? buffer_indent : buffer_unindent);
 }
+
+void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *b = buffers_cur();
+
+	b->ui_pos = b->ui_pos == &b->ui_npos ? &b->ui_vpos : &b->ui_npos;
+	ui_cur_changed();
+}

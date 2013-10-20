@@ -53,8 +53,9 @@ const nkey_t nkeys[] = {
 
 	{ 'V',            k_set_mode,   { UI_VISUAL_LN }, UI_NORMAL },
 
-	{ 'o',            k_open,       {  1 },                   UI_NORMAL | UI_VISUAL_LN },
-	{ 'O',            k_open,       { -1 },                   UI_NORMAL | UI_VISUAL_LN },
+	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
+	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
+	{ 'o',            k_vtoggle,    KEY_ARG_NONE, UI_VISUAL_LN },
 
 	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_LN },
 	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_LN },

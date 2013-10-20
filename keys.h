@@ -43,4 +43,6 @@ key_func k_join;
 key_func k_indent;
 key_func k_case;
 
+key_func k_vtoggle;
+
 #endif
