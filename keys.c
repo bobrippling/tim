@@ -33,10 +33,24 @@ const motion *motion_find(int first_ch, int skip)
 	return NULL;
 }
 
-int motion_repeat_read(motion_repeat *mr, int *pch, int skip)
+int motion_repeat_read(
+		motion_repeat *mr, int *pch,
+		int allow_visual, int skip)
 {
-	int ch = *pch;
+	int ch;
 	int had_repeat = 0;
+
+	if(allow_visual){
+		buffer_t *buf = buffers_cur();
+		if(buf->ui_mode & UI_VISUAL_ANY){
+			mr->repeat = 0;
+			mr->motion = &motion_visual;
+			return 1;
+		}
+		*pch = ch = io_getch(IO_NOMAP);
+	}else{
+		ch = *pch;
+	}
 
 	/* attempt to get a motion from this */
 	for(;;){
@@ -310,10 +324,10 @@ static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
 		buffer_action *action)
 {
-	int ch = io_getch(IO_NOMAP), fallback = 0;
+	int ch, fallback = 0;
 	motion_repeat mr = { 0, 0 };
 
-	if(motion_repeat_read(&mr, &ch, 0) || (fallback = ch == from_ch)){
+	if(motion_repeat_read(&mr, &ch, 0, 1) || (fallback = ch == from_ch)){
 		motion m_doubletap = {
 			.func = m_move,
 			.how = M_LINEWISE,

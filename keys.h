@@ -28,7 +28,9 @@ typedef struct motionkey_t
 } motionkey_t;
 
 const motion *motion_find(int first_ch, int skip);
-int motion_repeat_read(motion_repeat *, int *pfirst_ch, int skip);
+int motion_repeat_read(
+		motion_repeat *, int *pfirst_ch,
+		int skip, int allow_visual);
 
 key_func k_cmd, k_set_mode;
 key_func k_redraw;

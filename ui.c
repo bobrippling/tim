@@ -104,7 +104,7 @@ void ui_main()
 
 		if(UI_MODE() != UI_INSERT){
 			int skip = 0;
-			while(motion_repeat_read(&mr, &last_ch, skip))
+			while(motion_repeat_read(&mr, &last_ch, skip, /*visual=*/0))
 				skip++, motion_apply_buf(&mr, buffers_cur());
 
 			found = skip > 0;

@@ -44,10 +44,7 @@ int buffer_setmode(buffer_t *buf, enum buf_mode m)
 		&& m & UI_VISUAL_ANY)
 		{
 			/* from non-visual to visual */
-			if(buf->ui_pos == &buf->ui_vpos)
-				buf->ui_npos = *buf->ui_pos;
-			else
-				buf->ui_vpos = *buf->ui_pos;
+			*buffer_uipos_alt(buf) = *buf->ui_pos;
 		}
 
 		buf->ui_mode = m;
@@ -351,4 +348,11 @@ point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 		buf->screen_coord.x + pt->x - buf->ui_start.x,
 		buf->screen_coord.y + pt->y - buf->ui_start.y
 	};
+}
+
+point_t *buffer_uipos_alt(buffer_t *buf)
+{
+	if(buf->ui_pos == &buf->ui_vpos)
+		return &buf->ui_npos;
+	return &buf->ui_vpos;
 }

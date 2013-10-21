@@ -23,6 +23,10 @@ enum
 	MOTION_SUCCESS = 1
 };
 
+const motion motion_visual = {
+	.func = m_visual
+};
+
 int m_eof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	to->y = list_count(buf->head);
@@ -296,6 +300,22 @@ int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	int found = buffer_find(buf, target, to, m->i);
 	free(target);
 	return found;
+}
+
+int m_visual(
+		motion_arg const *m, unsigned repeat,
+		buffer_t *buf, point_t *to)
+{
+	(void)m;
+	(void)repeat;
+
+	if(!(buf->ui_mode & UI_VISUAL_ANY))
+		return MOTION_FAILURE;
+
+	/* set `to' to the opposite corner */
+	*to = *buffer_uipos_alt(buf);
+
+	return MOTION_SUCCESS;
 }
 
 int motion_apply_buf_dry(const motion_repeat *mr, buffer_t *buf, point_t *out)

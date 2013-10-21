@@ -26,6 +26,7 @@ motion_func m_find, m_findnext;
 motion_func m_word;
 motion_func m_para;
 motion_func m_search;
+motion_func m_visual;
 
 typedef struct motion
 {
@@ -47,6 +48,8 @@ typedef struct motion_repeat
 
 #define MOTION_REPEAT() { NULL, 0U }
 #define DEFAULT_REPEAT(r) (r ? r : 1)
+
+extern const motion motion_visual;
 
 int motion_apply_buf_dry(const motion_repeat *, buffer_t *, point_t *out);
 int motion_apply_buf(const motion_repeat *, buffer_t *);
