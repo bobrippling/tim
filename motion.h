@@ -6,7 +6,7 @@ typedef union motion_arg motion_arg;
 typedef int motion_func(
 		motion_arg const *,
 		unsigned repeat,
-		const buffer_t *,
+		buffer_t *,
 		point_t *);
 
 union motion_arg
@@ -48,7 +48,7 @@ typedef struct motion_repeat
 #define MOTION_REPEAT() { NULL, 0U }
 #define DEFAULT_REPEAT(r) (r ? r : 1)
 
-int motion_apply_buf_dry(const motion_repeat *, const buffer_t *, point_t *out);
+int motion_apply_buf_dry(const motion_repeat *, buffer_t *, point_t *out);
 int motion_apply_buf(const motion_repeat *, buffer_t *);
 
 #endif
