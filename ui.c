@@ -93,21 +93,16 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		/* don't want maps if in insert mode */
-		const int first_ch = io_getch(
-				UI_MODE() == UI_INSERT ? IO_NOMAP : IO_MAP);
-		int last_ch = first_ch;
-
-		motion_repeat mr = MOTION_REPEAT();
-
 		int found = 0;
+		unsigned repeat = 0;
 
 		if(UI_MODE() != UI_INSERT){
-			int skip = 0;
-			while(motion_repeat_read(&mr, &last_ch, skip, /*visual=*/0))
-				skip++, motion_apply_buf(&mr, buffers_cur());
+			motion *m = motion_read(&rep);
 
-			found = skip > 0;
+			if(m){
+				motion_apply_buf(m, rep, buffers_cur());
+				continue;
+			}
 		}
 
 		for(int i = 0; nkeys[i].ch; i++)
