@@ -387,8 +387,6 @@ void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *b = buffers_cur();
-
-	b->ui_pos = b->ui_pos == &b->ui_npos ? &b->ui_vpos : &b->ui_npos;
+	buffer_togglev(buffers_cur());
 	ui_cur_changed();
 }

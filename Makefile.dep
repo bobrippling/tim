@@ -1,7 +1,7 @@
 main.o: main.c pos.h list.h buffer.h ui.h buffers.h
 ncurses.o: ncurses.c ncurses.h
 ui.o: ui.c pos.h ncurses.h list.h buffer.h ui.h motion.h keys.h buffers.h \
- io.h map.h
+ io.h map.h region.h
 mem.o: mem.c mem.h
 keys.o: keys.c pos.h list.h buffer.h ui.h motion.h keys.h ncurses.h mem.h \
  cmds.h prompt.h map.h io.h buffers.h config.h
@@ -17,3 +17,4 @@ str.o: str.c str.h
 prompt.o: prompt.c prompt.h ncurses.h io.h map.h mem.h
 io.o: io.c ncurses.h mem.h io.h map.h
 pos.o: pos.c pos.h
+region.o: region.c pos.h region.h

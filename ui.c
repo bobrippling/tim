@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "pos.h"
 #include "ncurses.h"
@@ -11,6 +12,7 @@
 #include "keys.h"
 #include "buffers.h"
 #include "io.h"
+#include "region.h"
 
 #define UI_MODE() buffers_cur()->ui_mode
 
@@ -21,24 +23,22 @@ static const char *ui_bufmode_str(enum buf_mode m)
 	switch(m){
 		case UI_NORMAL: return "NORMAL";
 		case UI_INSERT: return "INSERT";
-		case UI_VISUAL_LN: return "VISUAL";
+		case UI_VISUAL_CHAR: return "VISUAL";
+		case UI_VISUAL_LN: return "VISUAL LINE";
+		case UI_VISUAL_COL: return "VISUAL BLOCK";
 	}
 	return "?";
 }
 
 void ui_set_bufmode(enum buf_mode m)
 {
-	/* only a single bit */
-	if(!m || (m & (m - 1))){
+	buffer_t *buf = buffers_cur();
+
+	if(buffer_setmode(buf, m)){
 		ui_status("bad mode 0x%x", m);
 	}else{
-		buffer_t *buf = buffers_cur();
-
-		buf->ui_mode = m;
-
-		if(m == UI_VISUAL_LN)
-			buf->ui_vpos = buf->ui_npos;
-
+		ui_redraw();
+		ui_cur_changed();
 		ui_status("%s", ui_bufmode_str(buf->ui_mode));
 	}
 }
@@ -133,33 +133,6 @@ void ui_term()
 	nc_term();
 }
 
-static void ui_fill_visual(
-		point_t *nc_a, point_t *nc_b)
-{
-	/* put A before B */
-	point_minmax(nc_a, nc_b);
-
-	for(int y = nc_a->y; y <= nc_b->y; y++)
-		for(int x = nc_a->x; x <= nc_b->x; x++)
-			nc_highlight(y, x, 1);
-}
-
-static void ui_draw_visual(buffer_t *buf)
-{
-	switch(buf->ui_mode){
-		case UI_NORMAL:
-		case UI_INSERT:
-			break;
-		case UI_VISUAL_LN:
-		{
-			point_t ncursor = buffer_toscreen(buf, &buf->ui_npos);
-			point_t vcursor = buffer_toscreen(buf, &buf->ui_vpos);
-			ui_fill_visual(&ncursor, &vcursor);
-			break;
-		}
-	}
-}
-
 void ui_cur_changed()
 {
 	int need_redraw = 0;
@@ -180,13 +153,11 @@ void ui_cur_changed()
 		need_redraw = 1;
 	}
 
+	if(buf->ui_mode & UI_VISUAL_ANY)
+		need_redraw = 1;
+
 	if(need_redraw)
 		ui_redraw();
-
-	/* must do visual in ui_cur_changed()
-	 * as ui_draw_* aren't called on just movements
-	 */
-	ui_draw_visual(buf);
 
 	point_t cursor = buffer_toscreen(buf, buf->ui_pos);
 	nc_set_yx(cursor.y, cursor.x);
@@ -209,14 +180,32 @@ void ui_draw_vline(int x, int y, int h)
 	}
 }
 
+static enum region_type ui_mode_to_region(enum buf_mode m)
+{
+	switch(m){
+		case UI_NORMAL:
+		case UI_INSERT:
+			break;
+		case UI_VISUAL_CHAR: return REGION_CHAR;
+		case UI_VISUAL_COL: return REGION_COL;
+		case UI_VISUAL_LN: return REGION_LINE;
+	}
+	return REGION_CHAR; /* doesn't matter */
+}
+
 static
 void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 {
-	list_t *l;
-	int y;
-
 	buf->screen_coord = *r;
 
+	const region_t hlregion = {
+		buf->ui_npos,
+		buf->ui_vpos,
+		ui_mode_to_region(buf->ui_mode),
+	};
+
+	list_t *l;
+	int y;
 	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0);
 			l && y < r->h;
 			l = l->next, y++)
@@ -224,13 +213,19 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		const int lim = l->len_line < (unsigned)r->w
 			? l->len_line
 			: (unsigned)r->w;
-		int i;
 
 		nc_set_yx(r->y + y, r->x);
 		nc_clrtoeol();
 
-		for(i = 0; i < lim; i++)
-			nc_addch(l->line[i]);
+		for(int x = 0; x < lim; x++){
+			if(buf->ui_mode & UI_VISUAL_ANY)
+				nc_highlight(region_contains(
+							&hlregion, x, buf->ui_start.y + y));
+
+			nc_addch(l->line[x]);
+		}
+
+		nc_highlight(0);
 	}
 
 	for(; y < r->h; y++){
@@ -238,8 +233,6 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		nc_addch('~');
 		nc_clrtoeol();
 	}
-
-	ui_draw_visual(buf);
 }
 
 static

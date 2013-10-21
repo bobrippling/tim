@@ -28,6 +28,33 @@ buffer_t *buffer_new()
 	return b;
 }
 
+void buffer_togglev(buffer_t *buf)
+{
+	buf->ui_pos = (buf->ui_pos == &buf->ui_npos)
+		? &buf->ui_vpos
+		: &buf->ui_npos;
+}
+
+int buffer_setmode(buffer_t *buf, enum buf_mode m)
+{
+	if(!m || (m & (m - 1))){
+		return -1;
+	}else{
+		if((buf->ui_mode & UI_VISUAL_ANY) == 0
+		&& m & UI_VISUAL_ANY)
+		{
+			/* from non-visual to visual */
+			if(buf->ui_pos == &buf->ui_vpos)
+				buf->ui_npos = *buf->ui_pos;
+			else
+				buf->ui_vpos = *buf->ui_pos;
+		}
+
+		buf->ui_mode = m;
+		return 0;
+	}
+}
+
 static
 buffer_t *buffer_new_file(FILE *f)
 {

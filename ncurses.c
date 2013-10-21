@@ -56,9 +56,9 @@ void nc_clearall()
 	clear();
 }
 
-void nc_highlight(int y, int x, int on)
+void nc_highlight(int on)
 {
-	mvchgat(y, x, 1, A_REVERSE, 0, NULL);
+	(on ? attron : attroff)(A_REVERSE);
 }
 
 void nc_vstatus(const char *fmt, va_list l)

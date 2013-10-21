@@ -39,12 +39,18 @@ struct buffer
 	{
 		UI_NORMAL = 1 << 0,
 		UI_INSERT = 1 << 1,
-		UI_VISUAL_LN = 1 << 2,
+		UI_VISUAL_CHAR = 1 << 2,
+		UI_VISUAL_COL = 1 << 3,
+		UI_VISUAL_LN = 1 << 4,
+#define UI_VISUAL_ANY (1 << 2 | 1 << 3 | 1 << 4)
 	} ui_mode;
 };
 
 buffer_t *buffer_new(void);
 void buffer_new_fname(buffer_t **, const char *, int *err);
+
+int buffer_setmode(buffer_t *, enum buf_mode m); /* 0 = success */
+void buffer_togglev(buffer_t *);
 
 void buffer_free(buffer_t *);
 

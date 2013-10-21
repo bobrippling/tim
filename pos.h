@@ -14,6 +14,7 @@ struct point
 	int x, y;
 };
 
-void point_minmax(point_t *, point_t *);
+void point_sort_y(point_t *a, point_t *b);
+void point_sort_all(point_t *a, point_t *b);
 
 #endif

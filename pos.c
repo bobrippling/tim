@@ -1,13 +1,17 @@
 #include "pos.h"
 
-#define SWAP(a, b) do{ int t = a; a = b; b = t; }while(0)
+#define SWAP(T, a, b) do{ T t = a; a = b; b = t; }while(0)
 
-void point_minmax(point_t *a, point_t *b)
+void point_sort_y(point_t *a, point_t *b)
 {
-	/* need A to be before B */
 	if(a->y > b->y)
-		SWAP(a->y, b->y);
+		SWAP(point_t, *a, *b);
+}
+
+void point_sort_all(point_t *a, point_t *b)
+{
+	point_sort_y(a, b);
 
 	if(a->x > b->x)
-		SWAP(a->x, b->x);
+		SWAP(int, a->x, b->x);
 }
