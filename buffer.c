@@ -24,6 +24,7 @@ buffer_t *buffer_new()
 	buffer_t *b = umalloc(sizeof *b);
 	b->head = list_new(NULL);
 	b->ui_pos = &b->ui_npos;
+	b->ui_mode = UI_NORMAL;
 	return b;
 }
 

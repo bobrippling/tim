@@ -1,6 +1,8 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include <stdbool.h>
+
 typedef struct buffer buffer_t;
 
 enum buffer_neighbour
@@ -32,6 +34,13 @@ struct buffer
 	buffer_t *neighbours[4];
 
 	char *fname;
+
+	enum buf_mode
+	{
+		UI_NORMAL = 1 << 0,
+		UI_INSERT = 1 << 1,
+		UI_VISUAL_LN = 1 << 2,
+	} ui_mode;
 };
 
 buffer_t *buffer_new(void);

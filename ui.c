@@ -3,19 +3,20 @@
 #include <stdarg.h>
 
 #include "pos.h"
-#include "ui.h"
 #include "ncurses.h"
 #include "list.h"
 #include "buffer.h"
+#include "ui.h"
 #include "motion.h"
 #include "keys.h"
 #include "buffers.h"
 #include "io.h"
 
-enum ui_mode ui_mode;
+#define UI_MODE() buffers_cur()->ui_mode
+
 int ui_running = 1;
 
-static const char *ui_mode_str(enum ui_mode m)
+static const char *ui_bufmode_str(enum buf_mode m)
 {
 	switch(m){
 		case UI_NORMAL: return "NORMAL";
@@ -25,27 +26,27 @@ static const char *ui_mode_str(enum ui_mode m)
 	return "?";
 }
 
-void ui_set_mode(enum ui_mode m)
+void ui_set_bufmode(enum buf_mode m)
 {
 	/* only a single bit */
-	if(m & (m - 1)){
+	if(!m || (m & (m - 1))){
 		ui_status("bad mode 0x%x", m);
 	}else{
 		buffer_t *buf = buffers_cur();
 
-		ui_mode = m;
+		buf->ui_mode = m;
 
 		if(m == UI_VISUAL_LN)
 			buf->ui_vpos = buf->ui_npos;
 
-		ui_status("%s", ui_mode_str(m));
+		ui_status("%s", ui_bufmode_str(buf->ui_mode));
 	}
 }
 
 void ui_init()
 {
 	nc_init();
-	ui_set_mode(UI_NORMAL);
+	ui_set_bufmode(UI_NORMAL);
 }
 
 void ui_status(const char *fmt, ...)
@@ -94,14 +95,14 @@ void ui_main()
 	while(ui_running){
 		/* don't want maps if in insert mode */
 		const int first_ch = io_getch(
-				ui_mode == UI_INSERT ? IO_NOMAP : IO_MAP);
+				UI_MODE() == UI_INSERT ? IO_NOMAP : IO_MAP);
 		int last_ch = first_ch;
 
 		motion_repeat mr = MOTION_REPEAT();
 
 		int found = 0;
 
-		if(ui_mode != UI_INSERT){
+		if(UI_MODE() != UI_INSERT){
 			int skip = 0;
 			while(motion_repeat_read(&mr, &last_ch, skip))
 				skip++, motion_apply_buf(&mr, buffers_cur());
@@ -110,14 +111,14 @@ void ui_main()
 		}
 
 		for(int i = 0; nkeys[i].ch; i++)
-			if(nkeys[i].mode & ui_mode && nkeys[i].ch == last_ch){
+			if(nkeys[i].mode & UI_MODE() && nkeys[i].ch == last_ch){
 				nkeys[i].func(&nkeys[i].arg, mr.repeat, last_ch);
 				found = 1;
 			}
 
 		if(!found){
 			/* checks for multiple */
-			if(ui_mode == UI_INSERT)
+			if(UI_MODE() == UI_INSERT)
 				ui_inschar(first_ch);
 			else if(mr.repeat)
 				; /* ignore */
@@ -136,11 +137,27 @@ static void ui_fill_visual(
 		point_t *nc_a, point_t *nc_b)
 {
 	/* put A before B */
-	point_sort(nc_a, nc_b);
+	point_minmax(nc_a, nc_b);
 
 	for(int y = nc_a->y; y <= nc_b->y; y++)
 		for(int x = nc_a->x; x <= nc_b->x; x++)
 			nc_highlight(y, x, 1);
+}
+
+static void ui_draw_visual(buffer_t *buf)
+{
+	switch(buf->ui_mode){
+		case UI_NORMAL:
+		case UI_INSERT:
+			break;
+		case UI_VISUAL_LN:
+		{
+			point_t ncursor = buffer_toscreen(buf, &buf->ui_npos);
+			point_t vcursor = buffer_toscreen(buf, &buf->ui_vpos);
+			ui_fill_visual(&ncursor, &vcursor);
+			break;
+		}
+	}
 }
 
 void ui_cur_changed()
@@ -163,25 +180,16 @@ void ui_cur_changed()
 		need_redraw = 1;
 	}
 
-	/* visual */
-	switch(ui_mode){
-		case UI_NORMAL:
-		case UI_INSERT:
-			break;
-		case UI_VISUAL_LN:
-		{
-			point_t ncursor = buffer_toscreen(buf, &buf->ui_npos);
-			point_t vcursor = buffer_toscreen(buf, &buf->ui_vpos);
-			ui_fill_visual(&ncursor, &vcursor);
-			break;
-		}
-	}
+	if(need_redraw)
+		ui_redraw();
+
+	/* must do visual in ui_cur_changed()
+	 * as ui_draw_* aren't called on just movements
+	 */
+	ui_draw_visual(buf);
 
 	point_t cursor = buffer_toscreen(buf, buf->ui_pos);
 	nc_set_yx(cursor.y, cursor.x);
-
-	if(need_redraw)
-		ui_redraw();
 }
 
 static
@@ -230,6 +238,8 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		nc_addch('~');
 		nc_clrtoeol();
 	}
+
+	ui_draw_visual(buf);
 }
 
 static

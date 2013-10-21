@@ -7,14 +7,6 @@
 #  define tim_printf(a, b)
 #endif
 
-enum ui_mode
-{
-	UI_NORMAL = 1 << 0,
-	UI_INSERT = 1 << 1,
-	UI_VISUAL_LN = 1 << 2,
-};
-
-void ui_set_mode(enum ui_mode);
 void ui_init(void);
 void ui_main(void);
 void ui_term(void);
@@ -25,8 +17,10 @@ void ui_clear(void); /* full clear, for ^L */
 
 void ui_status(const char *fmt, ...) tim_printf(1, 2);
 
-extern int ui_running;
+#ifdef BUFFER_H
+void ui_set_bufmode(enum buf_mode m);
+#endif
 
-extern enum ui_mode ui_mode;
+extern int ui_running;
 
 #endif

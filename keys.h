@@ -18,7 +18,7 @@ typedef struct nkey_t
 	char ch;
 	key_func *func;
 	keyarg_u arg;
-	enum ui_mode mode;
+	enum buf_mode mode;
 } nkey_t;
 
 typedef struct motionkey_t
