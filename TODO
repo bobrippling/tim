@@ -1,6 +1,7 @@
 visual mode:
 	exec-region = :%!$repl
 	n number of cursor points - multi/mark insert?
+	r[char], ~, and : over a region
 
 keys:
 	check:
