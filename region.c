@@ -6,7 +6,7 @@
 bool region_contains(const region_t *re, int x, int y)
 {
 	region_t sorted = *re;
-	point_sort_all(&sorted.begin, &sorted.end);
+	point_sort_full(&sorted.begin, &sorted.end);
 
 	const struct
 	{

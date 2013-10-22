@@ -3,6 +3,7 @@
 #include <errno.h>
 
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
 #include "buffers.h"

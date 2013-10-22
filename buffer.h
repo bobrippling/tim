@@ -64,14 +64,10 @@ const char *buffer_fname(const buffer_t *);
 void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
 
-typedef void buffer_action(
-		buffer_t *,
-		point_t *,
-		point_t const *,
-		enum list_region);
+typedef void buffer_action(buffer_t *, const region_t *, point_t *out);
 
-buffer_action buffer_delbetween,
-              buffer_joinbetween,
+buffer_action buffer_delregion,
+              buffer_joinregion,
               buffer_indent,
               buffer_unindent;
 

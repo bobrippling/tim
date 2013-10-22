@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
 #include "mem.h"
@@ -146,38 +147,30 @@ void buffer_delchar(buffer_t *buf, int *x, int *y)
 	list_delchar(buf->head, x, y);
 }
 
-void buffer_delbetween(buffer_t *buf,
-		point_t *from, point_t const *to,
-		enum list_region how)
+void buffer_delregion(buffer_t *buf, const region_t *region, point_t *out)
 {
-	list_delbetween(&buf->head, from, to, how);
+	list_delregion(&buf->head, region);
 }
 
-void buffer_joinbetween(buffer_t *buf,
-		point_t *from, point_t const *to,
-		enum list_region how)
+void buffer_joinregion(buffer_t *buf, const region_t *region, point_t *out)
 {
 	/* could use 'how' here - columns and lines only make sense */
-	list_t *l = list_seek(buf->head, from->y, 0);
+	list_t *l = list_seek(buf->head, region->begin.y, 0);
 	const int mid = l ? l->len_line : 0;
 
-	list_joinbetween(&buf->head, from, to);
+	list_joinregion(&buf->head, region);
 
 	if(l)
-		from->x = mid;
+		out->x = mid;
 }
 
 /* TODO: buffer_foreach_line(buf, from, to, ^{ indent/unindent }) */
-void buffer_indent(buffer_t *buf,
-		point_t *from, point_t const *to,
-		enum list_region how)
+void buffer_indent(buffer_t *buf, const region_t *region, point_t *out)
 {
 	TODO();
 }
 
-void buffer_unindent(buffer_t *buf,
-		point_t *from, point_t const *to,
-		enum list_region how)
+void buffer_unindent(buffer_t *buf, const region_t *region, point_t *out)
 {
 	TODO();
 }

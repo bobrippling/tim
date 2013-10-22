@@ -6,6 +6,7 @@
 #include <wordexp.h>
 
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
 
@@ -331,37 +332,29 @@ static int around_motion(
 		repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
 
 		buffer_t *b = buffers_cur();
-		point_t to;
-		if(!motion_apply_buf_dry(m, repeat, b, &to))
+
+		region_t r = {
+			.begin = *b->ui_pos
+		};
+		if(!motion_apply_buf_dry(m, repeat, b, &r.end))
 			return 0;
 
-		point_t from = *b->ui_pos;
-
 		/* reverse if negative range */
-		if(to.y < from.y){
-			point_t tmp = to;
-			to = from;
-			from = tmp;
-		}else if(to.y == from.y && to.x < from.x){
-			int tmp = to.x;
-			to.x = from.x;
-			from.x = tmp;
-		}
+		point_sort_yx(&r.begin, &r.end);
 
 		if(!(m->how & M_EXCLUSIVE))
-			m->how & M_LINEWISE ? ++to.y : ++to.x;
+			m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
 
-		enum list_region r;
 		if(m->how & M_COLUMN)
-			r = HOW_COL;
+			r.type = REGION_COL;
 		else if(m->how & M_LINEWISE)
-			r = HOW_LINE;
+			r.type = REGION_LINE;
 		else
-			r = HOW_CHAR;
+			r.type = REGION_CHAR;
 
-		action(b, &from, &to, r);
-
-		*b->ui_pos = from;
+		/* reset cursor to beginning, then allow adjustments */
+		*b->ui_pos = r.begin;
+		action(b, &r, b->ui_pos);
 
 		ui_set_bufmode(UI_NORMAL);
 
@@ -376,18 +369,18 @@ static int around_motion(
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_delbetween);
+	around_motion(a, repeat, from_ch, buffer_delregion);
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	if(around_motion(a, repeat, from_ch, buffer_delbetween))
+	if(around_motion(a, repeat, from_ch, buffer_delregion))
 		k_set_mode(&(keyarg_u){ UI_INSERT }, 0, 0);
 }
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_joinbetween);
+	around_motion(a, repeat, from_ch, buffer_joinregion);
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)

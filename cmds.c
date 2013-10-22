@@ -5,6 +5,7 @@
 
 #include "cmds.h"
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
 #include "ui.h"

@@ -5,6 +5,7 @@
 
 #include "pos.h"
 #include "ncurses.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
 #include "ui.h"
@@ -12,7 +13,6 @@
 #include "keys.h"
 #include "buffers.h"
 #include "io.h"
-#include "region.h"
 
 #define UI_MODE() buffers_cur()->ui_mode
 
