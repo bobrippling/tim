@@ -103,9 +103,10 @@ void ui_main()
 			}
 		}
 
-		const enum io io_mode = UI_MODE() == UI_INSERT ? IO_NOMAP : IO_MAP;
+		const bool ins = UI_MODE() == UI_INSERT;
+		const enum io io_mode = ins ? IO_NOMAP : IO_MAP;
 
-		unsigned repeat = io_read_repeat(io_mode);
+		unsigned repeat = ins ? 0 : io_read_repeat(io_mode);
 		int ch = io_getch(io_mode);
 
 		bool found = false;
