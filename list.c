@@ -226,7 +226,7 @@ void list_dellines(list_t **pl, list_t *prev, unsigned n)
 
 void list_delbetween(list_t **pl,
 		point_t const *from, point_t const *to,
-		int linewise)
+		enum list_region how)
 {
 	assert(from->y <= to->y);
 	assert(from->y < to->y || from->x < to->x);
@@ -236,44 +236,52 @@ void list_delbetween(list_t **pl,
 	if(!seeked || !*seeked)
 		return;
 
-	if(linewise){
-		list_dellines(seeked, (*seeked)->prev, to->y - from->y + 1);
-	}else{
-		list_t *l = *seeked;
-		size_t line_change = to->y - from->y;
+	switch(how){
+		case HOW_LINE:
+			list_dellines(seeked, (*seeked)->prev, to->y - from->y + 1);
+			break;
+		case HOW_CHAR:
+		{
+			list_t *l = *seeked;
+			size_t line_change = to->y - from->y;
 
-		if(line_change > 1)
-			list_dellines(&l->next, l, line_change);
+			if(line_change > 1)
+				list_dellines(&l->next, l, line_change);
 
-		if(line_change > 0){
-			/* join the lines */
-			list_t *next = l->next;
-			size_t nextlen = next->len_line - to->x;
-			size_t fulllen = from->x + nextlen;
+			if(line_change > 0){
+				/* join the lines */
+				list_t *next = l->next;
+				size_t nextlen = next->len_line - to->x;
+				size_t fulllen = from->x + nextlen;
 
-			if(l->len_malloc < fulllen)
-				l->line = urealloc(l->line, l->len_malloc = fulllen);
+				if(l->len_malloc < fulllen)
+					l->line = urealloc(l->line, l->len_malloc = fulllen);
 
-			memcpy(l->line + from->x,
-					next->line + to->x,
-					nextlen);
-			l->len_line = fulllen;
+				memcpy(l->line + from->x,
+						next->line + to->x,
+						nextlen);
+				l->len_line = fulllen;
 
-			list_dellines(&l->next, l, 1);
+				list_dellines(&l->next, l, 1);
 
-		}else{
-			if(!l->len_line || (unsigned)to->x > l->len_line)
-				return;
+			}else{
+				if(!l->len_line || (unsigned)to->x > l->len_line)
+					return;
 
-			size_t diff = to->x - from->x;
+				size_t diff = to->x - from->x;
 
-			memmove(
-					l->line + from->x,
-					l->line + to->x,
-					l->len_line - from->x - 1);
+				memmove(
+						l->line + from->x,
+						l->line + to->x,
+						l->len_line - from->x - 1);
 
-			l->len_line -= diff;
+				l->len_line -= diff;
+			}
+			break;
 		}
+		case HOW_COL:
+			/* TODO */
+			break;
 	}
 }
 

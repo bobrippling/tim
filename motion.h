@@ -15,6 +15,7 @@ enum motion_wise
 	M_NONE      = 0,
 	M_LINEWISE  = 1 << 0,
 	M_EXCLUSIVE = 1 << 1,
+	M_COLUMN    = 1 << 2,
 };
 
 union motion_arg

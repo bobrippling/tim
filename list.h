@@ -11,6 +11,13 @@ struct list_
 	list_t *next, *prev;
 };
 
+enum list_region
+{
+	HOW_CHAR,
+	HOW_LINE,
+	HOW_COL
+};
+
 list_t *list_new(list_t *prev);
 list_t *list_new_file(FILE *);
 
@@ -23,7 +30,7 @@ void    list_delchar(list_t *, int *x, int *y);
 void    list_delbetween(list_t **pl,
                         point_t const *from,
                         point_t const *to,
-                        int linewise);
+                        enum list_region);
 
 void    list_joinbetween(list_t **pl,
                         point_t const *from,

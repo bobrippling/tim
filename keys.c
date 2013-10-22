@@ -351,7 +351,15 @@ static int around_motion(
 		if(!(m->how & M_EXCLUSIVE))
 			m->how & M_LINEWISE ? ++to.y : ++to.x;
 
-		action(b, &from, &to, m->how & M_LINEWISE);
+		enum list_region r;
+		if(m->how & M_COLUMN)
+			r = HOW_COL;
+		else if(m->how & M_LINEWISE)
+			r = HOW_LINE;
+		else
+			r = HOW_CHAR;
+
+		action(b, &from, &to, r);
 
 		*b->ui_pos = from;
 

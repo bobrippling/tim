@@ -68,7 +68,7 @@ typedef void buffer_action(
 		buffer_t *,
 		point_t *,
 		point_t const *,
-		int linewise);
+		enum list_region);
 
 buffer_action buffer_delbetween,
               buffer_joinbetween,

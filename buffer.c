@@ -148,14 +148,16 @@ void buffer_delchar(buffer_t *buf, int *x, int *y)
 
 void buffer_delbetween(buffer_t *buf,
 		point_t *from, point_t const *to,
-		int linewise)
+		enum list_region how)
 {
-	list_delbetween(&buf->head, from, to, linewise);
+	list_delbetween(&buf->head, from, to, how);
 }
 
 void buffer_joinbetween(buffer_t *buf,
-		point_t *from, point_t const *to, int linewise)
+		point_t *from, point_t const *to,
+		enum list_region how)
 {
+	/* could use 'how' here - columns and lines only make sense */
 	list_t *l = list_seek(buf->head, from->y, 0);
 	const int mid = l ? l->len_line : 0;
 
@@ -167,13 +169,15 @@ void buffer_joinbetween(buffer_t *buf,
 
 /* TODO: buffer_foreach_line(buf, from, to, ^{ indent/unindent }) */
 void buffer_indent(buffer_t *buf,
-		point_t *from, point_t const *to, int linewise)
+		point_t *from, point_t const *to,
+		enum list_region how)
 {
 	TODO();
 }
 
 void buffer_unindent(buffer_t *buf,
-		point_t *from, point_t const *to, int linewise)
+		point_t *from, point_t const *to,
+		enum list_region how)
 {
 	TODO();
 }
