@@ -265,7 +265,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		/* single char */
 		int ch = io_getch(IO_NOMAP);
 
-		if(ch == '\033')
+		if(ch == K_ESC)
 			return;
 
 		buffer_replace_chars(
@@ -303,7 +303,7 @@ static int around_motion(
 			repeat = 0;
 			m = &m_doubletap;
 		}else{
-			if(ch != '\033')
+			if(ch != K_ESC)
 				ui_status("no motion '%c'", ch);
 			/*io_ungetch(ch);*/
 		}

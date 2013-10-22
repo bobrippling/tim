@@ -25,7 +25,7 @@ char *prompt(char promp)
 		int ch = io_getch(IO_NOMAP);
 
 		switch(ch){
-			case '\033':
+			case K_ESC:
 				goto cancel;
 
 			case CTRL_AND('?'):

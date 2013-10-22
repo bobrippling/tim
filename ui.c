@@ -120,8 +120,8 @@ void ui_main()
 			/* checks for multiple */
 			if(UI_MODE() == UI_INSERT)
 				ui_inschar(ch);
-			else
-				ui_status("unknown key %d", ch);
+			else if(ch != K_ESC)
+				ui_status("unknown key %c", ch);
 		}
 	}
 }
