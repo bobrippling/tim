@@ -46,6 +46,24 @@ const motion *motion_read(unsigned *repeat)
 }
 
 static
+const motion *motion_read_or_visual(unsigned *repeat)
+{
+	buffer_t *buf = buffers_cur();
+	if(buf->ui_mode & UI_VISUAL_ANY){
+		static motion visual = {
+			.func = m_visual,
+			.arg.phow = &visual.how
+		};
+
+		*repeat = 0;
+
+		return &visual;
+	}
+
+	return motion_read(repeat);
+}
+
+static
 char *parse_arg(const char *arg)
 {
 	/* TODO: ~ substitution */
@@ -292,7 +310,7 @@ static int around_motion(
 	};
 
 	unsigned repeat_motion;
-	const motion *m = motion_read(&repeat_motion);
+	const motion *m = motion_read_or_visual(&repeat_motion);
 
 	if(!m){
 		/* check for dd, etc */
@@ -336,6 +354,8 @@ static int around_motion(
 		action(b, &from, &to, m->how & M_LINEWISE);
 
 		*b->ui_pos = from;
+
+		ui_set_bufmode(UI_NORMAL);
 
 		ui_redraw();
 		ui_cur_changed();

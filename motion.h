@@ -10,6 +10,13 @@ typedef int motion_func(
 		/*point_t *current, * both changeable */
 		point_t *to);
 
+enum motion_wise
+{
+	M_NONE      = 0,
+	M_LINEWISE  = 1 << 0,
+	M_EXCLUSIVE = 1 << 1,
+};
+
 union motion_arg
 {
 	int i;
@@ -20,6 +27,7 @@ union motion_arg
 	} find_type;
 	point_t pos;
 	enum case_tog case_type;
+	enum motion_wise *phow;
 };
 
 motion_func m_eof, m_eol, m_eos, m_goto, m_mos, m_move, m_sof, m_sol, m_sos;
@@ -33,12 +41,7 @@ typedef struct motion
 {
 	motion_func *func;
 	motion_arg arg;
-	enum motion_wise
-	{
-		M_NONE      = 0,
-		M_LINEWISE  = 1 << 0,
-		M_EXCLUSIVE = 1 << 1,
-	} how;
+	enum motion_wise how;
 } motion;
 
 #define MOTION_REPEAT() { NULL, 0U }

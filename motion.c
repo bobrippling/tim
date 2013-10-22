@@ -299,14 +299,17 @@ int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 }
 
 int m_visual(
-		motion_arg const *m, unsigned repeat,
+		motion_arg const *arg, unsigned repeat,
 		buffer_t *buf, point_t *to)
 {
-	(void)m;
 	(void)repeat;
 
 	if(!(buf->ui_mode & UI_VISUAL_ANY))
 		return MOTION_FAILURE;
+
+	/* line, char? */
+	*arg->phow = (buf->ui_mode & UI_VISUAL_LN)
+		? M_LINEWISE : M_NONE;
 
 	/* set `to' to the opposite corner */
 	*to = *buffer_uipos_alt(buf);
