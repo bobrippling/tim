@@ -30,16 +30,8 @@ static
 buffer_t *buffer_new_file(FILE *f)
 {
 	/* TODO: mmap() */
-	list_t *l;
-	buffer_t *b;
-
-	l = list_new_file(f);
-
-	if(!l)
-		return NULL;
-
-	b = buffer_new();
-	b->head = l;
+	buffer_t *b = buffer_new();
+	buffer_replace_file(b, f);
 
 	return b;
 }
