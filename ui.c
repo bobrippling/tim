@@ -93,12 +93,22 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
+		buffer_t *buf = buffers_cur();
+
+		if(UI_MODE() & UI_VISUAL_ANY){
+			point_t *alt = buffer_uipos_alt(buf);
+
+			ui_status("%d,%d - %d,%d",
+					buf->ui_pos->y, buf->ui_pos->x,
+					alt->y, alt->x);
+		}
+
 		if(UI_MODE() != UI_INSERT){
 			unsigned repeat = 0;
 			const motion *m = motion_read(&repeat);
 
 			if(m){
-				motion_apply_buf(m, repeat, buffers_cur());
+				motion_apply_buf(m, repeat, buf);
 				continue;
 			}
 		}
