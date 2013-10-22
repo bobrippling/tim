@@ -279,8 +279,36 @@ void list_delregion(list_t **pl, const region_t *region)
 			break;
 		}
 		case REGION_COL:
-			/* TODO */
+		{
+			list_t *pos = *seeked;
+			point_t begin = region->begin, end = region->end;
+
+			/* should've been sorted also */
+			assert(begin.x <= end.x);
+
+			for(int i = begin.y;
+					i <= end.y && pos;
+					i++, pos = pos->next)
+			{
+				if((unsigned)begin.x < pos->len_line){
+					if((unsigned)end.x >= pos->len_line){
+						/* delete all */
+						pos->len_line = begin.x;
+
+					}else{
+						char *str = pos->line;
+
+						memmove(
+								str + begin.x,
+								str + end.x,
+								pos->len_line - end.x);
+
+						pos->len_line -= end.x - begin.x;
+					}
+				}
+			}
 			break;
+		}
 	}
 }
 

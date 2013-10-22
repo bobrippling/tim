@@ -342,15 +342,21 @@ static int around_motion(
 		/* reverse if negative range */
 		point_sort_yx(&r.begin, &r.end);
 
+		if(m->how & M_COLUMN){
+			r.type = REGION_COL;
+
+			/* needs to be done before incrementing r.end.x/y below */
+			point_sort_full(&r.begin, &r.end);
+
+		}else if(m->how & M_LINEWISE){
+			r.type = REGION_LINE;
+
+		}else{
+			r.type = REGION_CHAR;
+		}
+
 		if(!(m->how & M_EXCLUSIVE))
 			m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
-
-		if(m->how & M_COLUMN)
-			r.type = REGION_COL;
-		else if(m->how & M_LINEWISE)
-			r.type = REGION_LINE;
-		else
-			r.type = REGION_CHAR;
 
 		/* reset cursor to beginning, then allow adjustments */
 		*b->ui_pos = r.begin;
