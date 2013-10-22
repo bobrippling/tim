@@ -62,9 +62,13 @@ list_t *list_new_file(FILE *f)
 void list_free(list_t *l)
 {
 	if(l){
-		list_free(l->next);
+		list_t *next = l->next;
+
 		free(l->line);
 		free(l);
+
+		/* tco */
+		list_free(next);
 	}
 }
 
