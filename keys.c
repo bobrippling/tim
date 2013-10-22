@@ -23,61 +23,26 @@
 
 #include "config.h"
 
-const motion *motion_find(int first_ch, int skip)
+static const motion *motion_find(int ch)
 {
-	int i;
-	for(i = 0; motion_keys[i].ch; i++)
-		if(motion_keys[i].ch == first_ch && skip-- <= 0)
+	for(int i = 0; motion_keys[i].ch; i++)
+		if(motion_keys[i].ch == ch)
 			return &motion_keys[i].motion;
-
 	return NULL;
 }
 
-int motion_repeat_read(
-		motion_repeat *mr, int *pch,
-		int allow_visual, int skip)
+const motion *motion_read(unsigned *repeat)
 {
-	int ch;
-	int had_repeat = 0;
+	*repeat = io_read_repeat(IO_MAP);
 
-	if(allow_visual){
-		buffer_t *buf = buffers_cur();
-		if(buf->ui_mode & UI_VISUAL_ANY){
-			mr->repeat = 0;
-			mr->motion = &motion_visual;
-			return 1;
-		}
-		*pch = ch = io_getch(IO_NOMAP);
-	}else{
-		ch = *pch;
+	int ch = io_getch(IO_MAP);
+	const motion *m = motion_find(ch);
+	if(!m){
+		io_ungetch(ch);
+		return NULL;
 	}
 
-	/* attempt to get a motion from this */
-	for(;;){
-		const motion *m = motion_find(ch, skip);
-		int this_repeat = 0;
-
-		if(m){
-			mr->motion = m;
-			return 1;
-		}
-
-		if(ch == '0' && !had_repeat)
-			return 0;
-
-		had_repeat = 1;
-
-		while('0' <= ch && ch <= '9'){
-			mr->repeat = mr->repeat * 10 + ch - '0',
-			ch = io_getch(IO_NOMAP);
-			this_repeat = 1;
-		}
-		*pch = ch;
-		if(this_repeat)
-			continue;
-
-		return 0;
-	}
+	return m;
 }
 
 static
@@ -314,41 +279,45 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	motion_repeat mr = MOTION_REPEAT();
-	mr.motion = &a->motion;
-	mr.repeat = repeat;
-	motion_apply_buf(&mr, buffers_cur());
+	motion_apply_buf(&a->motion.m, a->motion.repeat, buffers_cur());
 }
 
 static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
 		buffer_action *action)
 {
-	int ch, fallback = 0;
-	motion_repeat mr = { 0, 0 };
+	motion m_doubletap = {
+		.func = m_move,
+		.how = M_LINEWISE,
+	};
 
-	if(motion_repeat_read(&mr, &ch, 0, 1) || (fallback = ch == from_ch)){
-		motion m_doubletap = {
-			.func = m_move,
-			.how = M_LINEWISE,
-		};
+	unsigned repeat_motion;
+	const motion *m = motion_read(&repeat_motion);
+
+	if(!m){
+		/* check for dd, etc */
+		int ch = io_getch(IO_NOMAP);
+		if(ch == from_ch){
+			/* dd - stay where we are, +the repeat */
+			m_doubletap.arg.pos.y = repeat - 1;
+			repeat = 0;
+			m = &m_doubletap;
+		}else{
+			if(ch != '\033')
+				ui_status("no motion '%c'", ch);
+			/*io_ungetch(ch);*/
+		}
+	}
+
+	if(m){
+		repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
 
 		buffer_t *b = buffers_cur();
-		point_t to, from;
-
-		mr.repeat = DEFAULT_REPEAT(mr.repeat) * DEFAULT_REPEAT(repeat);
-
-		if(fallback){
-			/* dd - stay where we are, +the repeat */
-			m_doubletap.arg.pos.y = mr.repeat - 1;
-			mr.repeat = 0;
-			mr.motion = &m_doubletap;
-		}
-
-		if(!motion_apply_buf_dry(&mr, b, &to))
+		point_t to;
+		if(!motion_apply_buf_dry(m, repeat, b, &to))
 			return 0;
 
-		from = *b->ui_pos;
+		point_t from = *b->ui_pos;
 
 		/* reverse if negative range */
 		if(to.y < from.y){
@@ -361,10 +330,10 @@ static int around_motion(
 			from.x = tmp;
 		}
 
-		if(!(mr.motion->how & M_EXCLUSIVE))
-			mr.motion->how & M_LINEWISE ? ++to.y : ++to.x;
+		if(!(m->how & M_EXCLUSIVE))
+			m->how & M_LINEWISE ? ++to.y : ++to.x;
 
-		action(b, &from, &to, mr.motion->how & M_LINEWISE);
+		action(b, &from, &to, m->how & M_LINEWISE);
 
 		*b->ui_pos = from;
 

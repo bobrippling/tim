@@ -46,7 +46,7 @@ const motionkey_t motion_keys[] = {
 const nkey_t nkeys[] = {
 	/* order is important */
 	/* char, func, arg, mode */
-	{ '\033',         k_motion,     { .motion = { m_move, .arg.pos = { -1, 0 }}}, UI_INSERT },
+	{ '\033', k_motion, { .motion = { .m = { m_move, .arg.pos = { -1, 0 } }, .repeat = 1 } }, UI_INSERT },
 	{ '\033',         k_set_mode,   { UI_NORMAL }, UI_INSERT | UI_VISUAL_ANY },
 
 	{ 'i',            k_set_mode,   { UI_INSERT }, UI_NORMAL },

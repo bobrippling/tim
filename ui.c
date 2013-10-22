@@ -93,32 +93,34 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		int found = 0;
-		unsigned repeat = 0;
-
 		if(UI_MODE() != UI_INSERT){
-			motion *m = motion_read(&rep);
+			unsigned repeat = 0;
+			const motion *m = motion_read(&repeat);
 
 			if(m){
-				motion_apply_buf(m, rep, buffers_cur());
+				motion_apply_buf(m, repeat, buffers_cur());
 				continue;
 			}
 		}
 
+		const enum io io_mode = UI_MODE() == UI_INSERT ? IO_NOMAP : IO_MAP;
+
+		unsigned repeat = io_read_repeat(io_mode);
+		int ch = io_getch(io_mode);
+
+		bool found = false;
 		for(int i = 0; nkeys[i].ch; i++)
-			if(nkeys[i].mode & UI_MODE() && nkeys[i].ch == last_ch){
-				nkeys[i].func(&nkeys[i].arg, mr.repeat, last_ch);
-				found = 1;
+			if(nkeys[i].mode & UI_MODE() && nkeys[i].ch == ch){
+				nkeys[i].func(&nkeys[i].arg, repeat, ch);
+				found = true;
 			}
 
 		if(!found){
 			/* checks for multiple */
 			if(UI_MODE() == UI_INSERT)
-				ui_inschar(first_ch);
-			else if(mr.repeat)
-				; /* ignore */
+				ui_inschar(ch);
 			else
-				ui_status("unknown key %d", first_ch);
+				ui_status("unknown key %d", ch);
 		}
 	}
 }

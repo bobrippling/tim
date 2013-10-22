@@ -23,10 +23,6 @@ enum
 	MOTION_SUCCESS = 1
 };
 
-const motion motion_visual = {
-	.func = m_visual
-};
-
 int m_eof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	to->y = list_count(buf->head);
@@ -318,17 +314,19 @@ int m_visual(
 	return MOTION_SUCCESS;
 }
 
-int motion_apply_buf_dry(const motion_repeat *mr, buffer_t *buf, point_t *out)
+int motion_apply_buf_dry(
+		const motion *m, unsigned repeat,
+		buffer_t *buf, point_t *out)
 {
 	*out = *buf->ui_pos;
-	return mr->motion->func(&mr->motion->arg, mr->repeat, buf, out);
+	return m->func(&m->arg, repeat, buf, out);
 }
 
-int motion_apply_buf(const motion_repeat *mr, buffer_t *buf)
+int motion_apply_buf(const motion *m, unsigned repeat, buffer_t *buf)
 {
 	point_t to;
 
-	if(motion_apply_buf_dry(mr, buf, &to)){
+	if(motion_apply_buf_dry(m, repeat, buf, &to)){
 		if(memcmp(buf->ui_pos, &to, sizeof to)){
 			*buf->ui_pos = to;
 			ui_cur_changed();
