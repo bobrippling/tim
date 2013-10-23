@@ -157,15 +157,42 @@ void buffer_joinregion(buffer_t *buf, const region_t *region, point_t *out)
 		out->x = mid;
 }
 
-/* TODO: buffer_foreach_line(buf, from, to, ^{ indent/unindent }) */
+static
+void buffer_indent2(
+		buffer_t *buf, const region_t *region,
+		point_t *out, int dir)
+{
+	/* region is sorted by y */
+	const int min_x = MIN(region->begin.x, region->end.x);
+
+	for(int y = region->begin.y; y < region->end.y; y++){
+		int x = 0;
+
+		switch(region->type){
+			case REGION_CHAR:
+			case REGION_LINE:
+				break;
+			case REGION_COL:
+				/* indent from the first col onwards */
+				x = min_x;
+		}
+
+		if(dir > 0){
+			buffer_inschar(buf, &x, &y, '\t');
+		}else{
+			// TODO: unindent
+		}
+	}
+}
+
 void buffer_indent(buffer_t *buf, const region_t *region, point_t *out)
 {
-	TODO();
+	buffer_indent2(buf, region, out, 1);
 }
 
 void buffer_unindent(buffer_t *buf, const region_t *region, point_t *out)
 {
-	TODO();
+	buffer_indent2(buf, region, out, -1);
 }
 
 void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
