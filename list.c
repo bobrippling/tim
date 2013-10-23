@@ -17,6 +17,13 @@ list_t *list_new(list_t *prev)
 	return l;
 }
 
+list_t *list_new_fd(int fd)
+{
+	list_t *head = NULL, **p_next = &head;
+
+	/* TODO: mmap() */
+}
+
 list_t *list_new_file(FILE *f)
 {
 #ifdef FAST_LIST_INIT
@@ -424,4 +431,72 @@ int list_count(list_t *l)
 	int i;
 	for(i = 0; l->next; l = l->next, i++);
 	return i;
+}
+
+int list_filter(list_t **pl,
+                point_t const *from,
+                point_t const *to,
+                const char *cmd)
+{
+	pl = list_seekp(pl, from->y, 0);
+
+	if(!pl)
+		return;
+
+	int child_in[2], child_out[2];
+	if(pipe(child_in))
+		return -1;
+	if(pipe(child_out))
+		goto close_pipe_in;
+
+	switch(fork()){
+		case -1:
+			goto close_pipe_both;
+		case 0:
+			dup2(child_in[0], 0);
+			dup2(child_out[1], 1);
+			for(int i = 0; i < 2; i++)
+				close(child_in[i]), close(child_out[i]);
+
+			execl("/bin/sh", "sh", "-c", cmd);
+			exit(127);
+	}
+
+	/* parent */
+	close(child_in[0]), close(child_out[1]);
+
+	/* write our lines to child_in */
+	size_t i = from.y;
+	for(list_t *l = *pl; l && i <= to.y; l = l->next, i++){
+		char *s;
+		size_t len;
+
+		if(l->len_line)
+			s = l->line, len = l->len_line;
+		else
+			s = "\n", len = 1;
+
+		int r = write(child_in[1], s, len);
+		if(r == -1)
+			break;
+	}
+
+	/* read from child_out */
+	list_t *l_read = list_new_fd(child_out[0]);
+
+close_pipe_both:
+	{
+		const int e = errno;
+		close(child_out[0]);
+		close(child_out[1]);
+		errno = e;
+	}
+close_pipe_in:
+	{
+		const int e = errno;
+		close(child_in[0]);
+		close(child_in[1]);
+		errno = e;
+	}
+	return -1;
 }
