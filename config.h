@@ -93,7 +93,11 @@ const keymap_t maps[] = {
 	{ 'C', "c$" },
 	{ 'D', "d$" },
 
-	{ 's', "cl" }, /* TODO: change command needs to forward count to the motion */
+	{ 'x', "dl" }, /* TODO: delete command needs to handle count */
+	{ 'X', "dh" },
+
+	{ 's', "cl" }, /* TODO: change command needs to handle count */
+	{ 'S', "0c$" },
 
 	{ 0 }
 };
