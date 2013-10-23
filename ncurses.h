@@ -12,7 +12,7 @@ void nc_addstr(char *);
 
 void nc_highlight(int on);
 
-void nc_vstatus(const char *fmt, va_list l);
+void nc_vstatus(const char *fmt, va_list l, int right);
 void nc_get_yx(int *y, int *x);
 void nc_set_yx(int y, int x);
 

@@ -2,6 +2,7 @@
 #include <signal.h>
 
 #include "ncurses.h"
+#include "macros.h"
 
 void nc_init()
 {
@@ -61,11 +62,15 @@ void nc_highlight(int on)
 	(on ? attron : attroff)(A_REVERSE);
 }
 
-void nc_vstatus(const char *fmt, va_list l)
+void nc_vstatus(const char *fmt, va_list l, int right)
 {
 	scrollok(stdscr, 0);
 
-	move(LINES - 1, 0);
+	int x = 0;
+	if(right)
+		x = COLS / 2;
+
+	move(LINES - 1, x);
 	clrtoeol();
 	vwprintw(stdscr, fmt, l);
 

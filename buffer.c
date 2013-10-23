@@ -10,6 +10,7 @@
 #include "list.h"
 #include "buffer.h"
 #include "mem.h"
+#include "macros.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 

@@ -49,18 +49,33 @@ void ui_init()
 	ui_set_bufmode(UI_NORMAL);
 }
 
-void ui_status(const char *fmt, ...)
+static
+void ui_vstatus(const char *fmt, va_list l, int right)
 {
-	va_list l;
 	int y, x;
 
 	nc_get_yx(&y, &x);
 
-	va_start(l, fmt);
-	nc_vstatus(fmt, l);
-	va_end(l);
+	nc_vstatus(fmt, l, right);
 
 	nc_set_yx(y, x);
+}
+
+void ui_status(const char *fmt, ...)
+{
+	va_list l;
+	va_start(l, fmt);
+	ui_vstatus(fmt, l, 0);
+	va_end(l);
+}
+
+static
+void ui_rstatus(const char *fmt, ...)
+{
+	va_list l;
+	va_start(l, fmt);
+	ui_vstatus(fmt, l, 1);
+	va_end(l);
 }
 
 static
@@ -98,7 +113,7 @@ void ui_main()
 		if(UI_MODE() & UI_VISUAL_ANY){
 			point_t *alt = buffer_uipos_alt(buf);
 
-			ui_status("%d,%d - %d,%d",
+			ui_rstatus("%d,%d - %d,%d",
 					buf->ui_pos->y, buf->ui_pos->x,
 					alt->y, alt->x);
 		}

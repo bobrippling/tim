@@ -1,5 +1,5 @@
 main.o: main.c pos.h region.h list.h buffer.h ui.h buffers.h
-ncurses.o: ncurses.c ncurses.h
+ncurses.o: ncurses.c ncurses.h macros.h
 ui.o: ui.c pos.h ncurses.h region.h list.h buffer.h ui.h motion.h keys.h \
  buffers.h io.h map.h
 mem.o: mem.c mem.h
@@ -7,7 +7,7 @@ keys.o: keys.c pos.h region.h list.h buffer.h ui.h motion.h keys.h \
  ncurses.h mem.h cmds.h prompt.h map.h io.h buffers.h config.h
 cmds.o: cmds.c cmds.h pos.h region.h list.h buffer.h ui.h buffers.h \
  external.h mem.h
-buffer.o: buffer.c pos.h region.h list.h buffer.h mem.h
+buffer.o: buffer.c pos.h region.h list.h buffer.h mem.h macros.h
 list.o: list.c pos.h region.h list.h mem.h str.h
 buffers.o: buffers.c pos.h region.h list.h buffer.h buffers.h mem.h ui.h
 motion.o: motion.c pos.h region.h list.h buffer.h motion.h ui.h io.h \
