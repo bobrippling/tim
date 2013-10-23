@@ -1,6 +1,8 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include <stdbool.h>
+
 typedef struct buffer buffer_t;
 
 enum buffer_neighbour
@@ -22,17 +24,44 @@ struct buffer
 {
 	list_t *head;
 
-	point_t ui_pos;       /* cursor pos in buffer */
+	point_t ui_npos;  /* cursor pos in buffer */
+	point_t ui_vpos;  /* when in visual mode - other point */
+	point_t *ui_pos; /* which one is in use? */
+
 	point_t ui_start;     /* offset into buffer */
 	rect_t  screen_coord; /* buffer pos in screen */
 
 	buffer_t *neighbours[4];
 
 	char *fname;
+
+	enum buf_mode
+	{
+		UI_NORMAL = 1 << 0,
+
+		UI_INSERT = 1 << 1,
+		UI_INSERT_COL = 1 << 2,
+
+		UI_VISUAL_CHAR = 1 << 3,
+		UI_VISUAL_COL = 1 << 4,
+		UI_VISUAL_LN = 1 << 5,
+
+#define UI_VISUAL_ANY (\
+		UI_VISUAL_CHAR | \
+		UI_VISUAL_COL  | \
+		UI_VISUAL_LN)
+
+#define UI_INSERT_ANY (UI_INSERT | UI_INSERT_COL)
+	} ui_mode;
+
+	unsigned col_insert_height;
 };
 
 buffer_t *buffer_new(void);
 void buffer_new_fname(buffer_t **, const char *, int *err);
+
+int buffer_setmode(buffer_t *, enum buf_mode m); /* 0 = success */
+void buffer_togglev(buffer_t *);
 
 void buffer_free(buffer_t *);
 
@@ -46,14 +75,10 @@ const char *buffer_fname(const buffer_t *);
 void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
 
-typedef void buffer_action(
-		buffer_t *,
-		point_t *,
-		point_t const *,
-		int linewise);
+typedef void buffer_action(buffer_t *, const region_t *, point_t *out);
 
-buffer_action buffer_delbetween,
-              buffer_joinbetween,
+buffer_action buffer_delregion,
+              buffer_joinregion,
               buffer_indent,
               buffer_unindent;
 
@@ -76,5 +101,8 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
 const char *buffer_shortfname(const char *); /* internal fname buffer */
 
 int buffer_find(const buffer_t *, const char *, point_t *, int rev);
+
+point_t buffer_toscreen(const buffer_t *, point_t const *);
+point_t *buffer_uipos_alt(buffer_t *buf);
 
 #endif

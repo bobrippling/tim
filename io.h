@@ -10,5 +10,9 @@ enum io
 };
 
 int io_getch(enum io);
+void io_ungetch(int);
+unsigned io_read_repeat(enum io);
+
+#define K_ESC '\033'
 
 #endif

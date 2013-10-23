@@ -4,11 +4,11 @@
 #include <stdlib.h>
 
 #include "cmds.h"
-#include "ui.h"
-
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "ui.h"
 #include "buffers.h"
 #include "external.h"
 #include "mem.h"

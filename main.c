@@ -2,10 +2,11 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "ui.h"
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "ui.h"
 #include "buffers.h"
 
 int main(int argc, char **argv)
@@ -37,9 +38,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	ui_init();
-
 	buffers_init(argc - i, argv + i, initargs, offset);
+
+	ui_init();
 
 	ui_main();
 	ui_term();

@@ -40,45 +40,47 @@ const motionkey_t motion_keys[] = {
 	{ 0 }
 };
 
-#define INS_KEY(k) \
-	{ k, k_set_mode, { UI_INSERT }, UI_NORMAL }
-
 const nkey_t nkeys[] = {
 	/* order is important */
 	/* char, func, arg, mode */
-	{ '\033',         k_motion,     { .motion = { m_move, .arg.pos = { -1, 0 }}}, UI_INSERT },
-	{ '\033',         k_set_mode,   { UI_NORMAL },           UI_INSERT },
+	{ K_ESC, k_motion, { .motion = { .m = { m_move, .arg.pos = { -1, 0 } }, .repeat = 1 } }, UI_INSERT_ANY },
+	{ K_ESC,         k_set_mode,   { UI_NORMAL }, UI_INSERT_ANY | UI_VISUAL_ANY },
 
 	{ 'i',            k_set_mode,   { UI_INSERT }, UI_NORMAL },
 
+	{ 'V',            k_set_mode,   { UI_VISUAL_LN }, UI_NORMAL | UI_VISUAL_ANY },
+	{ 'v',            k_set_mode,   { UI_VISUAL_CHAR }, UI_NORMAL | UI_VISUAL_ANY },
+	{ CTRL_AND('v'),  k_set_mode,   { UI_VISUAL_COL }, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ 'o',            k_open,       {  1 },                   UI_NORMAL },
 	{ 'O',            k_open,       { -1 },                   UI_NORMAL },
+	{ 'o',            k_vtoggle,    KEY_ARG_NONE, UI_VISUAL_ANY },
 
-	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL },
-	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL },
+	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
+	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 
-	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL },
+	{ 'J',            k_join,       KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 
-	{ '>',            k_indent,     { +1 },  UI_NORMAL },
-	{ '<',            k_indent,     { -1 },  UI_NORMAL },
+	{ '>',            k_indent,     { +1 },  UI_NORMAL | UI_VISUAL_ANY },
+	{ '<',            k_indent,     { -1 },  UI_NORMAL | UI_VISUAL_ANY },
 
-	{ 'r',            k_replace,    { 0 },         UI_NORMAL },
-	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL },
+	{ 'r',            k_replace,    { 0 },         UI_NORMAL | UI_VISUAL_ANY },
+	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL | UI_VISUAL_ANY },
 
-	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL }, /* k_set_mode instead? */
+	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
 
-	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL },
-/*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL },*/
-/*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL },*/
+	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL | UI_VISUAL_ANY },
+/*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_ANY },*/
+/*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL | UI_VISUAL_ANY },*/
 
-	{ CTRL_AND('l'),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL },
+	{ CTRL_AND('l'),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY },
 
-	{ CTRL_AND('e'),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL },
-	{ CTRL_AND('y'),  k_scroll,     { .pos = { 0, -2 } },     UI_NORMAL },
+	{ CTRL_AND('e'),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL | UI_VISUAL_ANY },
+	{ CTRL_AND('y'),  k_scroll,     { .pos = { 0, -2 } },     UI_NORMAL | UI_VISUAL_ANY },
 
-	{ CTRL_AND('w'),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL },
+	{ CTRL_AND('w'),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
-	{ CTRL_AND('g'),  k_show,       KEY_ARG_NONE,             UI_NORMAL },
+	{ CTRL_AND('g'),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
 
 	{ 0 }

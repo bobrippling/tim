@@ -6,6 +6,7 @@
 #include <wordexp.h>
 
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
 
@@ -23,47 +24,44 @@
 
 #include "config.h"
 
-const motion *motion_find(int first_ch, int skip)
+static const motion *motion_find(int ch)
 {
-	int i;
-	for(i = 0; motion_keys[i].ch; i++)
-		if(motion_keys[i].ch == first_ch && skip-- <= 0)
+	for(int i = 0; motion_keys[i].ch; i++)
+		if(motion_keys[i].ch == ch)
 			return &motion_keys[i].motion;
-
 	return NULL;
 }
 
-int motion_repeat_read(motion_repeat *mr, int *pch, int skip)
+const motion *motion_read(unsigned *repeat)
 {
-	int ch = *pch;
-	int had_repeat = 0;
+	*repeat = io_read_repeat(IO_MAP);
 
-	/* attempt to get a motion from this */
-	for(;;){
-		const motion *m = motion_find(ch, skip);
-		int this_repeat = 0;
-
-		if(m){
-			mr->motion = m;
-			return 1;
-		}
-
-		if(ch == '0' && !had_repeat)
-			return 0;
-
-		had_repeat = 1;
-
-		while('0' <= ch && ch <= '9'){
-			mr->repeat = mr->repeat * 10 + ch - '0',
-			ch = io_getch(IO_NOMAP);
-			this_repeat = 1;
-		}
-		*pch = ch;
-		if(this_repeat)
-			continue;
-
-		return 0;
+	int ch = io_getch(IO_MAP);
+	const motion *m = motion_find(ch);
+	if(!m){
+		io_ungetch(ch);
+		return NULL;
 	}
+
+	return m;
+}
+
+static
+const motion *motion_read_or_visual(unsigned *repeat)
+{
+	buffer_t *buf = buffers_cur();
+	if(buf->ui_mode & UI_VISUAL_ANY){
+		static motion visual = {
+			.func = m_visual,
+			.arg.phow = &visual.how
+		};
+
+		*repeat = 0;
+
+		return &visual;
+	}
+
+	return motion_read(repeat);
 }
 
 static
@@ -196,7 +194,7 @@ void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	ui_set_mode(a->i);
+	ui_set_bufmode(a->i);
 }
 
 void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -208,10 +206,10 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 	if(buf->ui_start.y < 0)
 		buf->ui_start.y = 0;
 
-	if(buf->ui_pos.y < buf->ui_start.y)
-		buf->ui_pos.y = buf->ui_start.y;
-	else if(buf->ui_pos.y >= buf->ui_start.y + buf->screen_coord.h)
-		buf->ui_pos.y = buf->ui_start.y + buf->screen_coord.h - 1;
+	if(buf->ui_pos->y < buf->ui_start.y)
+		buf->ui_pos->y = buf->ui_start.y;
+	else if(buf->ui_pos->y >= buf->ui_start.y + buf->screen_coord.h)
+		buf->ui_pos->y = buf->ui_start.y + buf->screen_coord.h - 1;
 
 	ui_redraw();
 	ui_cur_changed();
@@ -257,13 +255,13 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 			buf->fname ? "\"" : "",
 			buf->fname ? buffer_shortfname(buf->fname) : "<no name>",
 			buf->fname ? "\"" : "",
-			buf->ui_pos.x, buf->ui_pos.y);
+			buf->ui_pos->x, buf->ui_pos->y);
 }
 
 void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_insline(buffers_cur(), a->i);
-	ui_set_mode(UI_INSERT);
+	ui_set_bufmode(UI_INSERT);
 	ui_redraw();
 	ui_cur_changed();
 }
@@ -286,7 +284,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		/* single char */
 		int ch = io_getch(IO_NOMAP);
 
-		if(ch == '\033')
+		if(ch == K_ESC)
 			return;
 
 		buffer_replace_chars(
@@ -300,59 +298,74 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	motion_repeat mr = MOTION_REPEAT();
-	mr.motion = &a->motion;
-	mr.repeat = repeat;
-	motion_apply_buf(&mr, buffers_cur());
+	motion_apply_buf(&a->motion.m, a->motion.repeat, buffers_cur());
 }
 
 static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
-		buffer_action *action)
+		buffer_action *action, region_t *used_region)
 {
-	int ch = io_getch(IO_NOMAP), fallback = 0;
-	motion_repeat mr = { 0, 0 };
+	motion m_doubletap = {
+		.func = m_move,
+		.how = M_LINEWISE,
+	};
 
-	if(motion_repeat_read(&mr, &ch, 0) || (fallback = ch == from_ch)){
-		motion m_doubletap = {
-			.func = m_move,
-			.how = M_LINEWISE,
-		};
+	unsigned repeat_motion;
+	const motion *m = motion_read_or_visual(&repeat_motion);
+
+	if(!m){
+		/* check for dd, etc */
+		int ch = io_getch(IO_NOMAP);
+		if(ch == from_ch){
+			/* dd - stay where we are, +the repeat */
+			m_doubletap.arg.pos.y = repeat - 1;
+			repeat = 0;
+			m = &m_doubletap;
+		}else{
+			if(ch != K_ESC)
+				ui_status("no motion '%c'", ch);
+			/*io_ungetch(ch);*/
+		}
+	}
+
+	if(m){
+		repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
 
 		buffer_t *b = buffers_cur();
-		point_t to, from;
 
-		mr.repeat = DEFAULT_REPEAT(mr.repeat) * DEFAULT_REPEAT(repeat);
-
-		if(fallback){
-			/* dd - stay where we are, +the repeat */
-			m_doubletap.arg.pos.y = mr.repeat - 1;
-			mr.repeat = 0;
-			mr.motion = &m_doubletap;
-		}
-
-		if(!motion_apply_buf_dry(&mr, b, &to))
+		region_t r = {
+			.begin = *b->ui_pos
+		};
+		if(!motion_apply_buf_dry(m, repeat, b, &r.end))
 			return 0;
 
-		from = b->ui_pos;
-
 		/* reverse if negative range */
-		if(to.y < from.y){
-			point_t tmp = to;
-			to = from;
-			from = tmp;
-		}else if(to.y == from.y && to.x < from.x){
-			int tmp = to.x;
-			to.x = from.x;
-			from.x = tmp;
+		point_sort_yx(&r.begin, &r.end);
+
+		if(m->how & M_COLUMN){
+			r.type = REGION_COL;
+
+			/* needs to be done before incrementing r.end.x/y below */
+			point_sort_full(&r.begin, &r.end);
+
+		}else if(m->how & M_LINEWISE){
+			r.type = REGION_LINE;
+
+		}else{
+			r.type = REGION_CHAR;
 		}
 
-		if(!(mr.motion->how & M_EXCLUSIVE))
-			mr.motion->how & M_LINEWISE ? ++to.y : ++to.x;
+		if(!(m->how & M_EXCLUSIVE))
+			m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
 
-		action(b, &from, &to, mr.motion->how & M_LINEWISE);
+		if(used_region)
+			*used_region = r;
 
-		b->ui_pos = from;
+		/* reset cursor to beginning, then allow adjustments */
+		*b->ui_pos = r.begin;
+		action(b, &r, b->ui_pos);
+
+		ui_set_bufmode(UI_NORMAL);
 
 		ui_redraw();
 		ui_cur_changed();
@@ -365,22 +378,34 @@ static int around_motion(
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_delbetween);
+	around_motion(a, repeat, from_ch, buffer_delregion, NULL);
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	if(around_motion(a, repeat, from_ch, buffer_delbetween))
-		k_set_mode(&(keyarg_u){ UI_INSERT }, 0, 0);
+	region_t r;
+
+	if(around_motion(a, repeat, from_ch, buffer_delregion, &r)){
+		buffer_t *buf = buffers_cur();
+		buf->col_insert_height = r.end.y - r.begin.y + 1;
+
+		ui_set_bufmode(r.type == REGION_COL ? UI_INSERT_COL : UI_INSERT);
+	}
 }
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_joinbetween);
+	around_motion(a, repeat, from_ch, buffer_joinregion, NULL);
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion(a, repeat, from_ch,
-			a->i > 0 ? buffer_indent : buffer_unindent);
+			a->i > 0 ? buffer_indent : buffer_unindent, NULL);
+}
+
+void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_togglev(buffers_cur());
+	ui_cur_changed();
 }
