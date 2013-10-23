@@ -22,6 +22,7 @@ static const char *ui_bufmode_str(enum buf_mode m)
 {
 	switch(m){
 		case UI_NORMAL: return "NORMAL";
+		case UI_INSERT_COL: return "INSERT BLOCK";
 		case UI_INSERT: return "INSERT";
 		case UI_VISUAL_CHAR: return "VISUAL";
 		case UI_VISUAL_LN: return "VISUAL LINE";
@@ -79,21 +80,55 @@ void ui_rstatus(const char *fmt, ...)
 }
 
 static
-void ui_inschar(char ch)
+void ui_inschar_buf_xy(buffer_t *buf, char ch, int *x, int *y)
 {
-	buffer_t *buf = buffers_cur();
-
 	switch(ch){
 		case CTRL_AND('?'):
 		case CTRL_AND('H'):
 		case 127:
 			if(buf->ui_pos->x > 0)
-				buffer_delchar(buffers_cur(), &buf->ui_pos->x, &buf->ui_pos->y);
+				buffer_delchar(buf, x, y);
 			break;
 
 		default:
-			buffer_inschar(buffers_cur(), &buf->ui_pos->x, &buf->ui_pos->y, ch);
+			buffer_inschar(buf, x, y, ch);
 			break;
+	}
+}
+
+static
+void ui_inschar(char ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	ui_inschar_buf_xy(buf, ch, &buf->ui_pos->x, &buf->ui_pos->y);
+
+	ui_cur_changed();
+	ui_redraw();
+}
+
+static
+void ui_inscolchar(char ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	if(isnewline(ch)){
+		/* can't col-insert a newline, revert */
+		ui_set_bufmode(UI_INSERT);
+		ui_inschar(ch);
+		return;
+	}
+
+	for(unsigned off = 0; off < buf->col_insert_height; off++){
+		int y = buf->ui_pos->y + off;
+		int x = buf->ui_pos->x;
+		int *px = &x;
+
+		/* never care about y, and update x in the last case */
+		if(off == buf->col_insert_height - 1)
+			px = &buf->ui_pos->x;
+
+		ui_inschar_buf_xy(buf, ch, px, &y);
 	}
 
 	ui_cur_changed();
@@ -118,7 +153,9 @@ void ui_main()
 					alt->y, alt->x);
 		}
 
-		if(UI_MODE() != UI_INSERT){
+		const bool ins = UI_MODE() & UI_INSERT_ANY;
+
+		if(!ins){
 			unsigned repeat = 0;
 			const motion *m = motion_read(&repeat);
 
@@ -128,9 +165,7 @@ void ui_main()
 			}
 		}
 
-		const bool ins = UI_MODE() == UI_INSERT;
 		const enum io io_mode = ins ? IO_NOMAP : IO_MAP;
-
 		unsigned repeat = ins ? 0 : io_read_repeat(io_mode);
 		int ch = io_getch(io_mode);
 
@@ -141,12 +176,16 @@ void ui_main()
 				found = true;
 			}
 
-		if(!found){
-			/* checks for multiple */
-			if(UI_MODE() == UI_INSERT)
+		if(!found) switch(UI_MODE()){
+			case UI_INSERT:
 				ui_inschar(ch);
-			else if(ch != K_ESC)
-				ui_status("unknown key %c", ch);
+				break;
+			case UI_INSERT_COL:
+				ui_inscolchar(ch);
+				break;
+			default:
+				if(ch != K_ESC)
+					ui_status("unknown key %c", ch);
 		}
 	}
 }
@@ -208,6 +247,7 @@ static enum region_type ui_mode_to_region(enum buf_mode m)
 	switch(m){
 		case UI_NORMAL:
 		case UI_INSERT:
+		case UI_INSERT_COL:
 			break;
 		case UI_VISUAL_CHAR: return REGION_CHAR;
 		case UI_VISUAL_COL: return REGION_COL;

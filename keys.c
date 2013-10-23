@@ -303,7 +303,7 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
-		buffer_action *action)
+		buffer_action *action, region_t *used_region)
 {
 	motion m_doubletap = {
 		.func = m_move,
@@ -358,6 +358,9 @@ static int around_motion(
 		if(!(m->how & M_EXCLUSIVE))
 			m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
 
+		if(used_region)
+			*used_region = r;
+
 		/* reset cursor to beginning, then allow adjustments */
 		*b->ui_pos = r.begin;
 		action(b, &r, b->ui_pos);
@@ -375,24 +378,30 @@ static int around_motion(
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_delregion);
+	around_motion(a, repeat, from_ch, buffer_delregion, NULL);
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	if(around_motion(a, repeat, from_ch, buffer_delregion))
-		k_set_mode(&(keyarg_u){ UI_INSERT }, 0, 0);
+	region_t r;
+
+	if(around_motion(a, repeat, from_ch, buffer_delregion, &r)){
+		buffer_t *buf = buffers_cur();
+		buf->col_insert_height = r.end.y - r.begin.y + 1;
+
+		ui_set_bufmode(r.type == REGION_COL ? UI_INSERT_COL : UI_INSERT);
+	}
 }
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_joinregion);
+	around_motion(a, repeat, from_ch, buffer_joinregion, NULL);
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion(a, repeat, from_ch,
-			a->i > 0 ? buffer_indent : buffer_unindent);
+			a->i > 0 ? buffer_indent : buffer_unindent, NULL);
 }
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)

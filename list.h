@@ -30,4 +30,6 @@ void list_insline(list_t **, int *x, int *y, int dir);
 
 int list_count(list_t *);
 
+#define isnewline(ch) ((ch) == '\n' || (ch) == '\r')
+
 #endif

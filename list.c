@@ -109,7 +109,7 @@ static int list_evalnewlines(list_t *l)
 	for(size_t i = l->len_line - 1; ; i--){
 		char ch = l->line[i];
 
-		if(ch == '\n' || ch == '\r'){
+		if(isnewline(ch)){
 			int cut_len = l->len_line - i;
 			char *cut;
 			if(cut_len > 0){

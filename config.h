@@ -40,14 +40,11 @@ const motionkey_t motion_keys[] = {
 	{ 0 }
 };
 
-#define INS_KEY(k) \
-	{ k, k_set_mode, { UI_INSERT }, UI_NORMAL }
-
 const nkey_t nkeys[] = {
 	/* order is important */
 	/* char, func, arg, mode */
-	{ K_ESC, k_motion, { .motion = { .m = { m_move, .arg.pos = { -1, 0 } }, .repeat = 1 } }, UI_INSERT },
-	{ K_ESC,         k_set_mode,   { UI_NORMAL }, UI_INSERT | UI_VISUAL_ANY },
+	{ K_ESC, k_motion, { .motion = { .m = { m_move, .arg.pos = { -1, 0 } }, .repeat = 1 } }, UI_INSERT_ANY },
+	{ K_ESC,         k_set_mode,   { UI_NORMAL }, UI_INSERT_ANY | UI_VISUAL_ANY },
 
 	{ 'i',            k_set_mode,   { UI_INSERT }, UI_NORMAL },
 
