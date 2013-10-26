@@ -360,7 +360,9 @@ static int around_motion(
 			r.type = REGION_CHAR;
 		}
 
-		if(!(m->how & M_EXCLUSIVE))
+		if(b->ui_mode & UI_VISUAL_ANY)
+			r.end.x++; /* visual always includes the first char */
+		else if(!(m->how & M_EXCLUSIVE))
 			m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
 
 		if(used_region)
@@ -392,9 +394,19 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	if(around_motion(a, repeat, from_ch, buffer_delregion, &r)){
 		buffer_t *buf = buffers_cur();
-		buf->col_insert_height = r.end.y - r.begin.y + 1;
 
-		ui_set_bufmode(r.type == REGION_COL ? UI_INSERT_COL : UI_INSERT);
+		switch(r.type){
+			case REGION_COL:
+				buf->col_insert_height = r.end.y - r.begin.y + 1;
+				ui_set_bufmode(UI_INSERT_COL);
+				break;
+			case REGION_LINE:
+				k_open(&(keyarg_u){ .i = -1 }, 0, 0);
+				break;
+			case REGION_CHAR:
+				ui_set_bufmode(UI_INSERT);
+				break;
+		}
 	}
 }
 

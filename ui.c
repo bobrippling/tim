@@ -119,13 +119,13 @@ void ui_inscolchar(char ch)
 		return;
 	}
 
-	for(unsigned off = 0; off < buf->col_insert_height; off++){
-		int y = buf->ui_pos->y + off;
+	for(unsigned i = 1; i <= buf->col_insert_height; i++){
+		int y = buf->ui_pos->y + i - 1;
 		int x = buf->ui_pos->x;
 		int *px = &x;
 
 		/* never care about y, and update x in the last case */
-		if(off == buf->col_insert_height - 1)
+		if(i == buf->col_insert_height)
 			px = &buf->ui_pos->x;
 
 		ui_inschar_buf_xy(buf, ch, px, &y);

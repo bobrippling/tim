@@ -254,7 +254,12 @@ void list_delregion(list_t **pl, const region_t *region)
 			if(line_change > 0){
 				/* join the lines */
 				list_t *next = l->next;
-				size_t nextlen = next->len_line - region->end.x;
+				size_t nextlen;
+				if((unsigned)region->end.x >= next->len_line){
+					nextlen = 0;
+				}else{
+					nextlen = next->len_line - region->end.x;
+				}
 				size_t fulllen = region->begin.x + nextlen;
 
 				if(l->len_malloc < fulllen)
