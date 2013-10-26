@@ -164,6 +164,9 @@ void buffer_indent2(
 {
 	/* region is sorted by y */
 	const int min_x = MIN(region->begin.x, region->end.x);
+	list_t *pos = dir < 0
+		? list_seek(buf->head, buf->ui_pos->y, 0)
+		: NULL;
 
 	for(int y = region->begin.y; y < region->end.y; y++){
 		int x = 0;
@@ -180,7 +183,14 @@ void buffer_indent2(
 		if(dir > 0){
 			buffer_inschar(buf, &x, &y, '\t');
 		}else{
-			// TODO: unindent
+			if(pos){
+				if(pos->len_line > 0 && pos->line[0] == '\t')
+					memmove(pos->line, pos->line + 1, --pos->len_line);
+
+				pos = pos->next;
+			}else{
+				break;
+			}
 		}
 	}
 }
