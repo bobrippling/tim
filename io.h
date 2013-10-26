@@ -5,8 +5,9 @@
 
 enum io
 {
+	IO_NOMAP,
 	IO_MAP,
-	IO_NOMAP
+	IO_MAPV, /* use the visual entry? */
 };
 
 int io_getch(enum io);

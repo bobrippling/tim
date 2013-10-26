@@ -34,9 +34,14 @@ static const motion *motion_find(int ch)
 
 const motion *motion_read(unsigned *repeat)
 {
-	*repeat = io_read_repeat(IO_MAP);
+	enum io io_m =
+		buffers_cur()->ui_mode & UI_VISUAL_ANY
+		? IO_MAPV
+		: IO_MAP;
 
-	int ch = io_getch(IO_MAP);
+	*repeat = io_read_repeat(io_m);
+
+	int ch = io_getch(io_m);
 	const motion *m = motion_find(ch);
 	if(!m){
 		io_ungetch(ch);

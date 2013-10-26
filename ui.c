@@ -165,7 +165,10 @@ void ui_main()
 			}
 		}
 
-		const enum io io_mode = ins ? IO_NOMAP : IO_MAP;
+		const enum io io_mode = ins
+			? IO_NOMAP
+			: (buf->ui_mode & UI_VISUAL_ANY ? IO_MAPV : IO_MAP);
+
 		unsigned repeat = ins ? 0 : io_read_repeat(io_mode);
 		int ch = io_getch(io_mode);
 

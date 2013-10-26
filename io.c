@@ -23,6 +23,9 @@ static void io_fifo_realloc(size_t len)
 
 static void io_fifo_push(const char *s)
 {
+	if(!s)
+		return;
+
 	size_t newlen = strlen(s);
 	size_t start = io_fifoused;
 
@@ -50,11 +53,11 @@ static int io_fifo_pop(void)
 	return ret;
 }
 
-static void io_map(int ch)
+static void io_map(int ch, int visual)
 {
 	for(const keymap_t *m = maps; m->to; m++)
 		if(m->from == ch)
-			io_fifo_push(m->to);
+			io_fifo_push(visual ? m->to_visual : m->to);
 }
 
 int io_getch(enum io ty)
@@ -66,7 +69,8 @@ int io_getch(enum io ty)
 
 	switch(ty){
 		case IO_MAP:
-			io_map(ch);
+		case IO_MAPV:
+			io_map(ch, ty == IO_MAPV);
 			if(io_fifoused)
 				return io_fifo_pop();
 			/* fall */

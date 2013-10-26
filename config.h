@@ -87,17 +87,17 @@ const nkey_t nkeys[] = {
 };
 
 const keymap_t maps[] = {
-	{ 'I', "^i" },
-	{ 'a', "li" },
-	{ 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
-	{ 'C', "c$" },
-	{ 'D', "d$" },
+	{ 'I', "^i", NULL },
+	{ 'a', "li", NULL },
+	{ 'A', "$li", NULL }, /* remap not allowed, hence "$a" wouldn't work */
+	{ 'C', "c$", "c" },
+	{ 'D', "d$", "d" },
 
-	{ 'x', "dl" }, /* TODO: delete command needs to handle count */
-	{ 'X', "dh" },
+	{ 'x', "dl", "d" }, /* TODO: delete command needs to handle count */
+	{ 'X', "dh", "d" },
 
-	{ 's', "cl" }, /* TODO: change command needs to handle count */
-	{ 'S', "0c$" },
+	{ 's', "cl", "c" }, /* TODO: change command needs to handle count */
+	{ 'S', "0c$", NULL },
 
 	{ 0 }
 };
