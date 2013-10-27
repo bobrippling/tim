@@ -4,23 +4,25 @@ FIXES:
 
 visual mode:
 	exec-region = :%!$repl
-	n number of cursor points - multi/mark insert?
 	r[char], ~, and : over a region
 
-keys:
-	check:
-		dd, yy, cc
-	s
+operators:
 	R - multi-char replacement
-	k_format, k_paste, k_undo, k_yank
+	paste
+	undo
+	y
+	g~, gu, gU, gq
+	=
+	!
 
 motions:
 	%
 	n, N
-	[[
-	i:
-		iw
-		i{
+	[[, [{
+	i/a: iw, i{, ip
+	operator-pending:
+		v, V, c-v
+
 
 cmds:
 	:! / cmd parsing
