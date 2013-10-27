@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Wextra -pedantic -g -std=c99 \
-				 -fms-extensions                     \
+				 -fms-extensions -fno-common         \
 				 -Wmissing-prototypes -Wno-unused-parameter \
 				 -Wno-char-subscripts -Wno-missing-field-initializers
 

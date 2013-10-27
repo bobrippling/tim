@@ -84,7 +84,7 @@ struct buffer_action
 	int is_linewise;
 };
 
-struct buffer_action
+extern struct buffer_action
 	buffer_delregion, buffer_joinregion,
 	buffer_indent, buffer_unindent;
 
