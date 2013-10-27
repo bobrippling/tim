@@ -10,6 +10,9 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
 
+check: tim
+	cd test && ./run.pl
+
 clean:
 	rm -f ${OBJ} tim
 
