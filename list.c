@@ -118,7 +118,8 @@ static int list_evalnewlines(list_t *l)
 			char *cut;
 			if(cut_len > 0){
 				cut = umalloc(cut_len);
-				memcpy(cut, l->line + i + 1, cut_len);
+				/* cut_len-1, don't copy the \n */
+				memcpy(cut, l->line + i + 1, cut_len-1);
 			}else{
 				cut = NULL;
 				cut_len = 0;
