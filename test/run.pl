@@ -28,6 +28,7 @@ sub runtest
 	my(@f_begin, @f_end, @cmds);
 
 	my $target = \@cmds;
+	my $valid = 0;
 
 	open F, '<', $test or die "open $test: $!\n";
 	while(<F>){
@@ -35,12 +36,16 @@ sub runtest
 
 		if(/^__IN__$/){
 			$target = \@f_begin;
+			$valid++;
 		}elsif(/^__OUT__$/){
 			$target = \@f_end;
+			$valid++;
 		}else{
 			push @{$target}, $_;
 		}
 	}
+
+	die "invalid test $test" unless $valid == 2;
 
 	to_file ">$file", @f_begin;
 
