@@ -1,7 +1,3 @@
-FIXES:
-	indent - when not in visual line mode, the last line isn't indented
-	       - see M_EXCLUSIVE code, around_motion(), after r.type set
-
 visual mode:
 	exec-region = :%!$repl
 	r[char], ~, and : over a region

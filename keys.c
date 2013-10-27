@@ -308,7 +308,7 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 static int around_motion(
 		const keyarg_u *a, unsigned repeat, const int from_ch,
-		buffer_action *action, region_t *used_region)
+		struct buffer_action *action, region_t *used_region)
 {
 	motion m_doubletap = {
 		.func = m_move,
@@ -363,7 +363,7 @@ static int around_motion(
 		if(b->ui_mode & UI_VISUAL_ANY){
 			/* only increment y in the line case */
 			r.end.x++;
-			if(m->how & M_LINEWISE)
+			if(m->how & M_LINEWISE || action->is_linewise)
 				r.end.y++;
 
 		}else if(!(m->how & M_EXCLUSIVE)){
@@ -375,7 +375,7 @@ static int around_motion(
 
 		/* reset cursor to beginning, then allow adjustments */
 		*b->ui_pos = r.begin;
-		action(b, &r, b->ui_pos);
+		action->fn(b, &r, b->ui_pos);
 
 		ui_set_bufmode(UI_NORMAL);
 
@@ -390,14 +390,14 @@ static int around_motion(
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_delregion, NULL);
+	around_motion(a, repeat, from_ch, &buffer_delregion, NULL);
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	region_t r;
 
-	if(around_motion(a, repeat, from_ch, buffer_delregion, &r)){
+	if(around_motion(a, repeat, from_ch, &buffer_delregion, &r)){
 		buffer_t *buf = buffers_cur();
 
 		switch(r.type){
@@ -417,13 +417,13 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, buffer_joinregion, NULL);
+	around_motion(a, repeat, from_ch, &buffer_joinregion, NULL);
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion(a, repeat, from_ch,
-			a->i > 0 ? buffer_indent : buffer_unindent, NULL);
+			a->i > 0 ? &buffer_indent : &buffer_unindent, NULL);
 }
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)

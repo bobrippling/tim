@@ -75,12 +75,18 @@ const char *buffer_fname(const buffer_t *);
 void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
 
-typedef void buffer_action(buffer_t *, const region_t *, point_t *out);
+typedef void buffer_action_f(
+		buffer_t *, const region_t *, point_t *out);
 
-buffer_action buffer_delregion,
-              buffer_joinregion,
-              buffer_indent,
-              buffer_unindent;
+struct buffer_action
+{
+	buffer_action_f *fn;
+	int is_linewise;
+};
+
+struct buffer_action
+	buffer_delregion, buffer_joinregion,
+	buffer_indent, buffer_unindent;
 
 void buffer_replace_chars(buffer_t *, int ch, unsigned n);
 

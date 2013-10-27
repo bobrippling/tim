@@ -140,12 +140,15 @@ void buffer_delchar(buffer_t *buf, int *x, int *y)
 	list_delchar(buf->head, x, y);
 }
 
-void buffer_delregion(buffer_t *buf, const region_t *region, point_t *out)
+static
+void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	list_delregion(&buf->head, region);
 }
+struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
 
-void buffer_joinregion(buffer_t *buf, const region_t *region, point_t *out)
+static
+void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	/* could use 'how' here - columns and lines only make sense */
 	list_t *l = list_seek(buf->head, region->begin.y, 0);
@@ -156,6 +159,7 @@ void buffer_joinregion(buffer_t *buf, const region_t *region, point_t *out)
 	if(l)
 		out->x = mid;
 }
+struct buffer_action buffer_joinregion = { .fn = buffer_joinregion_f, .is_linewise = 1 };
 
 static
 void buffer_indent2(
@@ -195,15 +199,19 @@ void buffer_indent2(
 	}
 }
 
-void buffer_indent(buffer_t *buf, const region_t *region, point_t *out)
+static
+void buffer_indent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, 1);
 }
+struct buffer_action buffer_indent = { .fn = buffer_indent_f,  .is_linewise = 1 };
 
-void buffer_unindent(buffer_t *buf, const region_t *region, point_t *out)
+static
+void buffer_unindent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, -1);
 }
+struct buffer_action buffer_unindent = { .fn = buffer_unindent_f,  .is_linewise = 1 };
 
 void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 {
