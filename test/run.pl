@@ -14,7 +14,7 @@ END {
 sub to_file
 {
 	my($fnam, @l) = @_;
-	open F, '>', $fnam or die "open $fnam: $!\n";
+	open F, $fnam or die "open $fnam: $!\n";
 	print F "$_\n" for @l;
 	close F;
 }
@@ -42,17 +42,20 @@ sub runtest
 		}
 	}
 
-	to_file $file, @f_begin;
+	to_file ">$file", @f_begin;
 
 	my $rc = run_tim($file, join('', @cmds) . ":wq");
 
 	if($rc != 0){
 		print "failure: (exit code) $test\n";
 	}else{
-		to_file $expected, @f_end;
+		to_file ">$expected", @f_end;
 
-		$rc = system('diff', '-u', $expected, $file);
+		my @diff = map { chomp; $_ } `diff -u '$expected' '$file'`;
+		$rc = $?;
 		printf "%s: %s\n", $rc ? "failure" : "success", $test;
+
+		to_file '| sed -n l', @diff[2 .. $#diff];
 	}
 
 	return $rc;
@@ -65,7 +68,7 @@ sub run_tim
 	if($pid == 0){
 		my $inp = "$tdir/inp";
 		my($file, $cmds) = @_;
-		to_file $inp, $cmds;
+		to_file ">$inp", $cmds;
 
 		open STDIN, '<', $inp or die;
 		exec $tim, $file;
