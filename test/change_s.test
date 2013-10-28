@@ -1,0 +1,9 @@
+jSreplace
+__IN__
+hello there
+greetings
+abcdefghijk
+__OUT__
+hello there
+replace
+abcdefghijk
