@@ -216,17 +216,17 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buff
 	list_t *l = buffer_current_line(buf);
 
 	if(!l)
-		goto failed;
+		return MOTION_FAILURE;
 
 	point_t bpos = *buf->ui_pos;
 
 	if(!(ftype & F_REV)){
 		bpos.x++;
 		if((unsigned)bpos.x >= l->len_line)
-			goto failed;
+			return MOTION_FAILURE;
 	}else{
 		if(l->len_line == 0)
-			goto failed;
+			return MOTION_FAILURE;
 
 		/* if we're after the actual length, move from logical to it */
 		if((unsigned)bpos.x >= l->len_line)
@@ -235,36 +235,36 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buff
 		bpos.x--;
 
 		if(bpos.x < 0)
-			goto failed;
+			return MOTION_FAILURE;
 	}
-
-	char *const start = l->line + bpos.x;
-	char *p = start;
 
 	repeat = DEFAULT_REPEAT(repeat);
 
 	for(;;){
-		p = (ftype & F_REV
-				? strchr_rev(p, ch, l->line)
-				: memchr(p, ch, p - l->line));
+		char *p = l->line + bpos.x;
+
+		if(ftype & F_REV)
+			p = strchr_rev(p, ch, l->line);
+		else
+			p = memchr(p, ch, l->len_line - (p - l->line));
 
 		if(!p)
-			goto failed;
+			return MOTION_FAILURE;
+
+		bpos.x = p - l->line;
 
 		if(--repeat == 0){
 			const int adj = ftype & F_TIL ? ftype & F_REV ? 1 : -1 : 0;
 
-			*to = (point_t){ .x = bpos.x + p - start + adj,
-				               .y = bpos.y };
+			*to = bpos;
+			to->x += adj;
 			break;
 		}else{
-			p++;
+			bpos.x += ftype & F_REV ? -1 : +1;
 		}
 	}
 
 	return MOTION_SUCCESS;
-failed:
-	return MOTION_FAILURE;
 }
 
 static int last_find_ch;
