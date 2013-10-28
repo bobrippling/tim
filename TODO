@@ -11,6 +11,10 @@ operators:
 	=
 	!
 
+insert:
+	^U, ^W
+	^V
+
 motions:
 	%
 	n, N
@@ -25,3 +29,4 @@ cmds:
 	save-check  on :q/e
 	exist-check on :w
 	:e - limit cursor to (x, max_lines) when loading a new file
+	zt, zb, zz
