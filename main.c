@@ -38,9 +38,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	buffers_init(argc - i, argv + i, initargs, offset);
+	ui_init(); /* must be before buffers_init() */
 
-	ui_init();
+	buffers_init(argc - i, argv + i, initargs, offset);
 
 	ui_main();
 	ui_term();

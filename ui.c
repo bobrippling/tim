@@ -47,7 +47,6 @@ void ui_set_bufmode(enum buf_mode m)
 void ui_init()
 {
 	nc_init();
-	ui_set_bufmode(UI_NORMAL);
 }
 
 static
