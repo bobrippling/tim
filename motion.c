@@ -14,9 +14,7 @@
 #include "str.h"
 #include "prompt.h"
 
-#define UI_X   buf->ui_pos.x
-#define UI_Y   buf->ui_pos.y
-#define UI_TOP buf->ui_start.y
+#define UI_TOP(buf) buf->ui_start.y
 
 enum
 {
@@ -40,19 +38,19 @@ int m_eol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 int m_sos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	to->y = UI_TOP;
+	to->y = UI_TOP(buf);
 	return MOTION_SUCCESS;
 }
 
 int m_eos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	to->y = UI_TOP + buf->screen_coord.h - 1;
+	to->y = UI_TOP(buf) + buf->screen_coord.h - 1;
 	return MOTION_SUCCESS;
 }
 
 int m_mos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	to->y = UI_TOP + buf->screen_coord.h / 2 - 1;
+	to->y = UI_TOP(buf) + buf->screen_coord.h / 2 - 1;
 	return MOTION_SUCCESS;
 }
 
