@@ -244,7 +244,9 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buff
 	repeat = DEFAULT_REPEAT(repeat);
 
 	for(;;){
-		p = (ftype & F_REV ? strchr_rev(p, ch, l->line) : strchr(p, ch));
+		p = (ftype & F_REV
+				? strchr_rev(p, ch, l->line)
+				: memchr(p, ch, p - l->line));
 
 		if(!p)
 			goto failed;
