@@ -14,10 +14,44 @@ char *strchr_rev(const char *s, int ch, const char *start)
 	return (char *)s; /* *s == ch */
 }
 
-int isallspace(const char *s)
+bool isallspace(const char *s)
 {
 	for(; *s && isspace(*s); s++);
 	return !*s;
+}
+
+static const struct paren
+{
+	char opp;
+	bool lead;
+} parens[] = {
+	['['] = { ']', true },
+	['{'] = { '}', true },
+	['('] = { ')', true },
+	['<'] = { '>', true },
+	[']'] = { '[', false },
+	['}'] = { '{', false },
+	[')'] = { '(', false },
+	['>'] = { '<', false },
+};
+
+static const struct paren *paren_lookup(char c)
+{
+	unsigned char u = c;
+
+	if(u >= sizeof parens / sizeof *parens)
+		return &parens[0];
+	return &parens[u];
+}
+
+bool paren_match(char c, char *other)
+{
+	return (*other = paren_lookup(c)->opp);
+}
+
+bool paren_left(char c)
+{
+	return paren_lookup(c)->lead;
 }
 
 void str_ltrim(char *s, size_t *pl)

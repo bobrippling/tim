@@ -34,7 +34,7 @@ union motion_arg
 motion_func m_eof, m_eol, m_eos, m_goto, m_mos, m_move, m_sof, m_sol, m_sos;
 motion_func m_find, m_findnext;
 motion_func m_word;
-motion_func m_para;
+motion_func m_para, m_paren;
 motion_func m_search;
 motion_func m_visual;
 

@@ -211,6 +211,14 @@ int m_word(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
+static char *strchrdir(char *p, char ch, bool forward, char *start, size_t len)
+{
+	if(forward)
+		return strchr_rev(p, ch, start);
+	else
+		return memchr(p, ch, len - (p - start));
+}
+
 static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
@@ -243,10 +251,7 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buff
 	for(;;){
 		char *p = l->line + bpos.x;
 
-		if(ftype & F_REV)
-			p = strchr_rev(p, ch, l->line);
-		else
-			p = memchr(p, ch, l->len_line - (p - l->line));
+		p = strchrdir(p, ch, ftype & F_REV, l->line, l->len_line);
 
 		if(!p)
 			return MOTION_FAILURE;
@@ -322,6 +327,55 @@ int m_visual(
 	*to = *buffer_uipos_alt(buf);
 
 	return MOTION_SUCCESS;
+}
+
+int m_paren(
+		motion_arg const *arg, unsigned repeat,
+		buffer_t *buf, point_t *to)
+{
+	list_t *l = buffer_current_line(buf);
+	if(!l)
+		return MOTION_FAILURE;
+
+	char paren = 0, opp;
+	for(unsigned i = buf->ui_pos->x; i < l->len_line; i++)
+		if(paren_match(l->line[i], &opp)){
+			paren = l->line[i];
+			break;
+		}
+
+	if(!paren)
+		return MOTION_FAILURE;
+
+	/* search for opp, skipping matching parens */
+	unsigned nest = 0;
+	const int dir = paren_left(paren) ? 1 : -1;
+	unsigned y = buf->ui_pos->y;
+	unsigned x = buf->ui_pos->x;
+
+	for(; l; l = advance_line(l, &y, dir), x = 0){
+		if(l->len_line == 0)
+			continue;
+
+		for(char *p = l->line + x;;){
+			/* FIXME: nest++ */
+			char *match = strchrdir(p, opp, dir > 0, l->line, l->len_line);
+			if(match){
+				if(nest == 0){
+					*to = (point_t){ .y = y, .x = x };
+					return MOTION_SUCCESS;
+				}
+				nest--;
+				if((unsigned long)(p - l->line) == l->len_line - 1)
+					break;
+				p++;
+			}else{
+				break;
+			}
+		}
+	}
+
+	return MOTION_FAILURE;
 }
 
 int motion_apply_buf_dry(

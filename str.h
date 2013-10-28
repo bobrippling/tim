@@ -1,8 +1,12 @@
 #ifndef STR_H
 #define STR_H
 
+#include <stdbool.h>
+
 char *strchr_rev(const char *s, int ch, const char *start);
-int   isallspace(const char *);
+bool isallspace(const char *);
+bool paren_match(char c, char *other);
+bool paren_left(char);
 
 void str_ltrim(char *, size_t *);
 void str_rtrim(char *, size_t *);
