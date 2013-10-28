@@ -1,0 +1,11 @@
+jlj>
+__IN__
+abc
+def
+ghi
+jkl
+__OUT__
+abc
+d	ef
+g	hi
+jkl

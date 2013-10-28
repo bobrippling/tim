@@ -2,12 +2,16 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>
+#include <assert.h>
 
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
 #include "mem.h"
 #include "yank.h"
+#include "macros.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
@@ -22,23 +26,41 @@ buffer_t *buffer_new()
 {
 	buffer_t *b = umalloc(sizeof *b);
 	b->head = list_new(NULL);
+	b->ui_pos = &b->ui_npos;
+	b->ui_mode = UI_NORMAL;
 	return b;
+}
+
+void buffer_togglev(buffer_t *buf)
+{
+	buf->ui_pos = (buf->ui_pos == &buf->ui_npos)
+		? &buf->ui_vpos
+		: &buf->ui_npos;
+}
+
+int buffer_setmode(buffer_t *buf, enum buf_mode m)
+{
+	if(!m || (m & (m - 1))){
+		return -1;
+	}else{
+		if((buf->ui_mode & UI_VISUAL_ANY) == 0
+		&& m & UI_VISUAL_ANY)
+		{
+			/* from non-visual to visual */
+			*buffer_uipos_alt(buf) = *buf->ui_pos;
+		}
+
+		buf->ui_mode = m;
+		return 0;
+	}
 }
 
 static
 buffer_t *buffer_new_file(FILE *f)
 {
 	/* TODO: mmap() */
-	list_t *l;
-	buffer_t *b;
-
-	l = list_new_file(f);
-
-	if(!l)
-		return NULL;
-
-	b = buffer_new();
-	b->head = l;
+	buffer_t *b = buffer_new();
+	buffer_replace_file(b, f);
 
 	return b;
 }
@@ -119,11 +141,10 @@ void buffer_delchar(buffer_t *buf, int *x, int *y)
 	list_delchar(buf->head, x, y);
 }
 
-void buffer_delbetween(buffer_t *buf,
-		point_t *from, point_t const *to,
-		int linewise)
+static
+void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
-	list_t *del = list_delbetween(&buf->head, from, to, linewise);
+	list_t *del = list_delregion(&buf->head, region);
 
 	yank_push(del);
 }
@@ -140,31 +161,73 @@ void buffer_inslist(buffer_t *buf, list_t *l)
 	bl->next = l;
 	l->prev = bl;
 }
+struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
 
-void buffer_joinbetween(buffer_t *buf,
-		point_t *from, point_t const *to, int linewise)
+static
+void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
-	list_t *l = list_seek(buf->head, from->y, 0);
+	/* could use 'how' here - columns and lines only make sense */
+	list_t *l = list_seek(buf->head, region->begin.y, 0);
 	const int mid = l ? l->len_line : 0;
 
-	list_joinbetween(&buf->head, from, to);
+	list_joinregion(&buf->head, region);
 
 	if(l)
-		from->x = mid;
+		out->x = mid;
+}
+struct buffer_action buffer_joinregion = { .fn = buffer_joinregion_f, .is_linewise = 1 };
+
+static
+void buffer_indent2(
+		buffer_t *buf, const region_t *region,
+		point_t *out, int dir)
+{
+	/* region is sorted by y */
+	const int min_x = MIN(region->begin.x, region->end.x);
+	list_t *pos = dir < 0
+		? list_seek(buf->head, buf->ui_pos->y, 0)
+		: NULL;
+
+	for(int y = region->begin.y; y < region->end.y; y++){
+		int x = 0;
+
+		switch(region->type){
+			case REGION_CHAR:
+			case REGION_LINE:
+				break;
+			case REGION_COL:
+				/* indent from the first col onwards */
+				x = min_x;
+		}
+
+		if(dir > 0){
+			buffer_inschar(buf, &x, &y, '\t');
+		}else{
+			if(pos){
+				if(pos->len_line > 0 && pos->line[0] == '\t')
+					memmove(pos->line, pos->line + 1, --pos->len_line);
+
+				pos = pos->next;
+			}else{
+				break;
+			}
+		}
+	}
 }
 
-/* TODO: buffer_foreach_line(buf, from, to, ^{ indent/unindent }) */
-void buffer_indent(buffer_t *buf,
-		point_t *from, point_t const *to, int linewise)
+static
+void buffer_indent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
-	TODO();
+	buffer_indent2(buf, region, out, 1);
 }
+struct buffer_action buffer_indent = { .fn = buffer_indent_f,  .is_linewise = 1 };
 
-void buffer_unindent(buffer_t *buf,
-		point_t *from, point_t const *to, int linewise)
+static
+void buffer_unindent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
-	TODO();
+	buffer_indent2(buf, region, out, -1);
 }
+struct buffer_action buffer_unindent = { .fn = buffer_unindent_f,  .is_linewise = 1 };
 
 void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 {
@@ -174,15 +237,45 @@ void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 	with[n] = '\0';
 
 	list_replace_at(buf->head,
-			&buf->ui_pos.x, &buf->ui_pos.y,
+			&buf->ui_pos->x, &buf->ui_pos->y,
 			with);
 
 	free(with);
 }
 
+static int ctoggle(int c)
+{
+	return islower(c) ? toupper(c) : tolower(c);
+}
+
+void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
+{
+	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
+
+	int (*f)(int) = NULL;
+
+	switch(tog_type){
+		case CASE_TOGGLE: f = ctoggle; break;
+		case CASE_UPPER:  f = toupper; break;
+		case CASE_LOWER:  f = tolower; break;
+	}
+	assert(f);
+
+	unsigned i;
+	for(i = buf->ui_pos->x; n > 0; n--, i++){
+		if(i >= l->len_line)
+			break;
+
+		char *p = &l->line[i];
+		*p = f(*p);
+	}
+
+	buf->ui_pos->x = i;
+}
+
 void buffer_insline(buffer_t *buf, int dir)
 {
-	list_insline(&buf->head, &buf->ui_pos.x, &buf->ui_pos.y, dir);
+	list_insline(&buf->head, &buf->ui_pos->x, &buf->ui_pos->y, dir);
 }
 
 buffer_t *buffer_topleftmost(buffer_t *b)
@@ -219,7 +312,7 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new
 
 list_t *buffer_current_line(const buffer_t *b)
 {
-	return list_seek(b->head, b->ui_pos.y, 0);
+	return list_seek(b->head, b->ui_pos->y, 0);
 }
 
 unsigned buffer_nlines(const buffer_t *b)
@@ -274,7 +367,7 @@ static char *buffer_find2(
 
 int buffer_find(const buffer_t *buf, const char *search, point_t *at, int rev)
 {
-	point_t loc = buf->ui_pos;
+	point_t loc = *buf->ui_pos;
 
 	unsigned off = at->x > 0 ? at->x - rev : 0;
 
@@ -298,4 +391,19 @@ int buffer_find(const buffer_t *buf, const char *search, point_t *at, int rev)
 	}
 
 	return 0;
+}
+
+point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
+{
+	return (point_t){
+		buf->screen_coord.x + pt->x - buf->ui_start.x,
+		buf->screen_coord.y + pt->y - buf->ui_start.y
+	};
+}
+
+point_t *buffer_uipos_alt(buffer_t *buf)
+{
+	if(buf->ui_pos == &buf->ui_vpos)
+		return &buf->ui_npos;
+	return &buf->ui_vpos;
 }

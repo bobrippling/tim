@@ -1,30 +1,22 @@
 CFLAGS = -Wall -Wextra -pedantic -g -std=c99 \
-				 -fms-extensions                     \
+				 -fms-extensions -fno-common         \
 				 -Wmissing-prototypes -Wno-unused-parameter \
-				 -Wno-char-subscripts
+				 -Wno-char-subscripts -Wno-missing-field-initializers
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
-	list.o buffers.o motion.o external.o str.o prompt.o yank.o
+	list.o buffers.o motion.o external.o str.o prompt.o io.o \
+	yank.o pos.o region.o
 
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
 
-clean:
-	rm -f *.o tim
+check: tim
+	cd test && ./run.pl
 
-buffer.o: buffer.c pos.h list.h buffer.h mem.h
-buffers.o: buffers.c pos.h list.h buffer.h buffers.h mem.h ui.h
-cmds.o: cmds.c cmds.h ui.h pos.h list.h buffer.h buffers.h external.h \
- mem.h
-external.o: external.c mem.h ui.h external.h
-keys.o: keys.c pos.h list.h buffer.h ui.h motion.h keys.h ncurses.h mem.h \
- cmds.h prompt.h buffers.h config.h
-list.o: list.c pos.h list.h mem.h str.h
-main.o: main.c ui.h pos.h list.h buffer.h buffers.h
-mem.o: mem.c mem.h
-motion.o: motion.c pos.h list.h buffer.h motion.h ui.h ncurses.h str.h \
- prompt.h
-ncurses.o: ncurses.c ncurses.h
-prompt.o: prompt.c prompt.h ncurses.h mem.h
-str.o: str.c str.h
-ui.o: ui.c pos.h ui.h ncurses.h list.h buffer.h motion.h keys.h buffers.h
+clean:
+	rm -f ${OBJ} tim
+
+deps:
+	cc -MM ${OBJ:.o=.c} > Makefile.dep
+
+include Makefile.dep

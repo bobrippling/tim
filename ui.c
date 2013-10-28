@@ -1,38 +1,98 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "pos.h"
-#include "ui.h"
 #include "ncurses.h"
+#include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "ui.h"
 #include "motion.h"
 #include "keys.h"
 #include "buffers.h"
+#include "io.h"
 
-enum ui_mode ui_mode;
+#define UI_MODE() buffers_cur()->ui_mode
+
 int ui_running = 1;
+
+static const char *ui_bufmode_str(enum buf_mode m)
+{
+	switch(m){
+		case UI_NORMAL: return "NORMAL";
+		case UI_INSERT_COL: return "INSERT BLOCK";
+		case UI_INSERT: return "INSERT";
+		case UI_VISUAL_CHAR: return "VISUAL";
+		case UI_VISUAL_LN: return "VISUAL LINE";
+		case UI_VISUAL_COL: return "VISUAL BLOCK";
+	}
+	return "?";
+}
+
+void ui_set_bufmode(enum buf_mode m)
+{
+	buffer_t *buf = buffers_cur();
+
+	if(buffer_setmode(buf, m)){
+		ui_status("bad mode 0x%x", m);
+	}else{
+		ui_redraw();
+		ui_cur_changed();
+		ui_status("%s", ui_bufmode_str(buf->ui_mode));
+	}
+}
 
 void ui_init()
 {
-	ui_mode = UI_NORMAL;
-
 	nc_init();
+}
+
+static
+void ui_vstatus(const char *fmt, va_list l, int right)
+{
+	int y, x;
+
+	nc_get_yx(&y, &x);
+
+	nc_vstatus(fmt, l, right);
+
+	nc_set_yx(y, x);
 }
 
 void ui_status(const char *fmt, ...)
 {
 	va_list l;
-	int y, x;
-
-	nc_get_yx(&y, &x);
-
 	va_start(l, fmt);
-	nc_vstatus(fmt, l);
+	ui_vstatus(fmt, l, 0);
 	va_end(l);
+}
 
-	nc_set_yx(y, x);
+static
+void ui_rstatus(const char *fmt, ...)
+{
+	va_list l;
+	va_start(l, fmt);
+	ui_vstatus(fmt, l, 1);
+	va_end(l);
+}
+
+static
+void ui_inschar_buf_xy(buffer_t *buf, char ch, int *x, int *y)
+{
+	switch(ch){
+		case CTRL_AND('?'):
+		case CTRL_AND('H'):
+		case 127:
+			if(buf->ui_pos->x > 0)
+				buffer_delchar(buf, x, y);
+			break;
+
+		default:
+			buffer_inschar(buf, x, y, ch);
+			break;
+	}
 }
 
 static
@@ -40,17 +100,34 @@ void ui_inschar(char ch)
 {
 	buffer_t *buf = buffers_cur();
 
-	switch(ch){
-		case CTRL_AND('?'):
-		case CTRL_AND('H'):
-		case 127:
-			if(buf->ui_pos.x > 0)
-				buffer_delchar(buffers_cur(), &buf->ui_pos.x, &buf->ui_pos.y);
-			break;
+	ui_inschar_buf_xy(buf, ch, &buf->ui_pos->x, &buf->ui_pos->y);
 
-		default:
-			buffer_inschar(buffers_cur(), &buf->ui_pos.x, &buf->ui_pos.y, ch);
-			break;
+	ui_cur_changed();
+	ui_redraw();
+}
+
+static
+void ui_inscolchar(char ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	if(isnewline(ch)){
+		/* can't col-insert a newline, revert */
+		ui_set_bufmode(UI_INSERT);
+		ui_inschar(ch);
+		return;
+	}
+
+	for(unsigned i = 1; i <= buf->col_insert_height; i++){
+		int y = buf->ui_pos->y + i - 1;
+		int x = buf->ui_pos->x;
+		int *px = &x;
+
+		/* never care about y, and update x in the last case */
+		if(i == buf->col_insert_height)
+			px = &buf->ui_pos->x;
+
+		ui_inschar_buf_xy(buf, ch, px, &y);
 	}
 
 	ui_cur_changed();
@@ -65,34 +142,52 @@ void ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(ui_running){
-		const int first_ch = nc_getch();
-		motion_repeat mr = MOTION_REPEAT();
+		buffer_t *buf = buffers_cur();
 
-		int found = 0;
+		if(UI_MODE() & UI_VISUAL_ANY){
+			point_t *alt = buffer_uipos_alt(buf);
 
-		if(ui_mode == UI_NORMAL){
-			int skip = 0;
-			int ch = first_ch;
-			while(motion_repeat_read(&mr, &ch, skip))
-				skip++, motion_apply_buf(&mr, buffers_cur());
-
-			found = skip > 0;
+			ui_rstatus("%d,%d - %d,%d",
+					buf->ui_pos->y, buf->ui_pos->x,
+					alt->y, alt->x);
 		}
 
+		const bool ins = UI_MODE() & UI_INSERT_ANY;
+
+		if(!ins){
+			unsigned repeat = 0;
+			const motion *m = motion_read(&repeat);
+
+			if(m){
+				motion_apply_buf(m, repeat, buf);
+				continue;
+			}
+		}
+
+		const enum io io_mode = ins
+			? IO_NOMAP
+			: (buf->ui_mode & UI_VISUAL_ANY ? IO_MAPV : IO_MAP);
+
+		unsigned repeat = ins ? 0 : io_read_repeat(io_mode);
+		int ch = io_getch(io_mode);
+
+		bool found = false;
 		for(int i = 0; nkeys[i].ch; i++)
-			if(nkeys[i].mode == ui_mode && nkeys[i].ch == first_ch){
-				nkeys[i].func(&nkeys[i].arg, mr.repeat, first_ch);
-				found = 1;
+			if(nkeys[i].mode & UI_MODE() && nkeys[i].ch == ch){
+				nkeys[i].func(&nkeys[i].arg, repeat, ch);
+				found = true;
 			}
 
-		if(!found){
-			/* checks for multiple */
-			if(ui_mode == UI_INSERT)
-				ui_inschar(first_ch);
-			else if(mr.repeat)
-				; /* ignore */
-			else
-				ui_status("unknown key %d", first_ch);
+		if(!found) switch(UI_MODE()){
+			case UI_INSERT:
+				ui_inschar(ch);
+				break;
+			case UI_INSERT_COL:
+				ui_inscolchar(ch);
+				break;
+			default:
+				if(ch != K_ESC)
+					ui_status("unknown key %c", ch);
 		}
 	}
 }
@@ -108,25 +203,28 @@ void ui_cur_changed()
 	buffer_t *buf = buffers_cur();
 	const int nl = buf->screen_coord.h;
 
-	if(buf->ui_pos.x < 0)
-		buf->ui_pos.x = 0;
+	if(buf->ui_pos->x < 0)
+		buf->ui_pos->x = 0;
 
-	if(buf->ui_pos.y < 0)
-		buf->ui_pos.y = 0;
+	if(buf->ui_pos->y < 0)
+		buf->ui_pos->y = 0;
 
-	if(buf->ui_pos.y > buf->ui_start.y + nl - 1){
-		buf->ui_start.y = buf->ui_pos.y - nl + 1;
+	if(buf->ui_pos->y > buf->ui_start.y + nl - 1){
+		buf->ui_start.y = buf->ui_pos->y - nl + 1;
 		need_redraw = 1;
-	}else if(buf->ui_pos.y < buf->ui_start.y){
-		buf->ui_start.y = buf->ui_pos.y;
+	}else if(buf->ui_pos->y < buf->ui_start.y){
+		buf->ui_start.y = buf->ui_pos->y;
 		need_redraw = 1;
 	}
 
-	nc_set_yx(buf->screen_coord.y + buf->ui_pos.y - buf->ui_start.y,
-			      buf->screen_coord.x + buf->ui_pos.x - buf->ui_start.x);
+	if(buf->ui_mode & UI_VISUAL_ANY)
+		need_redraw = 1;
 
 	if(need_redraw)
 		ui_redraw();
+
+	point_t cursor = buffer_toscreen(buf, buf->ui_pos);
+	nc_set_yx(cursor.y, cursor.x);
 }
 
 static
@@ -146,23 +244,53 @@ void ui_draw_vline(int x, int y, int h)
 	}
 }
 
+static enum region_type ui_mode_to_region(enum buf_mode m)
+{
+	switch(m){
+		case UI_NORMAL:
+		case UI_INSERT:
+		case UI_INSERT_COL:
+			break;
+		case UI_VISUAL_CHAR: return REGION_CHAR;
+		case UI_VISUAL_COL: return REGION_COL;
+		case UI_VISUAL_LN: return REGION_LINE;
+	}
+	return REGION_CHAR; /* doesn't matter */
+}
+
 static
 void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 {
-	list_t *l;
-	int y;
-
 	buf->screen_coord = *r;
 
-	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0); l && y < r->h; l = l->next, y++){
-		const int lim = l->len_line < (unsigned)r->w ? l->len_line : (unsigned)r->w;
-		int i;
+	const region_t hlregion = {
+		buf->ui_npos,
+		buf->ui_vpos,
+		ui_mode_to_region(buf->ui_mode),
+	};
+
+	list_t *l;
+	int y;
+	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0);
+			l && y < r->h;
+			l = l->next, y++)
+	{
+		const int lim = l->len_line < (unsigned)r->w
+			? l->len_line
+			: (unsigned)r->w;
 
 		nc_set_yx(r->y + y, r->x);
 		nc_clrtoeol();
 
-		for(i = 0; i < lim; i++)
-			nc_addch(l->line[i]);
+		for(int x = 0; x < lim; x++){
+			if(buf->ui_mode & UI_VISUAL_ANY)
+				nc_highlight(region_contains(
+							&hlregion, x, buf->ui_start.y + y));
+
+			nc_addch(l->line[x]);
+		}
+
+		nc_highlight(0);
 	}
 
 	for(; y < r->h; y++){

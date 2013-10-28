@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #include "pos.h"
+#include "region.h"
 #include "list.h"
 #include "mem.h"
 #include "str.h"
@@ -62,9 +63,13 @@ list_t *list_new_file(FILE *f)
 void list_free(list_t *l)
 {
 	if(l){
-		list_free(l->next);
+		list_t *next = l->next;
+
 		free(l->line);
 		free(l);
+
+		/* tco */
+		list_free(next);
 	}
 }
 
@@ -108,12 +113,13 @@ static int list_evalnewlines(list_t *l)
 	for(size_t i = l->len_line - 1; ; i--){
 		char ch = l->line[i];
 
-		if(ch == '\n' || ch == '\r'){
+		if(isnewline(ch)){
 			int cut_len = l->len_line - i;
 			char *cut;
 			if(cut_len > 0){
 				cut = umalloc(cut_len);
-				memcpy(cut, l->line + i + 1, cut_len);
+				/* cut_len-1, don't copy the \n */
+				memcpy(cut, l->line + i + 1, cut_len-1);
 			}else{
 				cut = NULL;
 				cut_len = 0;
@@ -243,83 +249,123 @@ static list_t *list_append(list_t *accum, list_t *new)
 	return accum;
 }
 
-list_t *list_delbetween(list_t **pl,
-		point_t const *from, point_t const *to,
-		int linewise)
+list_t *list_delregion(list_t **pl, const region_t *region)
 {
-	assert(from->y <= to->y);
-	assert(from->y < to->y || from->x < to->x);
+	assert(region->begin.y <= region->end.y);
+	assert(region->begin.y < region->end.y || region->begin.x < region->end.x);
 
-	list_t **seeked = list_seekp(pl, from->y, 0);
+	list_t **seeked = list_seekp(pl, region->begin.y, 0);
 
 	list_t *deleted = NULL;
 
 	if(!seeked || !*seeked)
 		return deleted;
 
-	if(linewise){
-		deleted = list_dellines(seeked, (*seeked)->prev, to->y - from->y + 1);
-	}else{
-		list_t *l = *seeked;
-		size_t line_change = to->y - from->y;
+	switch(region->type){
+		case REGION_LINE:
+			deleted = list_dellines(
+					seeked, (*seeked)->prev,
+					region->end.y - region->begin.y + 1);
+			break;
+		case REGION_CHAR:
+		{
+			list_t *l = *seeked;
+			size_t line_change = region->end.y - region->begin.y;
 
-		if(line_change > 1)
-			deleted = list_append(
-					deleted,
-					list_dellines(&l->next, l, line_change));
+			if(line_change > 1)
+				deleted = list_append(
+						deleted,
+						list_dellines(&l->next, l, line_change));
 
-		if(line_change > 0){
-			/* join the lines */
-			list_t *next = l->next;
-			size_t nextlen = next->len_line - to->x;
-			size_t fulllen = from->x + nextlen;
+			if(line_change > 0){
+				/* join the lines */
+				list_t *next = l->next;
+				size_t nextlen;
+				if((unsigned)region->end.x >= next->len_line){
+					nextlen = 0;
+				}else{
+					nextlen = next->len_line - region->end.x;
+				}
+				size_t fulllen = region->begin.x + nextlen;
 
-			if(l->len_malloc < fulllen)
-				l->line = urealloc(l->line, l->len_malloc = fulllen);
+				if(l->len_malloc < fulllen)
+					l->line = urealloc(l->line, l->len_malloc = fulllen);
 
-			memcpy(l->line + from->x,
-					next->line + to->x,
-					nextlen);
-			l->len_line = fulllen;
+				memcpy(l->line + region->begin.x,
+						next->line + region->end.x,
+						nextlen);
+				l->len_line = fulllen;
 
-			deleted = list_append(
-					deleted,
-					list_dellines(&l->next, l, 1));
+				deleted = list_append(
+						deleted,
+						list_dellines(&l->next, l, 1));
 
-		}else{
-			if(!l->len_line || (unsigned)to->x > l->len_line)
-				return deleted;
+			}else{
+				if(!l->len_line || (unsigned)region->end.x > l->len_line)
+					return NULL;
 
-			size_t diff = to->x - from->x;
+				size_t diff = region->end.x - region->begin.x;
 
-			{
-				size_t delamt = l->len_line - from->x - 1;
+				size_t delamt = l->len_line - region->begin.x - 1;
 				list_t *part = list_new(deleted);
 				part->line = umalloc(delamt + 1);
-				memcpy(part->line, l->line + from->x, delamt);
+				memcpy(part->line, l->line + region->begin.x, delamt);
+
+				memmove(
+						l->line + region->begin.x,
+						l->line + region->end.x,
+						l->len_line - region->begin.x - 1);
+
+				l->len_line -= diff;
 			}
+			break;
+		}
+		case REGION_COL:
+		{
+			list_t *pos = *seeked;
+			point_t begin = region->begin, end = region->end;
 
-			memmove(
-					l->line + from->x,
-					l->line + to->x,
-					l->len_line - from->x - 1);
+			/* should've been sorted also */
+			assert(begin.x <= end.x);
 
-			l->len_line -= diff;
+			/* TODO: add to `deleted' */
+
+			for(int i = begin.y;
+					i <= end.y && pos;
+					i++, pos = pos->next)
+			{
+				if((unsigned)begin.x < pos->len_line){
+					if((unsigned)end.x >= pos->len_line){
+						/* delete all */
+						pos->len_line = begin.x;
+
+					}else{
+						char *str = pos->line;
+
+						memmove(
+								str + begin.x,
+								str + end.x,
+								pos->len_line - end.x);
+
+						pos->len_line -= end.x - begin.x;
+					}
+				}
+			}
+			break;
 		}
 	}
 
 	return deleted;
 }
 
-void list_joinbetween(list_t **pl,
-		point_t const *from, point_t const *to)
+void list_joinregion(list_t **pl, const region_t *region)
 {
-	if(from->y == to->y)
+	if(region->begin.y == region->end.y)
 		return;
 
-	assert(from->y < to->y);
+	assert(region->begin.y < region->end.y);
 
-	list_t *l, *start = list_seek(*pl, from->y, 0);
+	list_t *l, *start = list_seek(*pl, region->begin.y, 0);
 	int i;
 
 	if(!start)
@@ -328,8 +374,8 @@ void list_joinbetween(list_t **pl,
 	if(start->line)
 		str_rtrim(start->line, &start->len_line);
 
-	for(l = start->next, i = from->y + 1;
-			l && i < to->y;
+	for(l = start->next, i = region->begin.y + 1;
+			l && i < region->end.y;
 			l = l->next, i++)
 	{
 		if(!l->line)
@@ -356,8 +402,8 @@ void list_joinbetween(list_t **pl,
 		start->len_line += l->len_line;
 	}
 
-	if(i > from->y)
-		list_dellines(&start->next, start, i - from->y);
+	if(i > region->begin.y)
+		list_dellines(&start->next, start, i - region->begin.y);
 }
 
 void list_insline(list_t **pl, int *x, int *y, int dir)
