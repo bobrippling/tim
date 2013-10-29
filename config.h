@@ -60,6 +60,11 @@ const motionkey_t motion_keys[] = {
 };
 const size_t motion_keys_cnt = sizeof motion_keys / sizeof *motion_keys;
 
+/* called from around_motion() and in visual mode */
+const motion_surround_key_t surrounds = {
+	/* TODO: [ai]["'([<{bpsw] */
+};
+
 #define K_STR(k) (char[]){ k, 0 }
 const nkey_t nkeys[] = {
 	/* order is important */

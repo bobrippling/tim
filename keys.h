@@ -1,6 +1,8 @@
 #ifndef KEYS_H
 #define KEYS_H
 
+#include <stdbool.h>
+
 typedef union keyarg_u keyarg_u;
 
 typedef void key_func(const keyarg_u *, unsigned repeat, const int ch);
@@ -44,6 +46,13 @@ typedef struct motionkey_t
 	const char *keys;
 	motion motion;
 } motionkey_t;
+
+typedef struct motion_surround_key
+{
+	char ch;
+	bool inside;
+	motion motion;
+} motion_surround_key_t;
 
 /* returns 0 on success */
 const motion *motion_read(unsigned *repeat, bool apply_maps);
