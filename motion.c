@@ -357,6 +357,7 @@ int m_paren(
 	int nest = -1; /* we start on the paren */
 	const int dir = paren_left(paren) ? 1 : -1;
 	unsigned y = buf->ui_pos->y;
+	char in_quote = 0;
 
 	for(; l;
 	    l = advance_line(l, &y, dir),
@@ -367,7 +368,17 @@ int m_paren(
 
 		char *p = l->line + x;
 		while(1){
-			if(*p == opp){
+			if((*p == '\'' || *p == '"')
+			&& (!in_quote || in_quote == *p))
+			{
+				if(in_quote == *p){
+					in_quote = 0;
+				}else{
+					in_quote = *p;
+				}
+			}else if(in_quote){
+				/* skipping quotes */
+			}else if(*p == opp){
 				if(nest == 0){
 					*to = (point_t){ .y = y, .x = p - l->line };
 					return MOTION_SUCCESS;
