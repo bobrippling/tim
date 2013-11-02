@@ -338,39 +338,53 @@ int m_paren(
 		return MOTION_FAILURE;
 
 	char paren = 0, opp;
-	for(unsigned i = buf->ui_pos->x; i < l->len_line; i++)
+	unsigned x = buf->ui_pos->x;
+	if(x >= l->len_line)
+		x = 0;
+
+	for(unsigned i = x; i < l->len_line; i++)
 		if(paren_match(l->line[i], &opp)){
 			paren = l->line[i];
+			x = i;
 			break;
 		}
 
 	if(!paren)
 		return MOTION_FAILURE;
 
+
 	/* search for opp, skipping matching parens */
-	unsigned nest = 0;
+	int nest = -1; /* we start on the paren */
 	const int dir = paren_left(paren) ? 1 : -1;
 	unsigned y = buf->ui_pos->y;
-	unsigned x = buf->ui_pos->x;
 
-	for(; l; l = advance_line(l, &y, dir), x = 0){
+	for(; l;
+	    l = advance_line(l, &y, dir),
+	    x = !l || dir > 0 ? 0 : l->len_line - 1)
+	{
 		if(l->len_line == 0)
 			continue;
 
-		for(char *p = l->line + x;;){
-			/* FIXME: nest++ */
-			char *match = strchrdir(p, opp, dir > 0, l->line, l->len_line);
-			if(match){
+		char *p = l->line + x;
+		while(1){
+			if(*p == opp){
 				if(nest == 0){
-					*to = (point_t){ .y = y, .x = x };
+					*to = (point_t){ .y = y, .x = p - l->line };
 					return MOTION_SUCCESS;
 				}
 				nest--;
-				if((unsigned long)(p - l->line) == l->len_line - 1)
+			}else if(*p == paren){
+				nest++;
+			}
+
+			if(dir > 0){
+				if(p == l->line + l->len_line - 1)
 					break;
 				p++;
 			}else{
-				break;
+				if(p == l->line)
+					break;
+				p--;
 			}
 		}
 	}
