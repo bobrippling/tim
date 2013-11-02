@@ -1,0 +1,15 @@
+3j[{Ahello2[{Athere]}iyo$[{apre_2j]}[{A<gret
+__IN__
+void fn()
+{
+	if(abc){
+		hello();
+	}
+}
+__OUT__
+void fn()
+{pre_there
+	if(abc){hello<gret
+		hello();
+	}
+yo}
