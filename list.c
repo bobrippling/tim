@@ -139,6 +139,27 @@ list_t *list_new_file(FILE *f, bool *eol)
 #endif
 }
 
+static int list_write_fd(list_t *l, int n, int fd, bool eol)
+{
+	for(; l && (n == -1 || n --> 0); l = l->next){
+		if(write(fd, l->line, l->len_line) != (int)l->len_line)
+			goto got_err;
+
+		if(l->next || eol)
+			if(write(fd, "\n", 1) != 1)
+				goto got_err;
+	}
+
+	return 0;
+got_err:
+	return -1;
+}
+
+int list_write_file(list_t *l, int n, FILE *f, bool eol)
+{
+	return list_write_fd(l, n, fileno(f), eol);
+}
+
 void list_free(list_t *l)
 {
 	if(l){
@@ -547,29 +568,15 @@ int list_filter(
 	/* parent */
 	close(child_in[0]), close(child_out[1]);
 
+	const unsigned region_height = region->end.y - region->begin.y;
+
 	list_t **phead = pl;
-	list_t *tail = *phead;
+	list_t *tail = list_seek(*phead, region_height, false);
 
 	/* write our lines to child_in */
-	size_t i = region->begin.y;
-	for(list_t *l = *pl;
-	    l && i < (unsigned)region->end.y;
-	    l = l->next, i++)
-	{
-		char *s;
-		size_t len;
-
-		tail = l->next;
-
-		if(l->len_line)
-			s = l->line, len = l->len_line;
-		else
-			s = "\n", len = 1;
-
-		int r = write(child_in[1], s, len);
-		if(r == -1)
-			break;
-	}
+	list_write_fd(
+			*pl, region_height,
+			child_in[1], /*eol:*/true);
 
 	/* writes done */
 	close(child_in[1]);

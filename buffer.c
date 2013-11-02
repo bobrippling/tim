@@ -117,6 +117,11 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 	return r;
 }
 
+int buffer_write_file(buffer_t *b, int n, FILE *f, bool eol)
+{
+	return list_write_file(b->head, n, f, eol);
+}
+
 void buffer_set_fname(buffer_t *b, const char *s)
 {
 	if(b->fname != s){
