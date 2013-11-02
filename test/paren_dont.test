@@ -1,0 +1,9 @@
+j%dk
+__IN__
+if(abc)
+{
+	/* don't let this break stuff */
+}
+__OUT__
+if(abc)
+{

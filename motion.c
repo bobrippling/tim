@@ -357,7 +357,6 @@ int m_paren(
 	int nest = -1; /* we start on the paren */
 	const int dir = paren_left(paren) ? 1 : -1;
 	unsigned y = buf->ui_pos->y;
-	char in_quote = 0;
 
 	for(; l;
 	    l = advance_line(l, &y, dir),
@@ -366,6 +365,7 @@ int m_paren(
 		if(l->len_line == 0)
 			continue;
 
+		char in_quote = 0; /* scoped here - ignore multi-line quotes */
 		char *p = l->line + x;
 		while(1){
 			if((*p == '\'' || *p == '"')
