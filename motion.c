@@ -133,6 +133,40 @@ limit:
 	return MOTION_SUCCESS;
 }
 
+int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+{
+	list_t *l = buffer_current_line(buf);
+	unsigned n = 0;
+
+	*to = *buf->ui_pos;
+
+	if(!l)
+		goto limit;
+
+	for(repeat = DEFAULT_REPEAT(repeat);
+			repeat > 0;
+			repeat--)
+	{
+		if(l && l->len_line && *l->line == '{')
+			l = advance_line(l, &n, m->i);
+
+		for(;
+			l && (l->len_line == 0 || *l->line != '{');
+			l = advance_line(l, &n, m->i));
+
+		if(!l)
+			goto limit;
+	}
+
+	to->y += n;
+	to->x = 0;
+
+	return MOTION_SUCCESS;
+limit:
+	to->y = m->i > 0 ? buffer_nlines(buf) : 0;
+	return MOTION_SUCCESS;
+}
+
 enum word_state
 {
 	W_WORD, W_PUNCT, W_SPACE, W_NONE

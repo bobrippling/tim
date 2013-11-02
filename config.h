@@ -17,6 +17,9 @@ const motionkey_t motion_keys[] = {
 	{ "}",            { m_para,     { +1 }, M_LINEWISE } },
 	{ "%",            { m_paren,    MOTION_ARG_NONE, M_NONE } },
 
+	{ "[[", { m_func, { -1 }, M_LINEWISE } },
+	{ "]]", { m_func, { +1 }, M_LINEWISE } },
+
 	{ "f",            { m_find,     { .find_type = 0             }, M_NONE } },
 	{ "F",            { m_find,     { .find_type = F_REV         }, M_NONE } },
 	{ "t",            { m_find,     { .find_type = F_TIL         }, M_NONE } },
