@@ -500,8 +500,11 @@ int m_paren(
 			point_t pos = *buf->ui_pos;
 
 			int dir = paren_left(paren) ? -1 : 1;
+			bool done_one = false;
 
 			for(; repeat > 0; repeat--){
+				const point_t before_move = pos;
+
 				if((unsigned)pos.x < l->len_line &&
 				(l->line[pos.x] == paren || l->line[pos.x] == opp))
 				{
@@ -515,8 +518,14 @@ int m_paren(
 				if(!find_unnested_paren(paren, opp,
 							dir, &l, &pos))
 				{
+					if(done_one){
+						pos = before_move;
+						break;
+					}
 					return MOTION_FAILURE;
 				}
+
+				done_one = true;
 			}
 
 			*to = pos;
