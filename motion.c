@@ -101,7 +101,9 @@ static list_t *advance_line(list_t *l, unsigned *pn, const int dir)
 	return dir > 0 ? l->next : l->prev;
 }
 
-int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+static int m_linesearch(
+		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
+		list_t *sfn(motion_arg const *, list_t *, unsigned *))
 {
 	list_t *l = buffer_current_line(buf);
 	unsigned n = 0;
@@ -115,12 +117,7 @@ int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 			repeat > 0;
 			repeat--)
 	{
-		/* while in space, find non-space */
-		for(; l && (!l->line || isallspace(l->line)); l = advance_line(l, &n, m->i));
-
-		/* while in non-space, find space */
-		for(; l && (l->line && !isallspace(l->line)); l = advance_line(l, &n, m->i));
-
+		l = sfn(arg, l, &n);
 		if(!l)
 			goto limit;
 	}
@@ -129,42 +126,44 @@ int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 	return MOTION_SUCCESS;
 limit:
-	to->y = m->i > 0 ? buffer_nlines(buf) : 0;
+	to->y = arg->i > 0 ? buffer_nlines(buf) : 0;
 	return MOTION_SUCCESS;
+}
+
+static list_t *m_search_para(motion_arg const *a, list_t *l, unsigned *pn)
+{
+	/* while in space, find non-space */
+	for(; l && (!l->line || isallspace(l->line)); l = advance_line(l, pn, a->i));
+
+	/* while in non-space, find space */
+	for(; l && (l->line && !isallspace(l->line)); l = advance_line(l, pn, a->i));
+
+	return l;
+}
+
+int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+{
+	return m_linesearch(m, repeat, buf, to, m_search_para);
+}
+
+static list_t *m_search_func(motion_arg const *a, list_t *l, unsigned *pn)
+{
+	if(l && l->len_line && *l->line == '{')
+		l = advance_line(l, pn, a->i);
+
+	for(;
+	    l && (l->len_line == 0 || *l->line != '{');
+	    l = advance_line(l, pn, a->i));
+
+	return l;
 }
 
 int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	list_t *l = buffer_current_line(buf);
-	unsigned n = 0;
-
-	*to = *buf->ui_pos;
-
-	if(!l)
-		goto limit;
-
-	for(repeat = DEFAULT_REPEAT(repeat);
-			repeat > 0;
-			repeat--)
-	{
-		if(l && l->len_line && *l->line == '{')
-			l = advance_line(l, &n, m->i);
-
-		for(;
-			l && (l->len_line == 0 || *l->line != '{');
-			l = advance_line(l, &n, m->i));
-
-		if(!l)
-			goto limit;
-	}
-
-	to->y += n;
-	to->x = 0;
-
-	return MOTION_SUCCESS;
-limit:
-	to->y = m->i > 0 ? buffer_nlines(buf) : 0;
-	return MOTION_SUCCESS;
+	int r = m_linesearch(m, repeat, buf, to, m_search_func);
+	if(r == MOTION_SUCCESS)
+		to->x = 0;
+	return r;
 }
 
 enum word_state
