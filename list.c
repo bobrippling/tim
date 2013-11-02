@@ -37,7 +37,7 @@ static void mmap_new_line(list_t **pcur, char *p, char **panchor)
 	*panchor = p + 1;
 }
 
-static list_t *mmap_to_lines(char *mem, size_t len)
+static list_t *mmap_to_lines(char *mem, size_t len, bool *eol)
 {
 	list_t *head = list_new(NULL), *cur = head;
 	char *const last = mem + len;
@@ -48,26 +48,39 @@ static list_t *mmap_to_lines(char *mem, size_t len)
 			mmap_new_line(&cur, p, &begin);
 
 	int last_is_nl = (p == begin);
+	*eol = last_is_nl;
 	if(!last_is_nl)
 		mmap_new_line(&cur, p, &begin);
 
 	return head;
 }
 
-static list_t *list_new_fd_read(int fd)
+static list_t *list_new_fd_read(int fd, bool *eol)
 {
 	list_t *l = list_new(NULL);
 
 	int y = 0, x = 0;
+	bool nl = false;
 	int ch;
 	int r;
-	while((r = read(fd, &ch, 1)) == 1)
-		list_inschar(&l, &x, &y, ch);
+	while((r = read(fd, &ch, 1)) == 1){
+		if(nl){
+			list_inschar(&l, &x, &y, '\n');
+			nl = false;
+		}
+
+		if(ch == '\n')
+			nl = true;
+		else
+			list_inschar(&l, &x, &y, ch);
+	}
+
+	*eol = nl;
 
 	return l;
 }
 
-static list_t *list_new_fd(int fd)
+static list_t *list_new_fd(int fd, bool *eol)
 {
 	struct stat st;
 	if(fstat(fd, &st) == -1)
@@ -81,19 +94,19 @@ static list_t *list_new_fd(int fd)
 	if(mem == MAP_FAILED){
 		if(errno == EINVAL)
 fallback:
-			return list_new_fd_read(fd);
+			return list_new_fd_read(fd, eol);
 
 		return NULL;
 	}
 
-	list_t *l = mmap_to_lines(mem, st.st_size);
+	list_t *l = mmap_to_lines(mem, st.st_size, eol);
 	munmap(mem, st.st_size);
 
 	return l;
 
 }
 
-list_t *list_new_file(FILE *f)
+list_t *list_new_file(FILE *f, bool *eol)
 {
 #ifdef FAST_LIST_INIT
 	char buf[256];
@@ -122,7 +135,7 @@ list_t *list_new_file(FILE *f)
 
 	return l;
 #else
-	return list_new_fd_read(fileno(f));
+	return list_new_fd_read(fileno(f), eol);
 #endif
 }
 
@@ -562,7 +575,8 @@ int list_filter(
 	close(child_in[1]);
 
 	/* read from child_out */
-	list_t *l_read = list_new_fd(child_out[0]);
+	bool eol;
+	list_t *l_read = list_new_fd(child_out[0], &eol);
 	close(child_out[0]);
 
 	list_t *const gone = *pl;

@@ -34,6 +34,7 @@ struct buffer
 	buffer_t *neighbours[4];
 
 	char *fname;
+	bool eol;
 
 	enum buf_mode
 	{

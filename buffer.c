@@ -92,7 +92,7 @@ fin:
 
 int buffer_replace_file(buffer_t *b, FILE *f)
 {
-	list_t *l = list_new_file(f);
+	list_t *l = list_new_file(f, &b->eol);
 
 	if(!l)
 		return 0;

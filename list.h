@@ -12,7 +12,7 @@ struct list_
 };
 
 list_t *list_new(list_t *prev);
-list_t *list_new_file(FILE *);
+list_t *list_new_file(FILE *, bool *eol);
 
 list_t *list_seek(list_t *l, int y, int creat);
 

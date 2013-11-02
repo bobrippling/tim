@@ -60,9 +60,15 @@ got_err:
 		return CMD_FAILURE;
 	}
 
-	for(l = buffers_cur()->head; l; l = l->next)
-		if(fwrite(l->line, 1, l->len_line, f) != l->len_line || (l->next ? fputc('\n', f) == EOF : 0))
+	buffer_t *const b = buffers_cur();
+	for(l = b->head; l; l = l->next){
+		if(fwrite(l->line, 1, l->len_line, f) != l->len_line)
 			goto got_err;
+
+		if(l->next || b->eol)
+			if(fputc('\n', f) == EOF)
+				goto got_err;
+	}
 
 	if(fclose(f)){
 		f = NULL;
