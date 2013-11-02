@@ -444,9 +444,19 @@ static void filter(
 		point_t *out,
 		const key_action_u *ku)
 {
-	/* filter range through `ku->cmd` */
-	if(buffer_filter(buf, region, ku->s))
+	char *cmd = (char *)ku->s;
+
+	if(!cmd){
+		cmd = prompt('!');
+		if(!cmd)
+			return;
+	}
+
+	if(buffer_filter(buf, region, cmd))
 		ui_status("filter: %s", strerror(errno));
+
+	if(cmd != ku->s)
+		free(cmd);
 }
 
 void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
