@@ -24,31 +24,55 @@
 
 #include "config.h"
 
-static const motion *motion_find(int ch)
-{
-	for(int i = 0; motion_keys[i].ch; i++)
-		if(motion_keys[i].ch == ch)
-			return &motion_keys[i].motion;
-	return NULL;
-}
-
 const motion *motion_read(unsigned *repeat)
 {
-	enum io io_m =
+	bool potential[sizeof motion_keys / sizeof *motion_keys - 1];
+
+	memset(potential, true, sizeof potential);
+
+	const enum io io_m =
 		buffers_cur()->ui_mode & UI_VISUAL_ANY
 		? IO_MAPV
 		: IO_MAP;
 
 	*repeat = io_read_repeat(io_m);
 
-	int ch = io_getch(io_m);
-	const motion *m = motion_find(ch);
-	if(!m){
-		io_ungetch(ch);
-		return NULL;
-	}
+	unsigned ch_idx = 0;
+	for(;; ch_idx++){
+		int ch = io_getch(io_m);
 
-	return m;
+		unsigned npotential = 0;
+		unsigned last_potential = 0;
+
+		/* filter motions */
+		for(unsigned i = 0; i < sizeof potential; i++){
+			if(potential[i]){
+				size_t keys_len = strlen(motion_keys[i].keys);
+				if(ch_idx >= keys_len || motion_keys[i].keys[ch_idx] != ch){
+					potential[i] = false;
+				}else{
+					npotential++;
+					last_potential = i;
+				}
+			}
+		}
+
+		switch(npotential){
+			case 1:
+			{
+				/* only accept once we have the full string */
+				const motionkey_t *mk = &motion_keys[last_potential];
+				if(ch_idx == strlen(mk->keys) - 1)
+					return &mk->motion;
+				break;
+			}
+			case 0:
+				/* this is currently fine
+				 * motions don't clash with other maps in config.h */
+				io_ungetch(ch);
+				return NULL;
+		}
+	}
 }
 
 static

@@ -1,0 +1,11 @@
+j%dk
+__IN__
+
+{
+	int x = "hel'lo {";
+	'}}}{'
+}
+__OUT__
+
+{
+	int x = "hel'lo {";
