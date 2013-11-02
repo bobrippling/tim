@@ -96,7 +96,7 @@ int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 }
 
 static list_t *advance_line(
-		list_t *l, const int dir, unsigned *py, unsigned *px)
+		list_t *l, const int dir, int *py, int *px)
 {
 	*py += dir;
 
@@ -114,10 +114,10 @@ static list_t *advance_line(
 
 static int m_linesearch(
 		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
-		list_t *sfn(motion_arg const *, list_t *, unsigned *))
+		list_t *sfn(motion_arg const *, list_t *, int *))
 {
 	list_t *l = buffer_current_line(buf);
-	unsigned n = 0;
+	int n = 0;
 
 	*to = *buf->ui_pos;
 
@@ -141,7 +141,7 @@ limit:
 	return MOTION_SUCCESS;
 }
 
-static list_t *m_search_para(motion_arg const *a, list_t *l, unsigned *pn)
+static list_t *m_search_para(motion_arg const *a, list_t *l, int *pn)
 {
 	/* while in space, find non-space */
 	for(; l && (!l->line || isallspace(l->line));
@@ -159,7 +159,7 @@ int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return m_linesearch(m, repeat, buf, to, m_search_para);
 }
 
-static list_t *m_search_func(motion_arg const *a, list_t *l, unsigned *pn)
+static list_t *m_search_func(motion_arg const *a, list_t *l, int *pn)
 {
 	if(l && l->len_line && *l->line == '{')
 		l = advance_line(l, a->i, pn, NULL);
@@ -384,8 +384,8 @@ int m_paren(
 		return MOTION_FAILURE;
 
 	char paren = 0, opp;
-	unsigned x = buf->ui_pos->x;
-	if(x >= l->len_line)
+	int x = buf->ui_pos->x;
+	if((unsigned)x >= l->len_line)
 		x = 0;
 
 	for(unsigned i = x; i < l->len_line; i++)
@@ -402,7 +402,7 @@ int m_paren(
 	/* search for opp, skipping matching parens */
 	int nest = -1; /* we start on the paren */
 	const int dir = paren_left(paren) ? 1 : -1;
-	unsigned y = buf->ui_pos->y;
+	int y = buf->ui_pos->y;
 
 	for(; l; l = advance_line(l, dir, &y, &x)){
 		if(l->len_line == 0)
