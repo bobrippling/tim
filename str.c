@@ -54,6 +54,11 @@ bool paren_left(char c)
 	return paren_lookup(c)->lead;
 }
 
+char paren_opposite(char c)
+{
+	return paren_lookup(c)->opp;
+}
+
 void str_ltrim(char *s, size_t *pl)
 {
 	size_t i;
