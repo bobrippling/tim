@@ -611,3 +611,38 @@ int list_filter(
 
 	return 0;
 }
+
+list_t *list_advance_y(
+		list_t *l, const int dir, int *py, int *px)
+{
+	*py += dir;
+
+	if(dir > 0){
+		if(px)
+			*px = 0;
+		return l->next;
+	}else{
+		l = l->prev;
+		if(px && l)
+			*px = l->len_line > 0 ? l->len_line - 1 : 0;
+		return l;
+	}
+}
+
+list_t *list_advance_x(
+		list_t *l, const int dir, int *py, int *px)
+{
+	if(dir > 0){
+		if((unsigned)++*px >= l->len_line){
+			l = l->next;
+			++*py;
+			*px = 0;
+		}
+	}else{
+		if(*px == 0)
+			l = list_advance_y(l, dir, py, px);
+		else
+			--*px;
+	}
+	return l;
+}

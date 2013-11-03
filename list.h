@@ -37,4 +37,14 @@ int list_count(list_t *);
 
 #define isnewline(ch) ((ch) == '\n' || (ch) == '\r')
 
+list_t *list_advance_y(
+		list_t *l, const int dir,
+		int *py, int *px)
+	__attribute__((nonnull(1, 3)));
+
+list_t *list_advance_x(
+		list_t *l, const int dir,
+		int *py, int *px)
+	__attribute__((nonnull));
+
 #endif

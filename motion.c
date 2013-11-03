@@ -95,41 +95,6 @@ int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-static list_t *advance_line(
-		list_t *l, const int dir, int *py, int *px)
-{
-	*py += dir;
-
-	if(dir > 0){
-		if(px)
-			*px = 0;
-		return l->next;
-	}else{
-		l = l->prev;
-		if(px && l)
-			*px = l->len_line > 0 ? l->len_line - 1 : 0;
-		return l;
-	}
-}
-
-static list_t *advance_ch(
-		list_t *l, const int dir, int *py, int *px)
-{
-	if(dir > 0){
-		if((unsigned)++*px >= l->len_line){
-			l = l->next;
-			++*py;
-			*px = 0;
-		}
-	}else{
-		if(*px == 0)
-			l = advance_line(l, dir, py, px);
-		else
-			--*px;
-	}
-	return l;
-}
-
 static int m_linesearch(
 		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
 		list_t *sfn(motion_arg const *, list_t *, int *))
@@ -163,11 +128,11 @@ static list_t *m_search_para(motion_arg const *a, list_t *l, int *pn)
 {
 	/* while in space, find non-space */
 	for(; l && (!l->line || isallspace(l->line));
-			l = advance_line(l, a->i, pn, NULL));
+			l = list_advance_y(l, a->i, pn, NULL));
 
 	/* while in non-space, find space */
 	for(; l && (l->line && !isallspace(l->line));
-			l = advance_line(l, a->i, pn, NULL));
+			l = list_advance_y(l, a->i, pn, NULL));
 
 	return l;
 }
@@ -180,11 +145,11 @@ int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 static list_t *m_search_func(motion_arg const *a, list_t *l, int *pn)
 {
 	if(l && l->len_line && *l->line == '{')
-		l = advance_line(l, a->i, pn, NULL);
+		l = list_advance_y(l, a->i, pn, NULL);
 
 	for(;
 	    l && (l->len_line == 0 || *l->line != '{');
-	    l = advance_line(l, a->i, pn, NULL));
+	    l = list_advance_y(l, a->i, pn, NULL));
 
 	return l;
 }
@@ -401,7 +366,7 @@ static bool find_unnested_paren(
 
 	for(list_t *l = *pl;
 	    l;
-	    l = *pl = advance_line(l, dir, &pos->y, &pos->x))
+	    l = *pl = list_advance_y(l, dir, &pos->y, &pos->x))
 	{
 		if((unsigned)pos->x >= l->len_line)
 			continue;
@@ -512,7 +477,7 @@ int m_paren(
 					 * or
 					 * "[{" while on a '}' - step in so we match the other paren
 					 */
-					l = advance_ch(l, dir, &pos.y, &pos.x);
+					l = list_advance_x(l, dir, &pos.y, &pos.x);
 				}
 
 				if(!find_unnested_paren(paren, opp,
