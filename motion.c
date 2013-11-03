@@ -322,15 +322,37 @@ int m_find(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 			repeat, buf, to);
 }
 
+static char *lastsearch;
+int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+{
+	if(!lastsearch){
+		ui_status("no last search");
+		return MOTION_FAILURE;
+	}
+
+	repeat = DEFAULT_REPEAT(repeat);
+	*to = *buf->ui_pos;
+	while(repeat --> 0){
+		if(!buffer_findat(buf, lastsearch, to, m->i)){
+			ui_status("search pattern not found");
+			return MOTION_FAILURE;
+		}
+	}
+
+	ui_status("");
+	return MOTION_SUCCESS;
+}
+
 int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	char *target = prompt(m->i ? '?' : '/');
+	char *target = prompt(m->i > 0 ? '/' : '?');
 	if(!target)
 		return MOTION_FAILURE;
 
-	int found = buffer_find(buf, target, to, m->i);
-	free(target);
-	return found;
+	free(lastsearch);
+	lastsearch = target;
+
+	return m_searchnext(m, repeat, buf, to);
 }
 
 int m_visual(

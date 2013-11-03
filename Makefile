@@ -2,6 +2,7 @@ CFLAGS = -Wall -Wextra -pedantic -g -std=c99 \
 				 -fms-extensions -fno-common         \
 				 -Wmissing-prototypes -Wno-unused-parameter \
 				 -Wno-char-subscripts -Wno-missing-field-initializers \
+				 -Wno-format-zero-length \
 				 -D_POSIX_SOURCE=1
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \

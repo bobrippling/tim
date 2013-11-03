@@ -113,7 +113,7 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
 
 const char *buffer_shortfname(const char *); /* internal fname buffer */
 
-int buffer_find(const buffer_t *, const char *, point_t *, int rev);
+bool buffer_findat(const buffer_t *, const char *, point_t *, int dir);
 
 point_t buffer_toscreen(const buffer_t *, point_t const *);
 point_t *buffer_uipos_alt(buffer_t *buf);

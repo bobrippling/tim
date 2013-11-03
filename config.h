@@ -43,8 +43,10 @@ const motionkey_t motion_keys[] = {
 	{ "M",            { m_mos,  MOTION_ARG_NONE, M_LINEWISE } },
 	{ "L",            { m_eos,  MOTION_ARG_NONE, M_LINEWISE } },
 
-	{ "/",            { m_search, { 0               }, M_EXCLUSIVE } },
-	{ "?",            { m_search, { 1 /* reverse */ }, M_EXCLUSIVE } },
+	{ "/",            { m_search, { +1 }, M_EXCLUSIVE } },
+	{ "?",            { m_search, { -1 }, M_EXCLUSIVE } },
+	{ "n",            { m_searchnext, { +1 }, M_EXCLUSIVE } },
+	{ "N",            { m_searchnext, { -1 }, M_EXCLUSIVE } },
 
 	{ 0 }
 };
