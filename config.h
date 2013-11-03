@@ -78,6 +78,9 @@ const nkey_t nkeys[] = {
 
 	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
 
+	{ '!',            k_filter,     { .s = NULL }, UI_NORMAL | UI_VISUAL_ANY },
+	{ 'q',            k_filter,     { .s = "fmt" }, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL | UI_VISUAL_ANY },
 /*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_ANY },*/
 /*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL | UI_VISUAL_ANY },*/

@@ -34,6 +34,7 @@ struct buffer
 	buffer_t *neighbours[4];
 
 	char *fname;
+	bool eol;
 
 	enum buf_mode
 	{
@@ -67,6 +68,7 @@ void buffer_free(buffer_t *);
 
 int buffer_replace_file( buffer_t *, FILE *);
 int buffer_replace_fname(buffer_t *, const char *);
+int buffer_write_file(buffer_t *, int n, FILE *, bool eol);
 
 void buffer_set_fname(buffer_t *, const char *);
 const char *buffer_fname(const buffer_t *);
@@ -87,6 +89,11 @@ struct buffer_action
 extern struct buffer_action
 	buffer_delregion, buffer_joinregion,
 	buffer_indent, buffer_unindent;
+
+int buffer_filter(
+		buffer_t *,
+		const region_t *,
+		const char *cmd);
 
 void buffer_replace_chars(buffer_t *, int ch, unsigned n);
 

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <wordexp.h>
+#include <errno.h>
 
 #include "pos.h"
 #include "region.h"
@@ -455,4 +456,41 @@ void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_togglev(buffers_cur());
 	ui_cur_changed();
+}
+
+static char *filter_shcmd;
+
+static void filter(
+		buffer_t *buf,
+		const region_t *region,
+		point_t *out)
+{
+	char *cmd = filter_shcmd;
+	filter_shcmd = NULL;
+
+	bool prompted = false;
+	if(!cmd){
+		cmd = prompt('!');
+		if(!cmd)
+			return;
+		prompted = true;
+	}
+
+	if(buffer_filter(buf, region, cmd))
+		ui_status("filter: %s", strerror(errno));
+
+	if(prompted)
+		free(cmd);
+}
+
+void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	struct buffer_action filter_wrapper = {
+		.fn = filter,
+		.is_linewise = 1,
+	};
+
+	filter_shcmd = a->s;
+
+	around_motion(a, repeat, from_ch, &filter_wrapper, NULL);
 }

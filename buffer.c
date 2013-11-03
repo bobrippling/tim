@@ -92,7 +92,7 @@ fin:
 
 int buffer_replace_file(buffer_t *b, FILE *f)
 {
-	list_t *l = list_new_file(f);
+	list_t *l = list_new_file(f, &b->eol);
 
 	if(!l)
 		return 0;
@@ -115,6 +115,11 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 	fclose(f);
 
 	return r;
+}
+
+int buffer_write_file(buffer_t *b, int n, FILE *f, bool eol)
+{
+	return list_write_file(b->head, n, f, eol);
 }
 
 void buffer_set_fname(buffer_t *b, const char *s)
@@ -197,6 +202,13 @@ void buffer_indent2(
 			}
 		}
 	}
+}
+
+int buffer_filter(
+		buffer_t *buf, const region_t *reg,
+		const char *cmd)
+{
+	return list_filter(&buf->head, reg, cmd);
 }
 
 static

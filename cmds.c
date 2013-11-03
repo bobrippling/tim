@@ -33,10 +33,6 @@ int c_q(int argc, char **argv)
 
 int c_w(int argc, char **argv)
 {
-	FILE *f;
-	list_t *l;
-	const char *fname;
-
 	if(argc == 2){
 		buffer_set_fname(buffers_cur(), argv[1]);
 	}else if(argc != 1){
@@ -44,13 +40,13 @@ int c_w(int argc, char **argv)
 		return CMD_FAILURE;
 	}
 
-	fname = buffer_fname(buffers_cur());
+	const char *fname = buffer_fname(buffers_cur());
 	if(!fname){
 		ui_status("no filename");
 		return CMD_FAILURE;
 	}
 
-	f = fopen(fname, "w");
+	FILE *f = fopen(fname, "w");
 
 	if(!f){
 got_err:
@@ -60,9 +56,8 @@ got_err:
 		return CMD_FAILURE;
 	}
 
-	for(l = buffers_cur()->head; l; l = l->next)
-		if(fwrite(l->line, 1, l->len_line, f) != l->len_line || (l->next ? fputc('\n', f) == EOF : 0))
-			goto got_err;
+	buffer_t *b = buffers_cur();
+	buffer_write_file(b, -1, f, b->eol);
 
 	if(fclose(f)){
 		f = NULL;

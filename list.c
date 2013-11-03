@@ -4,11 +4,17 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <errno.h>
+#include <unistd.h>
+
 #include "pos.h"
 #include "region.h"
 #include "list.h"
 #include "mem.h"
 #include "str.h"
+#include "mem.h"
 
 list_t *list_new(list_t *prev)
 {
@@ -17,7 +23,90 @@ list_t *list_new(list_t *prev)
 	return l;
 }
 
-list_t *list_new_file(FILE *f)
+static void mmap_new_line(list_t **pcur, char *p, char **panchor)
+{
+	char *data = umalloc(p - *panchor + 1);
+
+	memcpy(data, *panchor, p - *panchor);
+
+	list_t *cur = *pcur;
+	cur->line = data;
+	cur->next = list_new(cur);
+	*pcur = cur->next;
+
+	*panchor = p + 1;
+}
+
+static list_t *mmap_to_lines(char *mem, size_t len, bool *eol)
+{
+	list_t *head = list_new(NULL), *cur = head;
+	char *const last = mem + len;
+
+	char *p, *begin;
+	for(p = begin = mem; p < last; p++)
+		if(*p == '\n')
+			mmap_new_line(&cur, p, &begin);
+
+	int last_is_nl = (p == begin);
+	*eol = last_is_nl;
+	if(!last_is_nl)
+		mmap_new_line(&cur, p, &begin);
+
+	return head;
+}
+
+static list_t *list_new_fd_read(int fd, bool *eol)
+{
+	list_t *l = list_new(NULL);
+
+	int y = 0, x = 0;
+	bool nl = false;
+	int ch;
+	int r;
+	while((r = read(fd, &ch, 1)) == 1){
+		if(nl){
+			list_inschar(&l, &x, &y, '\n');
+			nl = false;
+		}
+
+		if(ch == '\n')
+			nl = true;
+		else
+			list_inschar(&l, &x, &y, ch);
+	}
+
+	*eol = nl;
+
+	return l;
+}
+
+static list_t *list_new_fd(int fd, bool *eol)
+{
+	struct stat st;
+	if(fstat(fd, &st) == -1)
+		return NULL;
+
+	if(st.st_size == 0)
+		goto fallback; /* could be stdin */
+
+	void *mem = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+	if(mem == MAP_FAILED){
+		if(errno == EINVAL)
+fallback:
+			return list_new_fd_read(fd, eol);
+
+		return NULL;
+	}
+
+	list_t *l = mmap_to_lines(mem, st.st_size, eol);
+	munmap(mem, st.st_size);
+
+	return l;
+
+}
+
+list_t *list_new_file(FILE *f, bool *eol)
 {
 #ifdef FAST_LIST_INIT
 	char buf[256];
@@ -46,18 +135,29 @@ list_t *list_new_file(FILE *f)
 
 	return l;
 #else
-	int ch;
-	int y, x;
-	list_t *l;
-
-	y = x = 0;
-	l = list_new(NULL);
-
-	while((ch = fgetc(f)) != EOF)
-		list_inschar(&l, &x, &y, ch);
-
-	return l;
+	return list_new_fd_read(fileno(f), eol);
 #endif
+}
+
+static int list_write_fd(list_t *l, int n, int fd, bool eol)
+{
+	for(; l && (n == -1 || n --> 0); l = l->next){
+		if(write(fd, l->line, l->len_line) != (int)l->len_line)
+			goto got_err;
+
+		if(l->next || eol)
+			if(write(fd, "\n", 1) != 1)
+				goto got_err;
+	}
+
+	return 0;
+got_err:
+	return -1;
+}
+
+int list_write_file(list_t *l, int n, FILE *f, bool eol)
+{
+	return list_write_fd(l, n, fileno(f), eol);
 }
 
 void list_free(list_t *l)
@@ -430,4 +530,84 @@ int list_count(list_t *l)
 	int i;
 	for(i = 0; l->next; l = l->next, i++);
 	return i;
+}
+
+int list_filter(
+		list_t **pl, const region_t *region,
+		const char *cmd)
+{
+	pl = list_seekp(pl, region->begin.y, 0);
+
+	if(!pl)
+		return -1;
+
+	int child_in[2], child_out[2];
+	if(pipe(child_in))
+		return -1;
+	if(pipe(child_out)){
+		const int e = errno;
+		close(child_in[0]);
+		close(child_in[1]);
+		errno = e;
+		return -1;
+	}
+
+	switch(fork()){
+		case -1:
+		{
+			const int e = errno;
+			close(child_out[0]);
+			close(child_out[1]);
+			errno = e;
+			return -1;
+		}
+		case 0:
+			dup2(child_in[0], 0);
+			dup2(child_out[1], 1);
+			for(int i = 0; i < 2; i++)
+				close(child_in[i]), close(child_out[i]);
+
+			execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
+			exit(127);
+	}
+
+	/* parent */
+	close(child_in[0]), close(child_out[1]);
+
+	const unsigned region_height = region->end.y - region->begin.y;
+
+	list_t **phead = pl;
+	list_t *tail = list_seek(*phead, region_height, false);
+
+	/* write our lines to child_in */
+	list_write_fd(
+			*pl, region_height,
+			child_in[1], /*eol:*/true);
+
+	/* writes done */
+	close(child_in[1]);
+
+	/* read from child_out */
+	bool eol;
+	list_t *l_read = list_new_fd(child_out[0], &eol);
+	close(child_out[0]);
+
+	list_t *const gone = *pl;
+
+	*pl = l_read;
+	for(; l_read->next; l_read = l_read->next);
+	l_read->next = tail;
+	tail->prev = l_read;
+
+	list_t *gone_tail;
+	for(gone_tail = gone;
+			gone_tail && gone_tail->next != tail;
+			gone_tail = gone_tail->next);
+
+	if(gone_tail){
+		gone_tail->next = NULL;
+		list_free(gone);
+	}/* else we've lost `gone'?? */
+
+	return 0;
 }
