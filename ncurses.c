@@ -97,13 +97,22 @@ restart:
 		raise(SIGTSTP);
 		goto restart;
 	}
+	if(ch == '\r')
+		ch = '\n';
 	return ch;
 }
 
 void nc_addch(char c)
 {
-	if(c == '\t')
+	if(c == '\t'){
 		c = ' ';
+	}else if(c == '\r'){
+		/* TODO: all non-printables */
+		addch('^');
+		addch('M');
+		return;
+	}
+
 	addch(c);
 }
 
