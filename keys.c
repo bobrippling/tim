@@ -466,6 +466,7 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 	buffer_insyank(buffers_cur(), yank);
 
 	ui_redraw();
+	ui_cur_changed();
 }
 
 static char *filter_shcmd;
