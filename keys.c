@@ -40,7 +40,7 @@ const motion *motion_read(unsigned *repeat)
 
 	unsigned ch_idx = 0;
 	for(;; ch_idx++){
-		int ch = io_getch(io_m);
+		int ch = io_getch(io_m, NULL);
 
 		unsigned npotential = 0;
 		unsigned last_potential = 0;
@@ -254,7 +254,7 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 	(void)a;
 
 	buf = buffers_cur();
-	dir = nc_getch();
+	dir = io_getch(IO_NOMAP, NULL);
 
 	switch(dir){
 #define DIRECT(c, n) case c: buf = buf->neighbours[n]; break
@@ -313,7 +313,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		// TODO: repeated
 	}else{
 		/* single char */
-		int ch = io_getch(IO_NOMAP);
+		int ch = io_getch(IO_NOMAP, NULL);
 
 		if(ch == K_ESC)
 			return;
@@ -360,7 +360,7 @@ static bool around_motion(
 
 	if(!m){
 		/* check for dd, etc */
-		int ch = io_getch(IO_NOMAP);
+		int ch = io_getch(IO_NOMAP, NULL);
 		if(ch == from_ch){
 			/* dd - stay where we are, +the repeat */
 			m_doubletap.arg.pos.y = repeat - 1;

@@ -87,24 +87,46 @@ void nc_set_yx(int y, int x)
 	move(y, x);
 }
 
-int nc_getch()
+int nc_getch(bool mapraw, bool *wasraw)
 {
 	/* TODO: interrupts, winch */
+	bool ctrl_v = false;
 	int ch;
 restart:
 	ch = getch();
+
+	if(ctrl_v)
+		return ch;
+
 	if(ch == CTRL_AND('z')){
 		raise(SIGTSTP);
 		goto restart;
+	}
+	if(mapraw){
+		if(ch == '\r'){
+			ch = '\n';
+		}else if(ch == CTRL_AND('v')){
+			*wasraw = true;
+			ctrl_v = true;
+			goto restart;
+		}
+		*wasraw = false;
 	}
 	return ch;
 }
 
 void nc_addch(char c)
 {
-	if(c == '\t')
+	if(c == '\t'){
 		c = ' ';
-	addch(c);
+	}else if(c == '\r'){
+		/* TODO: all non-printables */
+		addch('^');
+		addch('M');
+		return;
+	}
+
+	addch(c & 0xff);
 }
 
 void nc_addstr(char *s)

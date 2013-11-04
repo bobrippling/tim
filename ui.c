@@ -169,14 +169,17 @@ void ui_main()
 			: (buf->ui_mode & UI_VISUAL_ANY ? IO_MAPV : IO_MAP);
 
 		unsigned repeat = ins ? 0 : io_read_repeat(io_mode);
-		int ch = io_getch(io_mode);
+		bool wasraw;
+		int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
 
 		bool found = false;
-		for(int i = 0; nkeys[i].ch; i++)
-			if(nkeys[i].mode & UI_MODE() && nkeys[i].ch == ch){
-				nkeys[i].func(&nkeys[i].arg, repeat, ch);
-				found = true;
-			}
+		if(!wasraw){
+			for(int i = 0; nkeys[i].ch; i++)
+				if(nkeys[i].mode & UI_MODE() && nkeys[i].ch == ch){
+					nkeys[i].func(&nkeys[i].arg, repeat, ch);
+					found = true;
+				}
+		}
 
 		if(!found) switch(UI_MODE()){
 			case UI_INSERT:
