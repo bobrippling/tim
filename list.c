@@ -439,19 +439,33 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 			/* should've been sorted also */
 			assert(begin.x <= end.x);
 
-			/* TODO: add to `deleted' */
-
 			for(int i = begin.y;
 					i <= end.y && pos;
 					i++, pos = pos->next)
 			{
 				if((unsigned)begin.x < pos->len_line){
+					struct
+					{
+						char *str;
+						size_t len;
+					} removed;
+
 					if((unsigned)end.x >= pos->len_line){
 						/* delete all */
+						removed.len = pos->len_line - begin.x + 1;
+						removed.str = ustrdup_len(
+								pos->line + begin.x,
+								removed.len);
+
 						pos->len_line = begin.x;
 
 					}else{
 						char *str = pos->line;
+
+						removed.len = end.x - begin.x;
+						removed.str = ustrdup_len(
+								str + begin.x,
+								removed.len);
 
 						memmove(
 								str + begin.x,
@@ -460,6 +474,12 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 
 						pos->len_line -= end.x - begin.x;
 					}
+
+					/* removed text */
+					list_t *new = list_new(NULL);
+					new->line = removed.str;
+					new->len_malloc = new->len_line = removed.len;
+					deleted = list_append(deleted, new);
 				}
 			}
 			break;
