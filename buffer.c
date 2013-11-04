@@ -155,6 +155,20 @@ void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 }
 struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
 
+static
+void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
+{
+	list_t *yanked = list_delregion(&buf->head, region);
+
+	yank *yank = yank_new(yanked, region->type);
+	yank_push(yank);
+
+	buffer_insyank(buf, yank, /*prepend:*/true);
+}
+struct buffer_action buffer_yankregion = {
+	.fn = buffer_yankregion_f
+};
+
 void buffer_insyank(buffer_t *buf, const yank *y, bool prepend)
 {
 	yank_put_in_list(y,

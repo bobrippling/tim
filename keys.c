@@ -442,6 +442,11 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 	}
 }
 
+void k_yank(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	around_motion(a, repeat, from_ch, &buffer_yankregion, NULL);
+}
+
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion(a, repeat, from_ch, &buffer_joinregion, NULL);

@@ -70,6 +70,7 @@ const nkey_t nkeys[] = {
 	{ 'd',            k_del,        KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 	{ 'c',            k_change,     KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 
+	{ 'y',            k_yank, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY },
 	{ 'p',            k_put, { false }, UI_NORMAL },
 	{ 'P',            k_put, { true }, UI_NORMAL },
 	/* TODO: p-in-visual */
@@ -113,6 +114,8 @@ const keymap_t maps[] = {
 
 	{ 'x', "dl", "d" }, /* TODO: delete command needs to handle count */
 	{ 'X', "dh", "d" },
+
+	{ 'Y', "y$", "y" },
 
 	{ 's', "cl", "c" }, /* TODO: change command needs to handle count */
 	{ 'S', "0c$", NULL },

@@ -41,7 +41,7 @@ key_func k_scroll;
 key_func k_winsel;
 key_func k_show;
 key_func k_open;
-key_func k_del, k_change;
+key_func k_del, k_change, k_yank;
 key_func k_motion;
 key_func k_replace;
 key_func k_join;
