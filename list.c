@@ -77,14 +77,14 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 	int r;
 	while((r = read(fd, &ch, 1)) == 1){
 		if(nl){
-			list_inschar(&l, &x, &y, '\n');
+			list_inschar(l, &x, &y, '\n');
 			nl = false;
 		}
 
 		if(ch == '\n')
 			nl = true;
 		else
-			list_inschar(&l, &x, &y, ch);
+			list_inschar(l, &x, &y, ch);
 	}
 
 	*eol = nl;
@@ -257,12 +257,9 @@ static int list_evalnewlines(list_t *l)
 	return r;
 }
 
-void list_inschar(list_t **pl, int *x, int *y, char ch)
+void list_inschar(list_t *l, int *x, int *y, char ch)
 {
-	list_t *l;
-	int i;
-
-	l = *(pl = list_seekp(pl, *y, 1));
+	l = list_seek(l, *y, 1);
 
 	if((unsigned)*x >= l->len_malloc){
 		const int old_len = l->len_malloc;
@@ -272,7 +269,7 @@ void list_inschar(list_t **pl, int *x, int *y, char ch)
 
 		memset(l->line + old_len, 0, l->len_malloc - old_len);
 
-		for(i = l->len_line; i < *x; i++){
+		for(int i = l->len_line; i < *x; i++){
 			l->line[i] = ' ';
 			l->len_line++;
 		}
