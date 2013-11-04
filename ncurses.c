@@ -126,7 +126,7 @@ void nc_addch(char c)
 		return;
 	}
 
-	addch(c);
+	addch(c & 0xff);
 }
 
 void nc_addstr(char *s)
