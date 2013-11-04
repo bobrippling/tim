@@ -155,10 +155,12 @@ void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 }
 struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
 
-void buffer_insyank(buffer_t *buf, const yank *y)
+void buffer_insyank(buffer_t *buf, const yank *y, bool prepend)
 {
-	list_t *l = list_seek(buf->head, buf->ui_pos->y, true);
-	yank_put_in_list(y, l, &buf->ui_pos->y, &buf->ui_pos->x);
+	yank_put_in_list(y,
+			list_seekp(&buf->head, buf->ui_pos->y, true),
+			prepend,
+			&buf->ui_pos->y, &buf->ui_pos->x);
 }
 
 static

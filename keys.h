@@ -8,6 +8,7 @@ typedef void key_func(const keyarg_u *, unsigned repeat, const int ch);
 union keyarg_u
 {
 	int i;
+	bool b;
 	struct
 	{
 		motion m;

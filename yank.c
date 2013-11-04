@@ -42,11 +42,10 @@ const yank *yank_top()
 }
 
 void yank_put_in_list(
-		const yank *ynk, list_t *head,
+		const yank *ynk, list_t **phead,
+		const bool prepend,
 		int *py, int *px)
 {
-	list_t *const after = head->next;
-
 	switch(ynk->as){
 		case REGION_CHAR:
 		{
@@ -58,26 +57,35 @@ void yank_put_in_list(
 		{
 			list_t *copy = list_copy_deep(ynk->list, NULL);
 			list_t *copy_tail = list_tail(copy);
+			list_t *const head = *phead;
 
-			/* top link */
-			head->next = copy;
-			copy->prev = head;
+			if(prepend){
+				*phead = copy;
+				copy_tail->next = head;
+			}else{
+				list_t *const after = head->next;
 
-			/* bottom link */
-			copy_tail->next = after;
-			after->prev = copy_tail;
+				/* top link */
+				head->next = copy;
+				copy->prev = head;
 
-			++*py;
-			*px = 0;
+				/* bottom link */
+				copy_tail->next = after;
+				if(after)
+					after->prev = copy_tail;
+
+				++*py;
+			}
 			break;
 		}
 		case REGION_COL:
 		{
+			list_t *head = *phead;
 			for(const list_t *l = ynk->list;
 			    l;
 			    l = l->next, head = list_seek(head, 1, true))
 			{
-				int x = *px + 1;
+				int x = *px + !prepend;
 				int y = 0;
 				for(unsigned i = 0; i < l->len_line; i++)
 					list_inschar(head, &x, &y, l->line[i]);

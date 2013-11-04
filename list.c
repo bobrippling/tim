@@ -185,7 +185,6 @@ void list_free(list_t *l)
 	}
 }
 
-static
 list_t **list_seekp(list_t **pl, int y, int creat)
 {
 	if(!*pl){
@@ -365,10 +364,10 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 
 	list_t **seeked = list_seekp(pl, region->begin.y, 0);
 
-	list_t *deleted = NULL;
-
 	if(!seeked || !*seeked)
-		return deleted;
+		return NULL;
+
+	list_t *deleted = NULL;
 
 	switch(region->type){
 		case REGION_LINE:
