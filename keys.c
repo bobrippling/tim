@@ -333,7 +333,7 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 }
 
 static int around_motion(
-		const keyarg_u *a, unsigned repeat, const int from_ch,
+		unsigned repeat, const int from_ch,
 		struct buffer_action *action, region_t *used_region)
 {
 	motion m_doubletap = {
@@ -416,14 +416,14 @@ static int around_motion(
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, &buffer_delregion, NULL);
+	around_motion(repeat, from_ch, &buffer_delregion, NULL);
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	region_t r;
 
-	if(around_motion(a, repeat, from_ch, &buffer_delregion, &r)){
+	if(around_motion(repeat, from_ch, &buffer_delregion, &r)){
 		buffer_t *buf = buffers_cur();
 
 		switch(r.type){
@@ -443,12 +443,12 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch, &buffer_joinregion, NULL);
+	around_motion(repeat, from_ch, &buffer_joinregion, NULL);
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(a, repeat, from_ch,
+	around_motion(repeat, from_ch,
 			a->i > 0 ? &buffer_indent : &buffer_unindent, NULL);
 }
 
@@ -492,5 +492,5 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	filter_shcmd = a->s;
 
-	around_motion(a, repeat, from_ch, &filter_wrapper, NULL);
+	around_motion(repeat, from_ch, &filter_wrapper, NULL);
 }
