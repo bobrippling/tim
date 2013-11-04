@@ -389,8 +389,18 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 {
+	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
+	int xoff = 0;
+
+	if(l && l->len_line > 0)
+		for(int x = MIN((unsigned)buf->ui_pos->x, l->len_line - 1);
+				x >= 0;
+				x--)
+			if(l->line[x] == '\r' || !isprint(l->line[x]))
+				xoff++;
+
 	return (point_t){
-		buf->screen_coord.x + pt->x - buf->ui_start.x,
+		buf->screen_coord.x + pt->x - buf->ui_start.x + xoff,
 		buf->screen_coord.y + pt->y - buf->ui_start.y
 	};
 }
