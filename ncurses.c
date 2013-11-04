@@ -87,7 +87,7 @@ void nc_set_yx(int y, int x)
 	move(y, x);
 }
 
-int nc_getch(bool mapraw)
+int nc_getch(bool mapraw, bool *wasraw)
 {
 	/* TODO: interrupts, winch */
 	bool ctrl_v = false;
@@ -106,9 +106,11 @@ restart:
 		if(ch == '\r'){
 			ch = '\n';
 		}else if(ch == CTRL_AND('v')){
+			*wasraw = true;
 			ctrl_v = true;
 			goto restart;
 		}
+		*wasraw = false;
 	}
 	return ch;
 }

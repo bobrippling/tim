@@ -23,7 +23,7 @@ int nc_COLS(void);
 void nc_clrtoeol(void);
 
 /* called by io functions */
-int nc_getch(bool mapraw);
+int nc_getch(bool mapraw, bool *wasraw);
 /* mapraw = convert ^Vx to escape char */
 
 #endif

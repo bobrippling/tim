@@ -14,7 +14,7 @@ enum io
 	IO_MAPRAW = 4, /* change ^Vx to literal x */
 };
 
-int io_getch(enum io);
+int io_getch(enum io, bool *wasraw);
 void io_ungetch(int);
 unsigned io_read_repeat(enum io);
 
