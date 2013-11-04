@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -pedantic -g -std=c99 \
+CFLAGS = -Wall -Wextra -pedantic -g -std=c11 \
 				 -fms-extensions -fno-common         \
 				 -Wmissing-prototypes -Wno-unused-parameter \
 				 -Wno-char-subscripts -Wno-missing-field-initializers \

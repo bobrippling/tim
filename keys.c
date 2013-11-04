@@ -332,9 +332,23 @@ void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 	motion_apply_buf(&a->motion.m, a->motion.repeat, buffers_cur());
 }
 
-static int around_motion(
+struct around_motion
+{
+	void (*fn)(buffer_t *, const region_t *,
+			point_t *out, struct around_motion *);
+
+	union
+	{
+		buffer_action_f *forward;
+		char *filter_cmd;
+	};
+};
+
+static bool around_motion(
 		unsigned repeat, const int from_ch,
-		struct buffer_action *action, region_t *used_region)
+		bool always_linewise,
+		struct around_motion *action,
+		region_t *used_region)
 {
 	motion m_doubletap = {
 		.func = m_move,
@@ -368,7 +382,7 @@ static int around_motion(
 			.begin = *b->ui_pos
 		};
 		if(!motion_apply_buf_dry(m, repeat, b, &r.end))
-			return 0;
+			return false;
 
 		/* reverse if negative range */
 		point_sort_yx(&r.begin, &r.end);
@@ -389,7 +403,7 @@ static int around_motion(
 		if(b->ui_mode & UI_VISUAL_ANY){
 			/* only increment y in the line case */
 			r.end.x++;
-			if(m->how & M_LINEWISE || action->is_linewise)
+			if(m->how & M_LINEWISE || always_linewise)
 				r.end.y++;
 
 		}else if(!(m->how & M_EXCLUSIVE)){
@@ -401,29 +415,47 @@ static int around_motion(
 
 		/* reset cursor to beginning, then allow adjustments */
 		*b->ui_pos = r.begin;
-		action->fn(b, &r, b->ui_pos);
+		action->fn(b, &r, b->ui_pos, action);
 
 		ui_set_bufmode(UI_NORMAL);
 
 		ui_redraw();
 		ui_cur_changed();
 
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
+}
+
+static void buffer_forward(
+		buffer_t *buf, const region_t *region,
+		point_t *out, struct around_motion *around)
+{
+	around->forward(buf, region, out);
+}
+
+static bool around_motion_bufaction(
+		unsigned repeat, const int from_ch,
+		struct buffer_action *buf_act, region_t *out_region)
+{
+	return around_motion(repeat, from_ch, buf_act->always_linewise,
+			&(struct around_motion){
+				.fn = buffer_forward,
+				.forward = buf_act->fn
+			}, out_region);
 }
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(repeat, from_ch, &buffer_delregion, NULL);
+	around_motion_bufaction(repeat, from_ch, &buffer_delregion, NULL);
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	region_t r;
 
-	if(around_motion(repeat, from_ch, &buffer_delregion, &r)){
+	if(around_motion_bufaction(repeat, from_ch, &buffer_delregion, &r)){
 		buffer_t *buf = buffers_cur();
 
 		switch(r.type){
@@ -443,12 +475,12 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(repeat, from_ch, &buffer_joinregion, NULL);
+	around_motion_bufaction(repeat, from_ch, &buffer_joinregion, NULL);
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion(repeat, from_ch,
+	around_motion_bufaction(repeat, from_ch,
 			a->i > 0 ? &buffer_indent : &buffer_unindent, NULL);
 }
 
@@ -458,39 +490,33 @@ void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-static char *filter_shcmd;
-
 static void filter(
 		buffer_t *buf,
 		const region_t *region,
-		point_t *out)
+		point_t *out,
+		struct around_motion *around)
 {
-	char *cmd = filter_shcmd;
-	filter_shcmd = NULL;
+	char *cmd = around->filter_cmd;
 
-	bool prompted = false;
 	if(!cmd){
 		cmd = prompt('!');
 		if(!cmd)
 			return;
-		prompted = true;
 	}
 
 	if(buffer_filter(buf, region, cmd))
 		ui_status("filter: %s", strerror(errno));
 
-	if(prompted)
+	if(cmd != around->filter_cmd)
 		free(cmd);
 }
 
 void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	struct buffer_action filter_wrapper = {
+	struct around_motion around = {
 		.fn = filter,
-		.is_linewise = 1,
+		.filter_cmd = a->s
 	};
 
-	filter_shcmd = a->s;
-
-	around_motion(repeat, from_ch, &filter_wrapper, NULL);
+	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);
 }

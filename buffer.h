@@ -83,7 +83,7 @@ typedef void buffer_action_f(
 struct buffer_action
 {
 	buffer_action_f *fn;
-	int is_linewise;
+	bool always_linewise;
 };
 
 extern struct buffer_action
