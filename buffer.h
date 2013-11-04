@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "yank.h"
+
 typedef struct buffer buffer_t;
 
 enum buffer_neighbour
@@ -90,7 +92,7 @@ extern struct buffer_action
 	buffer_delregion, buffer_joinregion,
 	buffer_indent, buffer_unindent;
 
-void buffer_inslist(buffer_t *, list_t *);
+void buffer_insyank(buffer_t *, const yank *);
 
 int buffer_filter(
 		buffer_t *,

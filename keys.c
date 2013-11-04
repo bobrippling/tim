@@ -461,9 +461,9 @@ void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	list_t *yank = yank_top();
+	const yank *yank = yank_top();
 
-	buffer_inslist(buffers_cur(), list_copy_deep(yank, NULL));
+	buffer_insyank(buffers_cur(), yank);
 
 	ui_redraw();
 }

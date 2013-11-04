@@ -30,7 +30,7 @@ list_t *list_copy_deep(const list_t *const l, list_t *prev)
 	list_t *new = list_new(prev);
 	new->len_line = l->len_line;
 	new->len_malloc = l->len_line; /* len_line, not len_malloc */
-	new->line = ustrdup(l->line);
+	new->line = ustrdup_len(l->line, l->len_line);
 	new->next = list_copy_deep(l->next, new);
 	return new;
 }
@@ -419,7 +419,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 				size_t diff = region->end.x - region->begin.x;
 
 				size_t delamt = l->len_line - region->begin.x - 1;
-				list_t *part = list_new(deleted);
+				list_t *part = list_new(NULL);
 				part->line = umalloc(delamt + 1);
 				memcpy(part->line, l->line + region->begin.x, delamt);
 
@@ -429,6 +429,8 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 						l->len_line - region->begin.x - 1);
 
 				l->len_line -= diff;
+
+				deleted = list_append(deleted, part);
 			}
 			break;
 		}

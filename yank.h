@@ -1,7 +1,13 @@
 #ifndef YANK_H
 #define YANK_H
 
-void yank_push(list_t *);
-list_t *yank_top(void);
+typedef struct yank yank;
+
+yank *yank_new(list_t *, enum region_type as);
+
+void yank_push(yank *);
+const yank *yank_top(void);
+
+void yank_put_in_list(const yank *y, list_t *head);
 
 #endif
