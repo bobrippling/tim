@@ -93,7 +93,7 @@ fin:
 
 int buffer_replace_file(buffer_t *b, FILE *f)
 {
-	list_t *l = list_new_file(f);
+	list_t *l = list_new_file(f, &b->eol);
 
 	if(!l)
 		return 0;
@@ -116,6 +116,11 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 	fclose(f);
 
 	return r;
+}
+
+int buffer_write_file(buffer_t *b, int n, FILE *f, bool eol)
+{
+	return list_write_file(b->head, n, f, eol);
 }
 
 void buffer_set_fname(buffer_t *b, const char *s)
@@ -148,6 +153,7 @@ void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 
 	yank_push(del);
 }
+struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
 
 void buffer_inslist(buffer_t *buf, list_t *l)
 {
@@ -161,7 +167,6 @@ void buffer_inslist(buffer_t *buf, list_t *l)
 	bl->next = l;
 	l->prev = bl;
 }
-struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
 
 static
 void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
@@ -213,6 +218,13 @@ void buffer_indent2(
 			}
 		}
 	}
+}
+
+int buffer_filter(
+		buffer_t *buf, const region_t *reg,
+		const char *cmd)
+{
+	return list_filter(&buf->head, reg, cmd);
 }
 
 static
@@ -358,39 +370,37 @@ static char *strrevstr(char *haystack, unsigned off, const char *needle)
 
 static char *buffer_find2(
 		char *haystack, const char *needle,
-		unsigned off, int rev)
+		unsigned off, int dir)
 {
-	return rev
+	return dir < 0
 		? strrevstr(haystack, off, needle)
 		: strstr(haystack + off, needle);
 }
 
-int buffer_find(const buffer_t *buf, const char *search, point_t *at, int rev)
+bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir)
 {
-	point_t loc = *buf->ui_pos;
+	list_t *l = list_seek(buf->head, at->y, 0);
 
-	unsigned off = at->x > 0 ? at->x - rev : 0;
+	if(!l)
+		return false;
 
-	list_t *l = list_seek(buf->head, loc.y, 0);
+	/* search at the next char */
+	l = list_advance_x(l, dir, &at->y, &at->x);
+
 	while(l){
 		char *p;
-		if(off < l->len_line
-		&& (p = buffer_find2(l->line, search, off, rev)))
+		if((unsigned)at->x < l->len_line
+		&& (p = buffer_find2(l->line, search, at->x, dir)))
 		{
 			at->x = p - l->line;
-			at->y = loc.y;
-			return 1;
+			at->y = at->y;
+			return true;
 		}
 
-		if(rev)
-			l = l->prev, loc.y--;
-		else
-			l = l->next, loc.y++;
-
-		off = rev ? l->len_line - 1 : 0;
+		l = list_advance_y(l, dir, &at->y, &at->x);
 	}
 
-	return 0;
+	return false;
 }
 
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)

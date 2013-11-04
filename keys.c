@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <wordexp.h>
+#include <errno.h>
 
 #include "pos.h"
 #include "region.h"
@@ -25,31 +26,55 @@
 
 #include "config.h"
 
-static const motion *motion_find(int ch)
-{
-	for(int i = 0; motion_keys[i].ch; i++)
-		if(motion_keys[i].ch == ch)
-			return &motion_keys[i].motion;
-	return NULL;
-}
-
 const motion *motion_read(unsigned *repeat)
 {
-	enum io io_m =
+	bool potential[sizeof motion_keys / sizeof *motion_keys - 1];
+
+	memset(potential, true, sizeof potential);
+
+	const enum io io_m =
 		buffers_cur()->ui_mode & UI_VISUAL_ANY
 		? IO_MAPV
 		: IO_MAP;
 
 	*repeat = io_read_repeat(io_m);
 
-	int ch = io_getch(io_m);
-	const motion *m = motion_find(ch);
-	if(!m){
-		io_ungetch(ch);
-		return NULL;
-	}
+	unsigned ch_idx = 0;
+	for(;; ch_idx++){
+		int ch = io_getch(io_m);
 
-	return m;
+		unsigned npotential = 0;
+		unsigned last_potential = 0;
+
+		/* filter motions */
+		for(unsigned i = 0; i < sizeof potential; i++){
+			if(potential[i]){
+				size_t keys_len = strlen(motion_keys[i].keys);
+				if(ch_idx >= keys_len || motion_keys[i].keys[ch_idx] != ch){
+					potential[i] = false;
+				}else{
+					npotential++;
+					last_potential = i;
+				}
+			}
+		}
+
+		switch(npotential){
+			case 1:
+			{
+				/* only accept once we have the full string */
+				const motionkey_t *mk = &motion_keys[last_potential];
+				if(ch_idx == strlen(mk->keys) - 1)
+					return &mk->motion;
+				break;
+			}
+			case 0:
+				/* this is currently fine
+				 * motions don't clash with other maps in config.h */
+				io_ungetch(ch);
+				return NULL;
+		}
+	}
 }
 
 static
@@ -196,6 +221,7 @@ void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 	(void)a;
 	ui_clear();
 	ui_redraw();
+	ui_cur_changed();
 }
 
 void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -438,4 +464,41 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 	list_t *yank = yank_top();
 
 	buffer_inslist(buffers_cur(), yank);
+}
+
+static char *filter_shcmd;
+
+static void filter(
+		buffer_t *buf,
+		const region_t *region,
+		point_t *out)
+{
+	char *cmd = filter_shcmd;
+	filter_shcmd = NULL;
+
+	bool prompted = false;
+	if(!cmd){
+		cmd = prompt('!');
+		if(!cmd)
+			return;
+		prompted = true;
+	}
+
+	if(buffer_filter(buf, region, cmd))
+		ui_status("filter: %s", strerror(errno));
+
+	if(prompted)
+		free(cmd);
+}
+
+void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	struct buffer_action filter_wrapper = {
+		.fn = filter,
+		.is_linewise = 1,
+	};
+
+	filter_shcmd = a->s;
+
+	around_motion(a, repeat, from_ch, &filter_wrapper, NULL);
 }

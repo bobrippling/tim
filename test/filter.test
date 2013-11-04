@@ -1,0 +1,11 @@
+jVj!sed 's/^/HI/'
+__IN__
+hello
+there
+abc
+xyz
+__OUT__
+hello
+HIthere
+HIabc
+xyz

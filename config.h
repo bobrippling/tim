@@ -5,37 +5,48 @@
 #define MOTION_ARG_NONE     { 0 }
 
 const motionkey_t motion_keys[] = {
-	{ 'w',            { m_word, {  1 }, M_EXCLUSIVE } },
-	{ 'b',            { m_word, { -1 }, M_EXCLUSIVE } },
+	{ "w",            { m_word, {  1 }, M_EXCLUSIVE } },
+	{ "b",            { m_word, { -1 }, M_EXCLUSIVE } },
 
-	{ 'j',            { m_move, { .pos = {  0,  1 } }, M_LINEWISE } },
-	{ 'k',            { m_move, { .pos = {  0, -1 } }, M_LINEWISE } },
-	{ 'h',            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },
-	{ 'l',            { m_move, { .pos = {  1,  0 } }, M_EXCLUSIVE } },
+	{ "j",            { m_move, { .pos = {  0,  1 } }, M_LINEWISE } },
+	{ "k",            { m_move, { .pos = {  0, -1 } }, M_LINEWISE } },
+	{ "h",            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },
+	{ "l",            { m_move, { .pos = {  1,  0 } }, M_EXCLUSIVE } },
 
-	{ '{',            { m_para,     { -1 }, M_LINEWISE } },
-	{ '}',            { m_para,     { +1 }, M_LINEWISE } },
+	{ "{",            { m_para,     { -1 }, M_LINEWISE } },
+	{ "}",            { m_para,     { +1 }, M_LINEWISE } },
+	{ "%",            { m_paren,    { '%' }, M_NONE } },
 
-	{ 'f',            { m_find,     { .find_type = 0             }, M_NONE } },
-	{ 'F',            { m_find,     { .find_type = F_REV         }, M_NONE } },
-	{ 't',            { m_find,     { .find_type = F_TIL         }, M_NONE } },
-	{ 'T',            { m_find,     { .find_type = F_REV | F_TIL }, M_NONE } },
-	{ ';',            { m_findnext, { .find_type = 0             }, M_NONE } },
-	{ ',',            { m_findnext, { .find_type = F_REV         }, M_NONE } },
+	{ "[[", { m_func, { -1 }, M_LINEWISE } },
+	{ "]]", { m_func, { +1 }, M_LINEWISE } },
 
-	{ '0',            { m_goto, { .pos = { 0, -1 } }, M_EXCLUSIVE } },
-	{ '^',            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },
-	{ '$',            { m_eol,  MOTION_ARG_NONE,      M_NONE      } },
+	{ "[{", { m_paren, { '{' }, M_LINEWISE } },
+	{ "[(", { m_paren, { '(' }, M_LINEWISE } },
+	{ "]}", { m_paren, { '}' }, M_LINEWISE } },
+	{ "])", { m_paren, { ')' }, M_LINEWISE } },
 
-	{ 'g',            { m_sof,  MOTION_ARG_NONE, M_LINEWISE } }, // FIXME: goto
-	{ 'G',            { m_eof,  MOTION_ARG_NONE, M_LINEWISE } },
+	{ "f",            { m_find,     { .find_type = 0             }, M_NONE } },
+	{ "F",            { m_find,     { .find_type = F_REV         }, M_NONE } },
+	{ "t",            { m_find,     { .find_type = F_TIL         }, M_NONE } },
+	{ "T",            { m_find,     { .find_type = F_REV | F_TIL }, M_NONE } },
+	{ ";",            { m_findnext, { .find_type = 0             }, M_NONE } },
+	{ ",",            { m_findnext, { .find_type = F_REV         }, M_NONE } },
 
-	{ 'H',            { m_sos,  MOTION_ARG_NONE, M_LINEWISE } },
-	{ 'M',            { m_mos,  MOTION_ARG_NONE, M_LINEWISE } },
-	{ 'L',            { m_eos,  MOTION_ARG_NONE, M_LINEWISE } },
+	{ "0",            { m_goto, { .pos = { 0, -1 } }, M_EXCLUSIVE } },
+	{ "^",            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },
+	{ "$",            { m_eol,  MOTION_ARG_NONE,      M_NONE      } },
 
-	{ '/',            { m_search, { 0               }, M_EXCLUSIVE } },
-	{ '?',            { m_search, { 1 /* reverse */ }, M_EXCLUSIVE } },
+	{ "g",            { m_sof,  MOTION_ARG_NONE, M_LINEWISE } }, // FIXME: goto
+	{ "G",            { m_eof,  MOTION_ARG_NONE, M_LINEWISE } },
+
+	{ "H",            { m_sos,  MOTION_ARG_NONE, M_LINEWISE } },
+	{ "M",            { m_mos,  MOTION_ARG_NONE, M_LINEWISE } },
+	{ "L",            { m_eos,  MOTION_ARG_NONE, M_LINEWISE } },
+
+	{ "/",            { m_search, { +1 }, M_EXCLUSIVE } },
+	{ "?",            { m_search, { -1 }, M_EXCLUSIVE } },
+	{ "n",            { m_searchnext, { +1 }, M_EXCLUSIVE } },
+	{ "N",            { m_searchnext, { -1 }, M_EXCLUSIVE } },
 
 	{ 0 }
 };
@@ -71,6 +82,9 @@ const nkey_t nkeys[] = {
 	{ 'R', /* TODO */ k_replace,    { 1 },         UI_NORMAL | UI_VISUAL_ANY },
 
 	{ ':',            k_cmd,        KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
+
+	{ '!',            k_filter,     { .s = NULL }, UI_NORMAL | UI_VISUAL_ANY },
+	{ 'q',            k_filter,     { .s = "fmt" }, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ '~',            k_case, { CASE_TOGGLE }, UI_NORMAL | UI_VISUAL_ANY },
 /*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_ANY },*/

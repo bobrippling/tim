@@ -34,6 +34,7 @@ struct buffer
 	buffer_t *neighbours[4];
 
 	char *fname;
+	bool eol;
 
 	enum buf_mode
 	{
@@ -67,6 +68,7 @@ void buffer_free(buffer_t *);
 
 int buffer_replace_file( buffer_t *, FILE *);
 int buffer_replace_fname(buffer_t *, const char *);
+int buffer_write_file(buffer_t *, int n, FILE *, bool eol);
 
 void buffer_set_fname(buffer_t *, const char *);
 const char *buffer_fname(const buffer_t *);
@@ -90,6 +92,11 @@ extern struct buffer_action
 
 void buffer_inslist(buffer_t *, list_t *);
 
+int buffer_filter(
+		buffer_t *,
+		const region_t *,
+		const char *cmd);
+
 void buffer_replace_chars(buffer_t *, int ch, unsigned n);
 
 void buffer_insline(buffer_t *, int dir);
@@ -108,7 +115,7 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
 
 const char *buffer_shortfname(const char *); /* internal fname buffer */
 
-int buffer_find(const buffer_t *, const char *, point_t *, int rev);
+bool buffer_findat(const buffer_t *, const char *, point_t *, int dir);
 
 point_t buffer_toscreen(const buffer_t *, point_t const *);
 point_t *buffer_uipos_alt(buffer_t *buf);

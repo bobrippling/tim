@@ -1,0 +1,15 @@
+3j4[{Ahere
+__IN__
+void f()
+{
+	{
+		;
+	}
+}
+__OUT__
+void f()
+{here
+	{
+		;
+	}
+}

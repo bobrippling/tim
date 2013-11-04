@@ -27,7 +27,7 @@ typedef struct nkey_t
 
 typedef struct motionkey_t
 {
-	char ch;
+	const char *keys;
 	motion motion;
 } motionkey_t;
 
@@ -47,6 +47,7 @@ key_func k_join;
 key_func k_indent;
 key_func k_put;
 key_func k_case;
+key_func k_filter;
 
 key_func k_vtoggle;
 
