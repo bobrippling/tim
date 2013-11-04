@@ -23,6 +23,18 @@ list_t *list_new(list_t *prev)
 	return l;
 }
 
+list_t *list_copy_deep(const list_t *const l, list_t *prev)
+{
+	if(!l)
+		return NULL;
+	list_t *new = list_new(prev);
+	new->len_line = l->len_line;
+	new->len_malloc = l->len_line; /* len_line, not len_malloc */
+	new->line = ustrdup(l->line);
+	new->next = list_copy_deep(l->next, new);
+	return new;
+}
+
 static void mmap_new_line(list_t **pcur, char *p, char **panchor)
 {
 	char *data = umalloc(p - *panchor + 1);

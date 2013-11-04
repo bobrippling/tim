@@ -157,15 +157,19 @@ struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
 
 void buffer_inslist(buffer_t *buf, list_t *l)
 {
-	list_t *bl = buffer_current_line(buf);
+	list_t *bl = list_seek(buf->head, buf->ui_pos->y, true);
 
-	list_t *tail = list_tail(l);
+	list_t *l_tail = list_tail(l);
 
-	tail->next = bl->next;
-	tail->next->prev = tail;
+	list_t *const after = bl->next;
 
+	/* top link */
 	bl->next = l;
 	l->prev = bl;
+
+	/* bottom link */
+	l_tail->next = after;
+	after->prev = l_tail;
 }
 
 static

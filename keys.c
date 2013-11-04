@@ -463,7 +463,9 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	list_t *yank = yank_top();
 
-	buffer_inslist(buffers_cur(), yank);
+	buffer_inslist(buffers_cur(), list_copy_deep(yank, NULL));
+
+	ui_redraw();
 }
 
 static char *filter_shcmd;
