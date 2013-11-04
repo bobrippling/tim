@@ -3,6 +3,8 @@
 
 #define CTRL_AND(c)  ((c) & 037)
 
+#include <stdbool.h>
+
 void nc_init(void);
 void nc_term(void);
 void nc_clearall(void);
@@ -21,6 +23,7 @@ int nc_COLS(void);
 void nc_clrtoeol(void);
 
 /* called by io functions */
-int nc_getch(void);
+int nc_getch(bool mapraw);
+/* mapraw = convert ^Vx to escape char */
 
 #endif

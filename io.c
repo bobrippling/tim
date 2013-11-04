@@ -65,9 +65,9 @@ int io_getch(enum io ty)
 	if(io_fifoused)
 		return io_fifo_pop();
 
-	int ch = nc_getch();
+	int ch = nc_getch(ty & IO_MAPRAW);
 
-	switch(ty){
+	switch((int)(ty & ~IO_MAPRAW)){
 		case IO_MAP:
 		case IO_MAPV:
 			io_map(ch, ty == IO_MAPV);

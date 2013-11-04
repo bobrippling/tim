@@ -317,7 +317,7 @@ int m_findnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 int m_find(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	return m_findnext2(
-			last_find_ch = io_getch(IO_NOMAP),
+			last_find_ch = io_getch(IO_NOMAP /* vim doesn't mapraw here */),
 			last_find_type = m->find_type,
 			repeat, buf, to);
 }

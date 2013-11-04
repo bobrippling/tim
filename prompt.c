@@ -22,7 +22,7 @@ char *prompt(char promp)
 	nc_clrtoeol();
 
 	while(reading){
-		int ch = io_getch(IO_NOMAP);
+		int ch = io_getch(IO_NOMAP | IO_MAPRAW);
 
 		switch(ch){
 			case K_ESC:

@@ -254,7 +254,7 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 	(void)a;
 
 	buf = buffers_cur();
-	dir = nc_getch();
+	dir = io_getch(IO_NOMAP);
 
 	switch(dir){
 #define DIRECT(c, n) case c: buf = buf->neighbours[n]; break

@@ -5,9 +5,13 @@
 
 enum io
 {
-	IO_NOMAP,
-	IO_MAP,
-	IO_MAPV, /* use the visual entry? */
+	/* one of: */
+	IO_NOMAP = 0,
+	IO_MAP   = 1,
+	IO_MAPV  = 2, /* use the visual entry? */
+
+	/* optional, or'd in */
+	IO_MAPRAW = 4, /* change ^Vx to literal x */
 };
 
 int io_getch(enum io);

@@ -87,18 +87,29 @@ void nc_set_yx(int y, int x)
 	move(y, x);
 }
 
-int nc_getch()
+int nc_getch(bool mapraw)
 {
 	/* TODO: interrupts, winch */
+	bool ctrl_v = false;
 	int ch;
 restart:
 	ch = getch();
+
+	if(ctrl_v)
+		return ch;
+
 	if(ch == CTRL_AND('z')){
 		raise(SIGTSTP);
 		goto restart;
 	}
-	if(ch == '\r')
-		ch = '\n';
+	if(mapraw){
+		if(ch == '\r'){
+			ch = '\n';
+		}else if(ch == CTRL_AND('v')){
+			ctrl_v = true;
+			goto restart;
+		}
+	}
 	return ch;
 }
 
