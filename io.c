@@ -60,14 +60,14 @@ static void io_map(int ch, int visual)
 			io_fifo_push(visual ? m->to_visual : m->to);
 }
 
-int io_getch(enum io ty)
+int io_getch(enum io ty, bool *wasraw)
 {
 	if(io_fifoused)
 		return io_fifo_pop();
 
-	int ch = nc_getch();
+	int ch = nc_getch(ty & IO_MAPRAW, wasraw);
 
-	switch(ty){
+	switch((int)(ty & ~IO_MAPRAW)){
 		case IO_MAP:
 		case IO_MAPV:
 			io_map(ch, ty == IO_MAPV);
@@ -91,12 +91,12 @@ unsigned io_read_repeat(enum io io_mode)
 {
 	unsigned repeat = 1;
 
-	int ch = io_getch(io_mode);
+	int ch = io_getch(io_mode, NULL);
 	if(isdigit(ch) && ch != '0'){
 		repeat = ch - '0';
 		/* more repeats */
 		for(;;){
-			ch = io_getch(io_mode);
+			ch = io_getch(io_mode, NULL);
 			if('0' <= ch && ch <= '9')
 				repeat = repeat * 10 + ch - '0';
 			else

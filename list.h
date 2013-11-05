@@ -17,8 +17,8 @@ int list_write_file(list_t *l, int n, FILE *f, bool eol);
 
 list_t *list_copy_deep(const list_t *const l, list_t *prev);
 
-list_t *list_seek(list_t *l, int y, int creat);
-list_t **list_seekp(list_t **pl, int y, int creat);
+list_t **list_seekp(list_t **pl, int y, bool creat);
+list_t *list_seek(list_t *l, int y, bool creat);
 
 void    list_free(list_t *);
 

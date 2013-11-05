@@ -12,6 +12,7 @@
 #include "mem.h"
 #include "yank.h"
 #include "macros.h"
+#include "ncurses.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
@@ -153,7 +154,9 @@ void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 
 	yank_push(yank_new(del, region->type));
 }
-struct buffer_action buffer_delregion = { .fn = buffer_delregion_f };
+struct buffer_action buffer_delregion = {
+	.fn = buffer_delregion_f
+};
 
 static
 void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
@@ -189,7 +192,10 @@ void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
 	if(l)
 		out->x = mid;
 }
-struct buffer_action buffer_joinregion = { .fn = buffer_joinregion_f, .is_linewise = 1 };
+struct buffer_action buffer_joinregion = {
+	.fn = buffer_joinregion_f,
+	.always_linewise = true
+};
 
 static
 void buffer_indent2(
@@ -241,14 +247,20 @@ void buffer_indent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, 1);
 }
-struct buffer_action buffer_indent = { .fn = buffer_indent_f,  .is_linewise = 1 };
+struct buffer_action buffer_indent = {
+	.fn = buffer_indent_f,
+	.always_linewise = true
+};
 
 static
 void buffer_unindent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, -1);
 }
-struct buffer_action buffer_unindent = { .fn = buffer_unindent_f,  .is_linewise = 1 };
+struct buffer_action buffer_unindent = {
+	.fn = buffer_unindent_f,
+	.always_linewise = true
+};
 
 void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 {
@@ -414,8 +426,17 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 {
+	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
+	int xoff = 0;
+
+	if(l && l->len_line > 0)
+		for(int x = MIN((unsigned)buf->ui_pos->x, l->len_line - 1);
+				x >= 0;
+				x--)
+			xoff += nc_charlen(l->line[x]) - 1;
+
 	return (point_t){
-		buf->screen_coord.x + pt->x - buf->ui_start.x,
+		buf->screen_coord.x + pt->x - buf->ui_start.x + xoff,
 		buf->screen_coord.y + pt->y - buf->ui_start.y
 	};
 }

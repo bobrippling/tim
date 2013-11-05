@@ -22,12 +22,10 @@ char *prompt(char promp)
 	nc_clrtoeol();
 
 	while(reading){
-		int ch = io_getch(IO_NOMAP);
+		bool wasraw;
+		int ch = io_getch(IO_NOMAP | IO_MAPRAW, &wasraw);
 
 		switch(ch){
-			case K_ESC:
-				goto cancel;
-
 			case CTRL_AND('?'):
 			case CTRL_AND('H'):
 			case 263:
@@ -48,6 +46,11 @@ char *prompt(char promp)
 				buf[i = 0] = '\0';
 				nc_set_yx(nc_LINES() - 1, i + 1);
 				break;
+
+			case K_ESC:
+				if(!wasraw)
+					goto cancel;
+				/* fall */
 
 			default:
 				buf[i++] = ch;
