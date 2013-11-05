@@ -81,17 +81,19 @@ void yank_put_in_list(
 		case REGION_COL:
 		{
 			list_t *head = *phead;
+			int y = 0;
 			for(const list_t *l = ynk->list;
-			    l;
-			    l = l->next, head = list_seek(head, 1, l))
+			    l; l = l->next, y++)
 			{
-				int x = *px + !prepend;
-				int y = 0;
 				for(unsigned i = 0; i < l->len_line; i++)
-					list_inschar(head, &x, &y, l->line[i]);
+					list_inschar(head,
+							&(int){ *px + !prepend + i },
+							&(int){ y },
+							l->line[i]);
 			}
 
-			*px += !prepend;
+			if(!prepend)
+				++*px;
 			break;
 		}
 	}
