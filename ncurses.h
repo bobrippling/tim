@@ -26,4 +26,6 @@ void nc_clrtoeol(void);
 int nc_getch(bool mapraw, bool *wasraw);
 /* mapraw = convert ^Vx to escape char */
 
+int nc_charlen(int ch);
+
 #endif

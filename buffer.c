@@ -11,6 +11,7 @@
 #include "buffer.h"
 #include "mem.h"
 #include "macros.h"
+#include "ncurses.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
@@ -407,8 +408,7 @@ point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 		for(int x = MIN((unsigned)buf->ui_pos->x, l->len_line - 1);
 				x >= 0;
 				x--)
-			if(l->line[x] == '\r' || !isprint(l->line[x]))
-				xoff++;
+			xoff += nc_charlen(l->line[x]) - 1;
 
 	return (point_t){
 		buf->screen_coord.x + pt->x - buf->ui_start.x + xoff,

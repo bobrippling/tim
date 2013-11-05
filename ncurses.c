@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include <signal.h>
+#include <ctype.h>
 
 #include "ncurses.h"
 #include "macros.h"
@@ -85,6 +86,22 @@ void nc_get_yx(int *y, int *x)
 void nc_set_yx(int y, int x)
 {
 	move(y, x);
+}
+
+int nc_charlen(int ch)
+{
+	int l = 1;
+	switch(ch){
+		case '\r':
+			l++; /* ^M */
+			break;
+		case '\t':
+			break;
+		default:
+			if(!isprint(ch))
+				l++; /* ^X */
+	}
+	return l;
 }
 
 int nc_getch(bool mapraw, bool *wasraw)
