@@ -248,7 +248,6 @@ static int list_evalnewlines(list_t *l)
 void list_inschar(list_t **pl, int *x, int *y, char ch)
 {
 	list_t *l;
-	int i;
 
 	l = *(pl = list_seekp(pl, *y, true));
 
@@ -259,15 +258,15 @@ void list_inschar(list_t **pl, int *x, int *y, char ch)
 		l->line = urealloc(l->line, l->len_malloc);
 
 		memset(l->line + old_len, 0, l->len_malloc - old_len);
-
-		for(i = l->len_line; i < *x; i++){
-			l->line[i] = ' ';
-			l->len_line++;
-		}
 	}else{
 		/* shift stuff up */
 		l->line = urealloc(l->line, ++l->len_malloc);
 		memmove(l->line + *x + 1, l->line + *x, l->len_malloc - *x - 1);
+	}
+
+	for(int i = l->len_line; i < *x; i++){
+		l->line[i] = ' ';
+		l->len_line++;
 	}
 
 	l->line[*x] = ch;
