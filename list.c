@@ -414,10 +414,11 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 
 				size_t diff = region->end.x - region->begin.x;
 
-				size_t delamt = l->len_line - region->begin.x - 1;
 				list_t *part = list_new(NULL);
-				part->line = umalloc(delamt + 1);
-				memcpy(part->line, l->line + region->begin.x, delamt);
+				part->line = umalloc(diff + 1);
+				part->len_line = diff;
+				part->len_malloc = diff + 1;
+				memcpy(part->line, l->line + region->begin.x, diff);
 
 				memmove(
 						l->line + region->begin.x,
