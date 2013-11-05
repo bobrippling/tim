@@ -153,9 +153,9 @@ void ui_main()
 		}
 
 		const bool ins = UI_MODE() & UI_INSERT_ANY;
+		unsigned repeat = 0;
 
 		if(!ins){
-			unsigned repeat = 0;
 			const motion *m = motion_read(&repeat);
 
 			if(m){
@@ -168,7 +168,6 @@ void ui_main()
 			? IO_NOMAP
 			: (buf->ui_mode & UI_VISUAL_ANY ? IO_MAPV : IO_MAP);
 
-		unsigned repeat = ins ? 0 : io_read_repeat(io_mode);
 		bool wasraw;
 		int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
 
