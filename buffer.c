@@ -260,6 +260,9 @@ void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
 {
 	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
 
+	if(!l)
+		return;
+
 	int (*f)(int) = NULL;
 
 	switch(tog_type){
