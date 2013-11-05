@@ -65,7 +65,10 @@ int io_getch(enum io ty, bool *wasraw)
 	if(io_fifoused)
 		return io_fifo_pop();
 
-	int ch = nc_getch(ty & IO_MAPRAW, wasraw);
+	int ch;
+	do
+		ch = nc_getch(ty & IO_MAPRAW, wasraw);
+	while(ch == NC_WINCH);
 
 	switch((int)(ty & ~IO_MAPRAW)){
 		case IO_MAP:

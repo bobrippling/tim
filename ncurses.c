@@ -5,6 +5,21 @@
 #include "ncurses.h"
 #include "macros.h"
 
+static volatile bool got_winch;
+
+static void handle_winch(int sig)
+{
+	(void)sig;
+	got_winch = true;
+}
+
+static bool had_winch(void)
+{
+	bool r = got_winch;
+	got_winch = false;
+	return r;
+}
+
 void nc_init()
 {
 	static int init = 0;
@@ -46,6 +61,9 @@ void nc_init()
 	}else{
 		refresh();
 	}
+#ifdef SIGWINCH
+	signal(SIGWINCH, handle_winch);
+#endif
 }
 
 void nc_term()
@@ -111,6 +129,8 @@ int nc_getch(bool mapraw, bool *wasraw)
 	int ch;
 restart:
 	ch = getch();
+	if(had_winch())
+		return NC_WINCH;
 
 	if(ctrl_v)
 		return ch;

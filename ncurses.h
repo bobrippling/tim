@@ -28,4 +28,6 @@ int nc_getch(bool mapraw, bool *wasraw);
 
 int nc_charlen(int ch);
 
+#define NC_WINCH -2
+
 #endif
