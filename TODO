@@ -22,6 +22,7 @@ motions:
 	i/a: iw, i{, ip
 	operator-pending:
 		v, V, c-v
+	'., '<mark>, etc
 
 
 cmds:
@@ -30,5 +31,6 @@ cmds:
 	exist-check on :w
 	:e - limit cursor to (x, max_lines) when loading a new file
 	zt, zb, zz
+	:messages - previous ui_status()s
 
 use-refactor: command mode is editing a height=1 repl-buffer
