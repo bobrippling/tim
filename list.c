@@ -174,7 +174,7 @@ void list_free(list_t *l)
 }
 
 static
-list_t **list_seekp(list_t **pl, int y, int creat)
+list_t **list_seekp(list_t **pl, int y, bool creat)
 {
 	if(!*pl){
 		if(creat)
@@ -198,7 +198,7 @@ list_t **list_seekp(list_t **pl, int y, int creat)
 	return pl;
 }
 
-list_t *list_seek(list_t *l, int y, int creat)
+list_t *list_seek(list_t *l, int y, bool creat)
 {
 	list_t **p = list_seekp(&l, y, creat);
 	return p ? *p : NULL;
@@ -250,7 +250,7 @@ void list_inschar(list_t **pl, int *x, int *y, char ch)
 	list_t *l;
 	int i;
 
-	l = *(pl = list_seekp(pl, *y, 1));
+	l = *(pl = list_seekp(pl, *y, true));
 
 	if((unsigned)*x >= l->len_malloc){
 		const int old_len = l->len_malloc;
@@ -282,7 +282,7 @@ void list_inschar(list_t **pl, int *x, int *y, char ch)
 
 void list_delchar(list_t *l, int *x, int *y)
 {
-	l = list_seek(l, *y, 0);
+	l = list_seek(l, *y, false);
 
 	--*x;
 
@@ -313,7 +313,7 @@ void list_dellines(list_t **pl, list_t *prev, unsigned n)
 		*pl = adv;
 
 	}else{
-		list_t *end_m1 = list_seek(l, n - 2, 0);
+		list_t *end_m1 = list_seek(l, n - 2, false);
 
 		if(end_m1){
 			*pl = end_m1->next;
@@ -335,7 +335,7 @@ void list_delregion(list_t **pl, const region_t *region)
 	assert(region->begin.y <= region->end.y);
 	assert(region->begin.y < region->end.y || region->begin.x < region->end.x);
 
-	list_t **seeked = list_seekp(pl, region->begin.y, 0);
+	list_t **seeked = list_seekp(pl, region->begin.y, false);
 
 	if(!seeked || !*seeked)
 		return;
@@ -429,7 +429,7 @@ void list_joinregion(list_t **pl, const region_t *region)
 
 	assert(region->begin.y < region->end.y);
 
-	list_t *l, *start = list_seek(*pl, region->begin.y, 0);
+	list_t *l, *start = list_seek(*pl, region->begin.y, false);
 	int i;
 
 	if(!start)
@@ -488,7 +488,7 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	if(dir < 0)
 		--*y;
 
-	l = list_seek(*pl, *y, 1);
+	l = list_seek(*pl, *y, true);
 
 	save = l->next;
 	l->next = list_new(l);
@@ -501,7 +501,7 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 
 void list_replace_at(list_t *l, int *px, int *py, char *with)
 {
-	l = list_seek(l, *py, 1);
+	l = list_seek(l, *py, true);
 
 	const int with_len = strlen(with);
 	int x = *px;
@@ -536,7 +536,7 @@ int list_filter(
 		list_t **pl, const region_t *region,
 		const char *cmd)
 {
-	pl = list_seekp(pl, region->begin.y, 0);
+	pl = list_seekp(pl, region->begin.y, false);
 
 	if(!pl)
 		return -1;
