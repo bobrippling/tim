@@ -60,7 +60,7 @@ sub runtest
 		$rc = $?;
 		printf "%s: %s\n", $rc ? "failure" : "success", $test;
 
-		to_file '| sed -n l', @diff[2 .. $#diff];
+		to_file '| sed -n "s/^/    /; l"', @diff[2 .. $#diff];
 	}
 
 	return $rc;
