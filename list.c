@@ -60,7 +60,7 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 	list_t *l = list_new(NULL);
 
 	int y = 0, x = 0;
-	bool nl = false;
+	bool nl = false, empty = true;
 	int ch;
 	int r;
 	while((r = read(fd, &ch, 1)) == 1){
@@ -73,9 +73,11 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 			nl = true;
 		else
 			list_inschar(&l, &x, &y, ch);
+
+		empty = false;
 	}
 
-	*eol = nl;
+	*eol = nl || empty;
 
 	return l;
 }
