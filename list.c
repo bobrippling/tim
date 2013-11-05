@@ -344,7 +344,7 @@ list_t *list_tail(list_t *l)
 	return l;
 }
 
-static list_t *list_append(list_t *accum, list_t *new)
+list_t *list_append(list_t *accum, list_t *new)
 {
 	if(!accum)
 		return new;

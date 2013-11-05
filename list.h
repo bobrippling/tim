@@ -16,6 +16,7 @@ list_t *list_new_file(FILE *, bool *eol);
 int list_write_file(list_t *l, int n, FILE *f, bool eol);
 
 list_t *list_copy_deep(const list_t *const l, list_t *prev);
+list_t *list_append(list_t *accum, list_t *new);
 
 list_t **list_seekp(list_t **pl, int y, bool creat);
 list_t *list_seek(list_t *l, int y, bool creat);
