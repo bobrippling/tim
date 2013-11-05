@@ -83,7 +83,7 @@ void yank_put_in_list(
 			list_t *head = *phead;
 			for(const list_t *l = ynk->list;
 			    l;
-			    l = l->next, head = list_seek(head, 1, true))
+			    l = l->next, head = list_seek(head, 1, l))
 			{
 				int x = *px + !prepend;
 				int y = 0;
