@@ -91,7 +91,7 @@ void yank_put_in_list(
 					list_inschar(head, &x, &y, l->line[i]);
 			}
 
-			++*px;
+			*px += !prepend;
 			break;
 		}
 	}
