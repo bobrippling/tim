@@ -61,7 +61,7 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 
 	int y = 0, x = 0;
 	bool nl = false, empty = true;
-	int ch;
+	int ch = 0;
 	int r;
 	while((r = read(fd, &ch, 1)) == 1){
 		if(nl){
