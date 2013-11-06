@@ -383,7 +383,7 @@ void list_delregion(list_t **pl, const region_t *region)
 				memmove(
 						l->line + region->begin.x,
 						l->line + region->end.x,
-						l->len_line - region->begin.x - 1);
+						l->len_line - region->end.x);
 
 				l->len_line -= diff;
 			}
