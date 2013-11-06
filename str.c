@@ -14,6 +14,36 @@ char *strchr_rev(const char *s, int ch, const char *start)
 	return (char *)s; /* *s == ch */
 }
 
+char *tim_strrevstr(char *restrict haystack, unsigned off, const char *restrict needle)
+{
+	const size_t nlen = strlen(needle);
+
+	for(char *p = haystack + off;
+			p >= haystack;
+			p--)
+	{
+		if(!strncmp(p, needle, nlen))
+			return p;
+	}
+
+	return NULL;
+}
+
+char *tim_strstr(char *restrict haystack, size_t len, const char *restrict needle)
+{
+	/* memstr */
+	for(size_t h = 0; h < len; h++)
+		if(haystack[h] == *needle)
+			/* can assume needle is 0-terminated */
+			for(size_t n = 0; n < len - h; n++)
+				if(!needle[n])
+					return haystack + h;
+				else if(haystack[h + n] != needle[n])
+					break;
+
+	return NULL;
+}
+
 bool isallspace(const char *s)
 {
 	for(; *s && isspace(*s); s++);

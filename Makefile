@@ -16,6 +16,9 @@ tim: ${OBJ}
 check: tim
 	cd test && ./run.pl
 
+checkmem: tim
+	cd test && ./run.pl -v
+
 clean:
 	rm -f ${OBJ} tim
 

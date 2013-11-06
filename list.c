@@ -72,8 +72,8 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 	list_t *l = list_new(NULL);
 
 	int y = 0, x = 0;
-	bool nl = false;
-	int ch;
+	bool nl = false, empty = true;
+	int ch = 0;
 	int r;
 	while((r = read(fd, &ch, 1)) == 1){
 		if(nl){
@@ -85,9 +85,11 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 			nl = true;
 		else
 			list_inschar(l, &x, &y, ch);
+
+		empty = false;
 	}
 
-	*eol = nl;
+	*eol = nl || empty;
 
 	return l;
 }
@@ -423,7 +425,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 				memmove(
 						l->line + region->begin.x,
 						l->line + region->end.x,
-						l->len_line - region->begin.x - 1);
+						l->len_line - region->end.x);
 
 				l->len_line -= diff;
 

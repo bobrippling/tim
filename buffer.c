@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
@@ -13,8 +14,12 @@
 #include "yank.h"
 #include "macros.h"
 #include "ncurses.h"
+#include "str.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
+
+static
+int buffer_replace_file(buffer_t *b, FILE *f, bool reset_pos);
 
 void buffer_free(buffer_t *b)
 {
@@ -61,7 +66,7 @@ buffer_t *buffer_new_file(FILE *f)
 {
 	/* TODO: mmap() */
 	buffer_t *b = buffer_new();
-	buffer_replace_file(b, f);
+	buffer_replace_file(b, f, false);
 
 	return b;
 }
@@ -92,7 +97,7 @@ fin:
 	*pb = b;
 }
 
-int buffer_replace_file(buffer_t *b, FILE *f)
+int buffer_replace_file(buffer_t *b, FILE *f, bool reset_pos)
 {
 	list_t *l = list_new_file(f, &b->eol);
 
@@ -101,6 +106,8 @@ int buffer_replace_file(buffer_t *b, FILE *f)
 
 	list_free(b->head);
 	b->head = l;
+	if(reset_pos)
+		b->ui_npos = b->ui_vpos = (point_t){ 0 };
 
 	return 1;
 }
@@ -113,7 +120,7 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 	if(!f)
 		return 0;
 
-	r = buffer_replace_file(b, f);
+	r = buffer_replace_file(b, f, true);
 	fclose(f);
 
 	return r;
@@ -285,6 +292,9 @@ void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
 {
 	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
 
+	if(!l)
+		return;
+
 	int (*f)(int) = NULL;
 
 	switch(tog_type){
@@ -374,28 +384,14 @@ const char *buffer_shortfname(const char *s)
 	return s;
 }
 
-static char *strrevstr(char *haystack, unsigned off, const char *needle)
-{
-	const size_t nlen = strlen(needle);
-
-	for(char *p = haystack + off;
-			p >= haystack;
-			p--)
-	{
-		if(!strncmp(p, needle, nlen))
-			return p;
-	}
-
-	return NULL;
-}
-
 static char *buffer_find2(
-		char *haystack, const char *needle,
+		char *haystack, size_t haystack_sz,
+		const char *needle,
 		unsigned off, int dir)
 {
 	return dir < 0
-		? strrevstr(haystack, off, needle)
-		: strstr(haystack + off, needle);
+		? tim_strrevstr(haystack, off, needle)
+		: tim_strstr(haystack + off, haystack_sz - off, needle);
 }
 
 bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir)
@@ -411,7 +407,7 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 	while(l){
 		char *p;
 		if((unsigned)at->x < l->len_line
-		&& (p = buffer_find2(l->line, search, at->x, dir)))
+		&& (p = buffer_find2(l->line, l->len_line, search, at->x, dir)))
 		{
 			at->x = p - l->line;
 			at->y = at->y;

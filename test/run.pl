@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 use warnings;
 
+my %opts = (
+	valgrind => 0
+);
+
 $tim = '../tim';
 $tdir = '/tmp/tim.test';
 mkdir $tdir;
@@ -49,7 +53,23 @@ sub runtest
 
 	to_file ">$file", @f_begin;
 
-	my $rc = run_tim($file, join('', @cmds) . ":wq");
+	my $errf = "$tdir/err";
+	my $rc = run_tim($file, $errf, join('', @cmds) . ":wq");
+
+	if($opts{valgrind}){
+		open VG, '<', $errf or die;
+		my @errs = map { chomp; $_ } <VG>;
+		close VG;
+
+		if(grep /uninit|invalid/i, @errs){
+			print "valgrind problems:\n";
+			for(@errs){
+				s/^(==|--)[0-9]+(==|--) //;
+				print "\t$_\n";
+			}
+			$rc = 1;
+		}
+	}
 
 	if($rc != 0){
 		print "failure: (exit code) $test\n";
@@ -60,7 +80,7 @@ sub runtest
 		$rc = $?;
 		printf "%s: %s\n", $rc ? "failure" : "success", $test;
 
-		to_file '| sed -n l', @diff[2 .. $#diff];
+		to_file '| sed -n "s/^/    /; l"', @diff[2 .. $#diff];
 	}
 
 	return $rc;
@@ -72,11 +92,19 @@ sub run_tim
 
 	if($pid == 0){
 		my $inp = "$tdir/inp";
-		my($file, $cmds) = @_;
+		my($file, $errf, $cmds) = @_;
 		to_file ">$inp", $cmds;
 
 		open STDIN, '<', $inp or die;
-		exec $tim, $file;
+
+		my @args = ($tim, $file);
+
+		if($opts{valgrind}){
+			unshift @args, 'valgrind';
+			open STDERR, '>', $errf or die;
+		}
+
+		exec @args;
 		die;
 	}
 
@@ -87,6 +115,11 @@ sub run_tim
 		unless $dead == $pid;
 
 	return $rc;
+}
+
+if(@ARGV and $ARGV[0] eq '-v'){
+	$opts{valgrind} = 1;
+	shift @ARGV;
 }
 
 my @tests = @ARGV ? @ARGV : glob '*.test';
