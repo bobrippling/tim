@@ -62,6 +62,9 @@ static void io_map(int ch, int visual)
 
 int io_getch(enum io ty, bool *wasraw)
 {
+	if(wasraw)
+		*wasraw = false;
+
 	if(io_fifoused)
 		return io_fifo_pop();
 
