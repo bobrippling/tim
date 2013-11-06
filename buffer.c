@@ -13,6 +13,7 @@
 #include "mem.h"
 #include "macros.h"
 #include "ncurses.h"
+#include "str.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
@@ -358,28 +359,14 @@ const char *buffer_shortfname(const char *s)
 	return s;
 }
 
-static char *strrevstr(char *haystack, unsigned off, const char *needle)
-{
-	const size_t nlen = strlen(needle);
-
-	for(char *p = haystack + off;
-			p >= haystack;
-			p--)
-	{
-		if(!strncmp(p, needle, nlen))
-			return p;
-	}
-
-	return NULL;
-}
-
 static char *buffer_find2(
-		char *haystack, const char *needle,
+		char *haystack, size_t haystack_sz,
+		const char *needle,
 		unsigned off, int dir)
 {
 	return dir < 0
-		? strrevstr(haystack, off, needle)
-		: strstr(haystack + off, needle);
+		? tim_strrevstr(haystack, off, needle)
+		: tim_strstr(haystack + off, haystack_sz - off, needle);
 }
 
 bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir)
@@ -395,7 +382,7 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 	while(l){
 		char *p;
 		if((unsigned)at->x < l->len_line
-		&& (p = buffer_find2(l->line, search, at->x, dir)))
+		&& (p = buffer_find2(l->line, l->len_line, search, at->x, dir)))
 		{
 			at->x = p - l->line;
 			at->y = at->y;

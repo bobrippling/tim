@@ -12,4 +12,14 @@ char paren_opposite(char);
 void str_ltrim(char *, size_t *);
 void str_rtrim(char *, size_t *);
 
+char *tim_strrevstr(
+		char *restrict haystack,
+		unsigned off,
+		const char *restrict needle);
+
+char *tim_strstr(
+		char *restrict haystack,
+		size_t len,
+		const char *restrict needle);
+
 #endif
