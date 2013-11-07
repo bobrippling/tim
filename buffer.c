@@ -174,6 +174,9 @@ void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
 	yank_push(yank);
 
 	buffer_insyank(buf, yank, /*prepend:*/true);
+
+	/* restore ui pos (set in buffer_insyank) */
+	*out = region->begin;
 }
 struct buffer_action buffer_yankregion = {
 	.fn = buffer_yankregion_f
