@@ -319,6 +319,10 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ch == K_ESC)
 			return;
 
+		/* special case */
+		if(ch == '\r')
+			ch = '\n';
+
 		buffer_replace_chars(
 				buffers_cur(),
 				ch,
