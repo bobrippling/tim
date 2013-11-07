@@ -99,10 +99,12 @@ void yank_put_in_list(
 
 					head->len_line += save.len;
 				}
-			}
 
-			if(!prepend)
-				++*px;
+				if(!prepend)
+					++*px;
+			}else{
+				*px += ynk->list->len_line - prepend;
+			}
 			break;
 		}
 		case REGION_LINE:
