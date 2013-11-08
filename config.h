@@ -7,6 +7,7 @@
 const motionkey_t motion_keys[] = {
 	{ "w",            { m_word, {  1 }, M_EXCLUSIVE } },
 	{ "b",            { m_word, { -1 }, M_EXCLUSIVE } },
+	/* TODO: eWBE, gE, ge */
 
 	{ "j",            { m_move, { .pos = {  0,  1 } }, M_LINEWISE } },
 	{ "k",            { m_move, { .pos = {  0, -1 } }, M_LINEWISE } },
