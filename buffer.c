@@ -373,8 +373,13 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 {
 	list_t *l = list_seek(buf->head, at->y, 0);
 
-	if(!l)
-		return false;
+	if(!l){
+		if(dir < 0){
+			l = list_last(buf->head, &at->y);
+		}else{
+			return false;
+		}
+	}
 
 	/* search at the next char */
 	l = list_advance_x(l, dir, &at->y, &at->x);

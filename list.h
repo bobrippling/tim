@@ -47,4 +47,6 @@ list_t *list_advance_x(
 		int *py, int *px)
 	__attribute__((nonnull));
 
+list_t *list_last(list_t *, int *py);
+
 #endif

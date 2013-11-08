@@ -653,3 +653,12 @@ list_t *list_advance_x(
 	}
 	return l;
 }
+
+list_t *list_last(list_t *l, int *py)
+{
+	*py = 0;
+	if(!l)
+		return NULL;
+	for(; l->next; l = l->next, ++*py);
+	return l;
+}
