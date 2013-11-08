@@ -172,7 +172,7 @@ enum word_state
 
 static enum word_state word_state(const list_t *l, int x)
 {
-	if(l && (unsigned)x < l->len_line){
+	if(l && 0 <= x && (unsigned)x < l->len_line){
 		const char ch = l->line[x];
 
 		if(isspace(ch))
@@ -202,7 +202,9 @@ static list_t *word_seek(
 	return l;
 }
 
-static int m_word1(const int dir, const buffer_t *buf, point_t *to)
+static int m_word1(
+		const buffer_t *buf, const int dir,
+		const bool end, point_t *to)
 {
 	list_t *l = buffer_current_line(buf);
 
@@ -210,6 +212,9 @@ static int m_word1(const int dir, const buffer_t *buf, point_t *to)
 	bool find_word = true;
 
 	if(st & (W_KEYWORD | W_NON_KWORD)){
+		/* FIXME: need special behaviour here for e/ge
+		 * in a similar way that it's already special... */
+
 		/* skip to space or other word type */
 		enum word_state other_word = ((W_KEYWORD | W_NON_KWORD) & ~st);
 
@@ -229,22 +234,24 @@ static int m_word1(const int dir, const buffer_t *buf, point_t *to)
 	if(find_word && !(l = word_seek(l, dir, to, W_KEYWORD | W_NON_KWORD)))
 		return MOTION_FAILURE;
 
-	if(dir < 0){
-		/* put us on the start of the word */
+	if(end == (dir > 0)){
+		/* put us on the start/end of the word */
 		const enum word_state st = word_state(l, to->x);
 
-		while(to->x > 0 && word_state(l, to->x - 1) == st)
-			to->x--;
+		if(st != W_NONE)
+			while(word_state(l, to->x + dir) == st)
+				to->x += dir;
 	}
 	return MOTION_SUCCESS;
 }
 
 int m_word(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	const int dir = m->i;
+	const int dir = m->word_type & WORD_BACKWARD ? -1 : 1;
+	const bool end = m->word_type & WORD_END;
 
 	for(repeat = DEFAULT_REPEAT(repeat); repeat > 0; repeat--)
-		if(m_word1(dir, buf, to) == MOTION_FAILURE)
+		if(m_word1(buf, dir, end, to) == MOTION_FAILURE)
 			return MOTION_FAILURE;
 
 	return MOTION_SUCCESS;

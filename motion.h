@@ -18,9 +18,17 @@ enum motion_wise
 	M_COLUMN    = 1 << 2,
 };
 
+enum word_wise
+{
+	WORD_NONE = 0,
+	WORD_BACKWARD = 1 << 0, /* b,B,ge,gE not w,W,e,E */
+	WORD_END = 1 << 1, /* e,E,ge,gE not w,W,b,B */
+};
+
 union motion_arg
 {
 	int i;
+	enum word_wise word_type;
 	enum find_type
 	{
 		F_TIL = 1 << 0, /* 'f' or 't' */

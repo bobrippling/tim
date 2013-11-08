@@ -1,0 +1,10 @@
+:e behaves differently to vim w.r.t newlines
+eaEND2eiYO$eiNL
+__IN__
+word1 word2 word3
+
+newline
+__OUT__
+word1END word2 wordYO3
+NL
+newline
