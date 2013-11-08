@@ -616,6 +616,9 @@ int list_filter(
 list_t *list_advance_y(
 		list_t *l, const int dir, int *py, int *px)
 {
+	if(!l)
+		return NULL;
+
 	*py += dir;
 
 	if(dir > 0){
@@ -633,6 +636,9 @@ list_t *list_advance_y(
 list_t *list_advance_x(
 		list_t *l, const int dir, int *py, int *px)
 {
+	if(!l)
+		return NULL;
+
 	if(dir > 0){
 		if((unsigned)++*px >= l->len_line){
 			l = l->next;
