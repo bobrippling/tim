@@ -190,9 +190,14 @@ static list_t *word_seek(
 		enum word_state target)
 {
 	while((word_state(l, to->x) & target) == 0){
+		const int y = to->y;
+
 		l = list_advance_x(l, dir, &to->y, &to->x);
+
 		if(!l)
 			break;
+		if(y != to->y)
+			break; /* newlines are a fresh start */
 	}
 	return l;
 }
@@ -211,10 +216,12 @@ static int m_word1(const int dir, const buffer_t *buf, point_t *to)
 		l = word_seek(l, dir, to, W_SPACE | other_word);
 
 		/* if we're on another word type, we're done */
-		if(word_state(l, to->x) == other_word)
+		if(word_state(l, to->x) & other_word)
 			find_word = false;
+		else if(!l || !l->len_line)
+			find_word = false; /* onto a new and empty - stop */
+		/* else space - need to find the next word */
 
-		/* space - need to find the next word */
 	}else{
 		/* on space or none, go to next word */
 	}
