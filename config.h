@@ -9,7 +9,11 @@ const motionkey_t motion_keys[] = {
 	{ "b",  { m_word, { .word_type = WORD_BACKWARD            }, M_EXCLUSIVE } },
 	{ "e",  { m_word, { .word_type = WORD_END                 }, M_EXCLUSIVE } },
 	{ "ge", { m_word, { .word_type = WORD_END | WORD_BACKWARD }, M_EXCLUSIVE } },
-	/* TODO: "W" "B" "E" "gE" */
+
+	{ "W",  { m_word, { .word_type = WORD_SPACE }, M_EXCLUSIVE } },
+	{ "B",  { m_word, { .word_type = WORD_BACKWARD | WORD_SPACE }, M_EXCLUSIVE } },
+	{ "E",  { m_word, { .word_type = WORD_END | WORD_SPACE }, M_EXCLUSIVE } },
+	{ "gE", { m_word, { .word_type = WORD_END | WORD_BACKWARD | WORD_SPACE }, M_EXCLUSIVE } },
 
 	{ "j",            { m_move, { .pos = {  0,  1 } }, M_LINEWISE } },
 	{ "k",            { m_move, { .pos = {  0, -1 } }, M_LINEWISE } },

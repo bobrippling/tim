@@ -23,6 +23,7 @@ enum word_wise
 	WORD_NONE = 0,
 	WORD_BACKWARD = 1 << 0, /* b,B,ge,gE not w,W,e,E */
 	WORD_END = 1 << 1, /* e,E,ge,gE not w,W,b,B */
+	WORD_SPACE = 1 << 2, /* W, E, B, gE */
 };
 
 union motion_arg
