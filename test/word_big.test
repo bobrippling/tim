@@ -1,0 +1,15 @@
+WWi2WWWi4W6Wi6moreW
+__IN__
+one.full%word'" second"word"here 'third.word#hi
+
+one.full%word'" second"word"here 'third.word#hi
+
+
+one.full%word'" second"word"here 'third.word#hi
+__OUT__
+one.full%word'" second"word"here 2W'third.word#hi
+
+4Wone.full%word'" second"word"here 'third.word#hi
+
+
+one.full%word'" 6moreWsecond"word"here 'third.word#hi
