@@ -15,29 +15,40 @@
 
 #include "ui.h"
 #include "motion.h"
+#include "io.h"
 #include "keys.h"
 #include "ncurses.h"
 #include "mem.h"
 #include "cmds.h"
 #include "prompt.h"
 #include "map.h"
-#include "io.h"
 
 #include "buffers.h"
 
 #include "config.h"
 
-static
 int keys_filter(
 		enum io io_m,
 		char *struc, unsigned n_ents,
-		unsigned st_off, unsigned st_sz)
+		unsigned st_off, unsigned st_sz,
+		int mode_off)
 {
 #define STRUCT_STR(i, st, off) *(const char **)(struc + i * st_sz + st_off)
 
 	bool potential[n_ents];
 
-	memset(potential, true, sizeof potential);
+	if(mode_off >= 0){
+		enum buf_mode curmode = buffers_cur()->ui_mode;
+
+		for(unsigned i = 0; i < n_ents; i++){
+			enum buf_mode mode = *(enum buf_mode *)(
+					struc + i * st_sz + mode_off);
+
+			potential[i] = mode & curmode;
+		}
+	}else{
+		memset(potential, true, sizeof potential);
+	}
 
 	unsigned ch_idx = 0;
 	for(;; ch_idx++){
@@ -89,9 +100,9 @@ const motion *motion_read(unsigned *repeat)
 
 	int i = keys_filter(
 			io_m,
-			(char *)motion_keys,
-			sizeof motion_keys / sizeof *motion_keys - 1,
-			offsetof(motionkey_t, keys), sizeof(motionkey_t));
+			(char *)motion_keys, motion_keys_cnt,
+			offsetof(motionkey_t, keys), sizeof(motionkey_t),
+			-1);
 
 	if(i == -1)
 		return NULL;
@@ -248,6 +259,22 @@ void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	ui_set_bufmode(a->i);
+}
+
+void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	if(buf->ui_mode & UI_INSERT_ANY){
+		motion move = {
+			.func = m_move,
+			.arg = { .pos = { -1, 0 } }
+		};
+
+		motion_apply_buf(&move, /*repeat:*/1, buf);
+	}
+
+	ui_set_bufmode(UI_NORMAL);
 }
 
 void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
