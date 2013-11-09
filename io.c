@@ -90,6 +90,19 @@ void io_ungetch(int ch)
 	io_fifo_ins(ch);
 }
 
+void io_ungetstrr(const char *s, size_t n)
+{
+	if(!*s)
+		return;
+
+	for(size_t i = n - 1;
+			i < n;
+			i--)
+	{
+		io_ungetch(s[i]);
+	}
+}
+
 unsigned io_read_repeat(enum io io_mode)
 {
 	unsigned repeat = 1;

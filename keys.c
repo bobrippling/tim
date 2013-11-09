@@ -34,6 +34,7 @@ int keys_filter(
 		int mode_off)
 {
 #define STRUCT_STR(i, st, off) *(const char **)(struc + i * st_sz + st_off)
+	int ret = -1;
 
 	bool potential[n_ents];
 
@@ -51,8 +52,13 @@ int keys_filter(
 	}
 
 	unsigned ch_idx = 0;
+	char *sofar = NULL;
+	size_t nsofar = 0;
 	for(;; ch_idx++){
 		int ch = io_getch(io_m, NULL);
+
+		sofar = urealloc(sofar, ++nsofar);
+		sofar[nsofar-1] = ch;
 
 		unsigned npotential = 0;
 		unsigned last_potential = 0;
@@ -76,17 +82,23 @@ int keys_filter(
 			{
 				/* only accept once we have the full string */
 				const char *kstr = STRUCT_STR(last_potential, struc, str_off);
-				if(ch_idx == strlen(kstr) - 1)
-					return last_potential;
+				if(ch_idx == strlen(kstr) - 1){
+					ret = last_potential;
+					goto out;
+				}
 				break;
 			}
 			case 0:
 				/* this is currently fine
 				 * motions don't clash with other maps in config.h */
-				io_ungetch(ch);
-				return -1;
+				io_ungetstrr(sofar, nsofar);
+				goto out;
 		}
 	}
+
+out:
+	free(sofar);
+	return ret;
 }
 
 const motion *motion_read(unsigned *repeat)
