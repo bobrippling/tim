@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stddef.h> /* offsetof() */
+
 #include <ctype.h>
 #include <wordexp.h>
 #include <errno.h>
@@ -25,18 +27,17 @@
 
 #include "config.h"
 
-const motion *motion_read(unsigned *repeat)
+static
+int keys_filter(
+		enum io io_m,
+		char *struc, unsigned n_ents,
+		unsigned st_off, unsigned st_sz)
 {
-	bool potential[sizeof motion_keys / sizeof *motion_keys - 1];
+#define STRUCT_STR(i, st, off) *(const char **)(struc + i * st_sz + st_off)
+
+	bool potential[n_ents];
 
 	memset(potential, true, sizeof potential);
-
-	const enum io io_m =
-		buffers_cur()->ui_mode & UI_VISUAL_ANY
-		? IO_MAPV
-		: IO_MAP;
-
-	*repeat = io_read_repeat(io_m);
 
 	unsigned ch_idx = 0;
 	for(;; ch_idx++){
@@ -45,11 +46,12 @@ const motion *motion_read(unsigned *repeat)
 		unsigned npotential = 0;
 		unsigned last_potential = 0;
 
-		/* filter motions */
 		for(unsigned i = 0; i < sizeof potential; i++){
 			if(potential[i]){
-				size_t keys_len = strlen(motion_keys[i].keys);
-				if(ch_idx >= keys_len || motion_keys[i].keys[ch_idx] != ch){
+				const char *const kstr = STRUCT_STR(i, struc, str_off);
+				size_t keys_len = strlen(kstr);
+
+				if(ch_idx >= keys_len || kstr[ch_idx] != ch){
 					potential[i] = false;
 				}else{
 					npotential++;
@@ -62,18 +64,38 @@ const motion *motion_read(unsigned *repeat)
 			case 1:
 			{
 				/* only accept once we have the full string */
-				const motionkey_t *mk = &motion_keys[last_potential];
-				if(ch_idx == strlen(mk->keys) - 1)
-					return &mk->motion;
+				const char *kstr = STRUCT_STR(last_potential, struc, str_off);
+				if(ch_idx == strlen(kstr) - 1)
+					return last_potential;
 				break;
 			}
 			case 0:
 				/* this is currently fine
 				 * motions don't clash with other maps in config.h */
 				io_ungetch(ch);
-				return NULL;
+				return -1;
 		}
 	}
+}
+
+const motion *motion_read(unsigned *repeat)
+{
+	const enum io io_m =
+		buffers_cur()->ui_mode & UI_VISUAL_ANY
+		? IO_MAPV
+		: IO_MAP;
+
+	*repeat = io_read_repeat(io_m);
+
+	int i = keys_filter(
+			io_m,
+			(char *)motion_keys,
+			sizeof motion_keys / sizeof *motion_keys - 1,
+			offsetof(motionkey_t, keys), sizeof(motionkey_t));
+
+	if(i == -1)
+		return NULL;
+	return &motion_keys[i].motion;
 }
 
 static
