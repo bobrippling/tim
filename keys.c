@@ -375,16 +375,6 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
-{
-	repeat = DEFAULT_REPEAT(repeat);
-
-	buffer_case(buffers_cur(), a->i, repeat);
-
-	ui_redraw();
-	ui_cur_changed();
-}
-
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	if(a->i == 1){
@@ -423,6 +413,7 @@ struct around_motion
 	{
 		buffer_action_f *forward;
 		char *filter_cmd;
+		enum case_tog case_ty;
 	};
 };
 
@@ -601,4 +592,23 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 	};
 
 	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);
+}
+
+static void case_cb(
+		buffer_t *buf,
+		const region_t *region,
+		point_t *out,
+		struct around_motion *around)
+{
+	buffer_caseregion(buf, around->case_ty, region);
+}
+
+void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	struct around_motion around = {
+		.fn = case_cb,
+		.case_ty = a->i
+	};
+
+	around_motion(repeat, from_ch, /*always_linewise:*/false, &around, NULL);
 }

@@ -31,6 +31,10 @@ int list_filter(
 		list_t **pl, const region_t *,
 		const char *cmd);
 
+void list_iter_region(
+		list_t *, const region_t *,
+		void fn(char *, void *), void *ctx);
+
 void list_insline(list_t **, int *x, int *y, int dir);
 
 int list_count(list_t *);

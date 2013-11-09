@@ -83,8 +83,8 @@ const nkey_t nkeys[] = {
 	{ "q",            k_filter,     { .s = "fmt" }, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ "~",            k_case, { CASE_TOGGLE }, UI_NORMAL | UI_VISUAL_ANY },
-/*{ "gU", TODO      k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_ANY },*/
-/*{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL | UI_VISUAL_ANY },*/
+	{ "gU",           k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('l')),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY },
 

@@ -1,0 +1,11 @@
+fc~fr~frVj~j~vj~2jgu$jgU$
+__IN__
+exec-region = :%!$repl
+r[char], ~, and : over a region
+WAS_UPPER
+was_lower
+__OUT__
+EXEC-rEGION = :%!$Repl
+r[cHAR], ~, AND : OVER A REGION
+WAS_upper
+was_LOWER

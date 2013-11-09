@@ -613,6 +613,44 @@ int list_filter(
 	return 0;
 }
 
+static void line_iter(
+		list_t *l, size_t start, size_t end,
+		void fn(char *, void *), void *ctx)
+{
+	for(size_t i = start; i < end && i < l->len_line; i++)
+		fn(l->line + i, ctx);
+}
+
+void list_iter_region(
+		list_t *l, const region_t *r,
+		void fn(char *, void *), void *ctx)
+{
+	size_t i = 0;
+	size_t end = r->end.y - r->begin.y;
+
+	if(r->type != REGION_LINE)
+		end++;
+
+	for(l = list_seek(l, r->begin.y, false);
+			l && i < end; l = l->next, i++)
+	{
+		switch(r->type){
+			case REGION_LINE:
+				line_iter(l, 0, l->len_line, fn, ctx);
+				break;
+			case REGION_COL:
+				line_iter(l, r->begin.x, r->end.x, fn, ctx);
+				break;
+			case REGION_CHAR:
+				line_iter(l,
+						i == 0 ? r->begin.x : 0,
+						i+1 == end ? (unsigned)r->end.x : l->len_line,
+						fn, ctx);
+				break;
+		}
+	}
+}
+
 list_t *list_advance_y(
 		list_t *l, const int dir, int *py, int *px)
 {
