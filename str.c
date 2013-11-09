@@ -31,15 +31,20 @@ char *tim_strrevstr(char *restrict haystack, unsigned off, const char *restrict 
 
 char *tim_strstr(char *restrict haystack, size_t len, const char *restrict needle)
 {
+	if(!*needle)
+		return NULL;
+
 	/* memstr */
 	for(size_t h = 0; h < len; h++)
 		if(haystack[h] == *needle)
 			/* can assume needle is 0-terminated */
-			for(size_t n = 0; n < len - h; n++)
+			for(size_t n = 0; n < len - h;){
+				if(haystack[h + n] != needle[n])
+					break;
+				n++;
 				if(!needle[n])
 					return haystack + h;
-				else if(haystack[h + n] != needle[n])
-					break;
+			}
 
 	return NULL;
 }
