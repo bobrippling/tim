@@ -293,7 +293,23 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf = buffers_cur();
 
-	buf->ui_start.y += a->pos.y;
+	if(a->pos.x){
+		/* y: 0=mid, -1=top, 1=bot */
+		int h = 0;
+		switch(a->pos.y){
+			case 0:
+				h = buf->screen_coord.h / 2;
+				break;
+			case -1:
+				break;
+			case 1:
+				h = buf->screen_coord.h - 1;
+				break;
+		}
+		buf->ui_start.y = buf->ui_pos->y - h;
+	}else{
+		buf->ui_start.y += a->pos.y;
+	}
 
 	if(buf->ui_start.y < 0)
 		buf->ui_start.y = 0;
