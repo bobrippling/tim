@@ -453,7 +453,7 @@ int m_paren(
 			unsigned y = buf->ui_pos->y;
 
 			if(x >= l->len_line)
-				x = 0;
+				x = l->len_line - 1;
 			for(unsigned i = x; i < l->len_line; i++)
 				if(paren_match(l->line[i], &opp)){
 					paren = l->line[i];
