@@ -99,7 +99,7 @@ static int m_linesearch(
 		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
 		list_t *sfn(motion_arg const *, list_t *, int *))
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf); /* fine - repeat handled */
 	int n = 0;
 
 	*to = *buf->ui_pos;
@@ -210,7 +210,7 @@ static int m_word1(
 		const bool end, const bool big_words,
 		point_t *to)
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = list_seek(buf->head, to->y, false);
 
 	enum word_state st = word_state(l, to->x, big_words);
 	bool find_word = true;
@@ -275,7 +275,7 @@ static char *strchrdir(char *p, char ch, bool forward, char *start, size_t len)
 
 static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf); /* fine - repeat handled */
 
 	if(!l)
 		return MOTION_FAILURE;
