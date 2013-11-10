@@ -99,7 +99,7 @@ static int m_linesearch(
 		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
 		list_t *sfn(motion_arg const *, list_t *, int *))
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf); /* fine - repeat handled */
 	int n = 0;
 
 	*to = *buf->ui_pos;
@@ -164,77 +164,116 @@ int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 enum word_state
 {
-	W_WORD, W_PUNCT, W_SPACE, W_NONE
+	W_NONE = 0,
+	W_SPACE = 1 << 0,
+	W_KEYWORD = 1 << 1,
+	W_NON_KWORD = 1 << 2,
 };
 
-static enum word_state word_state(const list_t *l, int x)
+static enum word_state word_state(
+		const list_t *l, int x, bool big_words)
 {
-	if(l && (unsigned)x < l->len_line){
+	if(l && 0 <= x && (unsigned)x < l->len_line){
 		const char ch = l->line[x];
 
 		if(isspace(ch))
 			return W_SPACE;
+		else if(big_words)
+			return W_KEYWORD;
 		else if(isalnum(ch) || ch == '_')
-			return W_WORD;
-		else if(ispunct(ch))
-			return W_PUNCT;
+			return W_KEYWORD;
+		return W_NON_KWORD;
 	}
 
 	return W_NONE;
 }
 
-static int word_state_eq(enum word_state a, enum word_state b)
+static list_t *word_seek(
+		list_t *l, int dir, point_t *to,
+		enum word_state target, bool big_words)
 {
-	/* treat punct and space as equal for moving around */
-	return (a == W_WORD) == (b == W_WORD);
+	while((word_state(l, to->x, big_words) & target) == 0){
+		const int y = to->y;
+
+		l = list_advance_x(l, dir, &to->y, &to->x);
+
+		if(!l)
+			break;
+		if(y != to->y)
+			break; /* newlines are a fresh start */
+	}
+	return l;
 }
 
-static int m_word1(const int dir, const buffer_t *buf, point_t *to)
+static void word_seek_to_end(list_t *l, int dir, point_t *to, bool big_words)
 {
-	list_t *l = buffer_current_line(buf);
+	/* put us on the start/end of the word */
+	const enum word_state st = word_state(l, to->x, big_words);
 
-	const enum word_state state_1 = word_state(l, to->x);
+	if(st != W_NONE)
+		while(word_state(l, to->x + dir, big_words) == st)
+			to->x += dir;
+}
 
-	/* skip until the state changes */
-	for(;;){
+static int m_word1(
+		const buffer_t *buf, const int dir,
+		const bool end, const bool big_words,
+		point_t *to)
+{
+	list_t *l = list_seek(buf->head, to->y, false);
+
+	enum word_state st = word_state(l, to->x, big_words);
+	bool find_word = true;
+
+	if(st & (W_KEYWORD | W_NON_KWORD)){
+		/* we're on a word - if we're an end motion and not at the end,
+		 * just need to move to the end */
+		if(end == (dir > 0)){
+			if(word_state(l, to->x + dir, big_words) != st){
+				/* at the end - next */
+			}else{
+				/* seek to end and we're done */
+				word_seek_to_end(l, dir, to, big_words);
+				return MOTION_SUCCESS;
+			}
+		}
+
+		/* skip to space or other word type */
+		enum word_state other_word = ((W_KEYWORD | W_NON_KWORD) & ~st);
+
+		l = word_seek(l, dir, to, W_SPACE | other_word, big_words);
+
+		/* if we're on another word type, we're done */
+		if(word_state(l, to->x, big_words) & other_word)
+			find_word = false;
+		else if(!l || !l->len_line)
+			find_word = false; /* onto a new and empty - stop */
+		/* else space - need to find the next word */
+
+	}else{
+		/* on space or none, go to next word */
+	}
+
+	if(find_word){
+		l = word_seek(l, dir, to, W_KEYWORD | W_NON_KWORD, big_words);
 		if(!l)
 			return MOTION_FAILURE;
-
-		to->x += dir;
-
-		/* bounds check */
-		if(dir > 0 ? (unsigned)to->x >= l->len_line : to->x < 0){
-			to->y += dir;
-			if(dir < 0){
-				if(to->y < 0)
-					return MOTION_FAILURE;
-
-				l = l->prev;
-				to->x = l->len_line ? l->len_line - 1 : 0;
-			}else{
-				l = l->next;
-				to->x = 0;
-			}
-		}
-
-		if(!word_state_eq(word_state(l, to->x), state_1)){
-			if(dir < 0){
-				enum word_state st = word_state(l, to->x);
-				while(to->x > 0 && word_state(l, to->x - 1) == st)
-					to->x--;
-			}
-
-			return MOTION_SUCCESS;
-		}
 	}
+
+	if(end == (dir > 0))
+		word_seek_to_end(l, dir, to, big_words);
+
+	return MOTION_SUCCESS;
 }
 
 int m_word(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	const int dir = m->i;
+	const int dir = m->word_type & WORD_BACKWARD ? -1 : 1;
+	const bool end = m->word_type & WORD_END;
+	const bool space = m->word_type & WORD_SPACE;
 
 	for(repeat = DEFAULT_REPEAT(repeat); repeat > 0; repeat--)
-		if(m_word1(dir, buf, to) == MOTION_FAILURE)
+		if(m_word1(buf, dir, end, space, to) == MOTION_FAILURE)
 			return MOTION_FAILURE;
 
 	return MOTION_SUCCESS;
@@ -250,7 +289,7 @@ static char *strchrdir(char *p, char ch, bool forward, char *start, size_t len)
 
 static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf); /* fine - repeat handled */
 
 	if(!l)
 		return MOTION_FAILURE;

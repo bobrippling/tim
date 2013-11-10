@@ -5,8 +5,15 @@
 #define MOTION_ARG_NONE     { 0 }
 
 const motionkey_t motion_keys[] = {
-	{ "w",            { m_word, {  1 }, M_EXCLUSIVE } },
-	{ "b",            { m_word, { -1 }, M_EXCLUSIVE } },
+	{ "w",  { m_word, { .word_type = WORD_NONE                }, M_EXCLUSIVE } },
+	{ "b",  { m_word, { .word_type = WORD_BACKWARD            }, M_EXCLUSIVE } },
+	{ "e",  { m_word, { .word_type = WORD_END                 }, M_EXCLUSIVE } },
+	{ "ge", { m_word, { .word_type = WORD_END | WORD_BACKWARD }, M_EXCLUSIVE } },
+
+	{ "W",  { m_word, { .word_type = WORD_SPACE }, M_EXCLUSIVE } },
+	{ "B",  { m_word, { .word_type = WORD_BACKWARD | WORD_SPACE }, M_EXCLUSIVE } },
+	{ "E",  { m_word, { .word_type = WORD_END | WORD_SPACE }, M_EXCLUSIVE } },
+	{ "gE", { m_word, { .word_type = WORD_END | WORD_BACKWARD | WORD_SPACE }, M_EXCLUSIVE } },
 
 	{ "j",            { m_move, { .pos = {  0,  1 } }, M_LINEWISE } },
 	{ "k",            { m_move, { .pos = {  0, -1 } }, M_LINEWISE } },
