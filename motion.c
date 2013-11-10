@@ -567,7 +567,12 @@ int motion_apply_buf_dry(
 		buffer_t *buf, point_t *out)
 {
 	*out = *buf->ui_pos;
-	return m->func(&m->arg, repeat, buf, out);
+	int r = m->func(&m->arg, repeat, buf, out);
+	if(r == MOTION_SUCCESS){
+		if(out->y < 0 || out->x < 0)
+			r = MOTION_FAILURE;
+	}
+	return r;
 }
 
 int motion_apply_buf(const motion *m, unsigned repeat, buffer_t *buf)
