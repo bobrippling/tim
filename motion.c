@@ -205,6 +205,16 @@ static list_t *word_seek(
 	return l;
 }
 
+static void word_seek_to_end(list_t *l, int dir, point_t *to, bool big_words)
+{
+	/* put us on the start/end of the word */
+	const enum word_state st = word_state(l, to->x, big_words);
+
+	if(st != W_NONE)
+		while(word_state(l, to->x + dir, big_words) == st)
+			to->x += dir;
+}
+
 static int m_word1(
 		const buffer_t *buf, const int dir,
 		const bool end, const bool big_words,
@@ -216,8 +226,17 @@ static int m_word1(
 	bool find_word = true;
 
 	if(st & (W_KEYWORD | W_NON_KWORD)){
-		/* FIXME: need special behaviour here for e/ge
-		 * in a similar way that it's already special... */
+		/* we're on a word - if we're an end motion and not at the end,
+		 * just need to move to the end */
+		if(end == (dir > 0)){
+			if(word_state(l, to->x + dir, big_words) != st){
+				/* at the end - next */
+			}else{
+				/* seek to end and we're done */
+				word_seek_to_end(l, dir, to, big_words);
+				return MOTION_SUCCESS;
+			}
+		}
 
 		/* skip to space or other word type */
 		enum word_state other_word = ((W_KEYWORD | W_NON_KWORD) & ~st);
@@ -241,14 +260,9 @@ static int m_word1(
 			return MOTION_FAILURE;
 	}
 
-	if(end == (dir > 0)){
-		/* put us on the start/end of the word */
-		const enum word_state st = word_state(l, to->x, big_words);
+	if(end == (dir > 0))
+		word_seek_to_end(l, dir, to, big_words);
 
-		if(st != W_NONE)
-			while(word_state(l, to->x + dir, big_words) == st)
-				to->x += dir;
-	}
 	return MOTION_SUCCESS;
 }
 
