@@ -106,9 +106,9 @@ list_t *buffer_current_line(const buffer_t *);
 
 unsigned buffer_nlines(const buffer_t *);
 
-void buffer_case(
+void buffer_caseregion(
 		buffer_t *, enum case_tog,
-		unsigned repeat);
+		const region_t *region);
 
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);

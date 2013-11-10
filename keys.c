@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stddef.h> /* offsetof() */
+
 #include <ctype.h>
 #include <wordexp.h>
 #include <errno.h>
@@ -14,43 +16,60 @@
 
 #include "ui.h"
 #include "motion.h"
+#include "io.h"
 #include "keys.h"
 #include "ncurses.h"
 #include "mem.h"
 #include "cmds.h"
 #include "prompt.h"
 #include "map.h"
-#include "io.h"
 
 #include "buffers.h"
 
 #include "config.h"
 
-const motion *motion_read(unsigned *repeat)
+int keys_filter(
+		enum io io_m,
+		char *struc, unsigned n_ents,
+		unsigned st_off, unsigned st_sz,
+		int mode_off)
 {
-	bool potential[sizeof motion_keys / sizeof *motion_keys - 1];
+#define STRUCT_STR(i, st, off) *(const char **)(struc + i * st_sz + st_off)
+	int ret = -1;
 
-	memset(potential, true, sizeof potential);
+	bool potential[n_ents];
 
-	const enum io io_m =
-		buffers_cur()->ui_mode & UI_VISUAL_ANY
-		? IO_MAPV
-		: IO_MAP;
+	if(mode_off >= 0){
+		enum buf_mode curmode = buffers_cur()->ui_mode;
 
-	*repeat = io_read_repeat(io_m);
+		for(unsigned i = 0; i < n_ents; i++){
+			enum buf_mode mode = *(enum buf_mode *)(
+					struc + i * st_sz + mode_off);
+
+			potential[i] = mode & curmode;
+		}
+	}else{
+		memset(potential, true, sizeof potential);
+	}
 
 	unsigned ch_idx = 0;
+	char *sofar = NULL;
+	size_t nsofar = 0;
 	for(;; ch_idx++){
 		int ch = io_getch(io_m, NULL);
+
+		sofar = urealloc(sofar, ++nsofar);
+		sofar[nsofar-1] = ch;
 
 		unsigned npotential = 0;
 		unsigned last_potential = 0;
 
-		/* filter motions */
 		for(unsigned i = 0; i < sizeof potential; i++){
 			if(potential[i]){
-				size_t keys_len = strlen(motion_keys[i].keys);
-				if(ch_idx >= keys_len || motion_keys[i].keys[ch_idx] != ch){
+				const char *const kstr = STRUCT_STR(i, struc, str_off);
+				size_t keys_len = strlen(kstr);
+
+				if(ch_idx >= keys_len || kstr[ch_idx] != ch){
 					potential[i] = false;
 				}else{
 					npotential++;
@@ -63,18 +82,44 @@ const motion *motion_read(unsigned *repeat)
 			case 1:
 			{
 				/* only accept once we have the full string */
-				const motionkey_t *mk = &motion_keys[last_potential];
-				if(ch_idx == strlen(mk->keys) - 1)
-					return &mk->motion;
+				const char *kstr = STRUCT_STR(last_potential, struc, str_off);
+				if(ch_idx == strlen(kstr) - 1){
+					ret = last_potential;
+					goto out;
+				}
 				break;
 			}
 			case 0:
 				/* this is currently fine
 				 * motions don't clash with other maps in config.h */
-				io_ungetch(ch);
-				return NULL;
+				io_ungetstrr(sofar, nsofar);
+				goto out;
 		}
 	}
+
+out:
+	free(sofar);
+	return ret;
+}
+
+const motion *motion_read(unsigned *repeat)
+{
+	const enum io io_m =
+		buffers_cur()->ui_mode & UI_VISUAL_ANY
+		? IO_MAPV
+		: IO_MAP;
+
+	*repeat = io_read_repeat(io_m);
+
+	int i = keys_filter(
+			io_m,
+			(char *)motion_keys, motion_keys_cnt,
+			offsetof(motionkey_t, keys), sizeof(motionkey_t),
+			-1);
+
+	if(i == -1)
+		return NULL;
+	return &motion_keys[i].motion;
 }
 
 static
@@ -229,11 +274,43 @@ void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_set_bufmode(a->i);
 }
 
+void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	if(buf->ui_mode & UI_INSERT_ANY){
+		motion move = {
+			.func = m_move,
+			.arg = { .pos = { -1, 0 } }
+		};
+
+		motion_apply_buf(&move, /*repeat:*/1, buf);
+	}
+
+	ui_set_bufmode(UI_NORMAL);
+}
+
 void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf = buffers_cur();
 
-	buf->ui_start.y += a->pos.y;
+	if(a->pos.x){
+		/* y: 0=mid, -1=top, 1=bot */
+		int h = 0;
+		switch(a->pos.y){
+			case 0:
+				h = buf->screen_coord.h / 2;
+				break;
+			case -1:
+				break;
+			case 1:
+				h = buf->screen_coord.h - 1;
+				break;
+		}
+		buf->ui_start.y = buf->ui_pos->y - h;
+	}else{
+		buf->ui_start.y += a->pos.y;
+	}
 
 	if(buf->ui_start.y < 0)
 		buf->ui_start.y = 0;
@@ -299,16 +376,6 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
-{
-	repeat = DEFAULT_REPEAT(repeat);
-
-	buffer_case(buffers_cur(), a->i, repeat);
-
-	ui_redraw();
-	ui_cur_changed();
-}
-
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	if(a->i == 1){
@@ -319,6 +386,10 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 		if(ch == K_ESC)
 			return;
+
+		/* special case */
+		if(ch == '\r')
+			ch = '\n';
 
 		buffer_replace_chars(
 				buffers_cur(),
@@ -343,6 +414,7 @@ struct around_motion
 	{
 		buffer_action_f *forward;
 		char *filter_cmd;
+		enum case_tog case_ty;
 	};
 };
 
@@ -538,4 +610,23 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 	};
 
 	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);
+}
+
+static void case_cb(
+		buffer_t *buf,
+		const region_t *region,
+		point_t *out,
+		struct around_motion *around)
+{
+	buffer_caseregion(buf, around->case_ty, region);
+}
+
+void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	struct around_motion around = {
+		.fn = case_cb,
+		.case_ty = a->i
+	};
+
+	around_motion(repeat, from_ch, /*always_linewise:*/false, &around, NULL);
 }

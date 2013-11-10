@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "pos.h"
 #include "ncurses.h"
@@ -10,9 +11,9 @@
 #include "buffer.h"
 #include "ui.h"
 #include "motion.h"
+#include "io.h"
 #include "keys.h"
 #include "buffers.h"
-#include "io.h"
 
 #define UI_MODE() buffers_cur()->ui_mode
 
@@ -137,6 +138,7 @@ void ui_inscolchar(char ch)
 void ui_main()
 {
 	extern nkey_t nkeys[];
+	extern const size_t nkeys_cnt;
 
 	ui_redraw(); /* this first, to frame buf_sel */
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
@@ -173,11 +175,19 @@ void ui_main()
 
 		bool found = false;
 		if(!wasraw){
-			for(int i = 0; nkeys[i].ch; i++)
-				if(nkeys[i].mode & UI_MODE() && nkeys[i].ch == ch){
-					nkeys[i].func(&nkeys[i].arg, repeat, ch);
-					found = true;
-				}
+			io_ungetch(ch);
+
+			int i = keys_filter(
+					io_mode, (char *)nkeys, nkeys_cnt,
+					offsetof(nkey_t, str), sizeof(nkey_t),
+					offsetof(nkey_t, mode));
+
+			if(i != -1){
+				nkeys[i].func(&nkeys[i].arg, repeat, nkeys[i].str[0]);
+				found = true;
+			}else{
+				ch = io_getch(0, NULL); /* pop it back */
+			}
 		}
 
 		if(!found) switch(UI_MODE()){

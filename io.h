@@ -16,6 +16,7 @@ enum io
 
 int io_getch(enum io, bool *wasraw);
 void io_ungetch(int);
+void io_ungetstrr(const char *s, size_t n);
 unsigned io_read_repeat(enum io);
 
 #define K_ESC '\033'

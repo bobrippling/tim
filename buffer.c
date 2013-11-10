@@ -291,13 +291,16 @@ static int ctoggle(int c)
 	return islower(c) ? toupper(c) : tolower(c);
 }
 
-void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
+static void buffer_case_cb(char *s, void *ctx)
 {
-	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
+	*s = (*(int (**)(int))ctx)(*s);
+}
 
-	if(!l)
-		return;
-
+void buffer_caseregion(
+		buffer_t *buf,
+		enum case_tog tog_type,
+		const region_t *r)
+{
 	int (*f)(int) = NULL;
 
 	switch(tog_type){
@@ -307,16 +310,7 @@ void buffer_case(buffer_t *buf, enum case_tog tog_type, unsigned n)
 	}
 	assert(f);
 
-	unsigned i;
-	for(i = buf->ui_pos->x; n > 0; n--, i++){
-		if(i >= l->len_line)
-			break;
-
-		char *p = &l->line[i];
-		*p = f(*p);
-	}
-
-	buf->ui_pos->x = i;
+	list_iter_region(buf->head, r, buffer_case_cb, &f);
 }
 
 void buffer_insline(buffer_t *buf, int dir)
@@ -401,8 +395,13 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 {
 	list_t *l = list_seek(buf->head, at->y, 0);
 
-	if(!l)
-		return false;
+	if(!l){
+		if(dir < 0){
+			l = list_last(buf->head, &at->y);
+		}else{
+			return false;
+		}
+	}
 
 	/* search at the next char */
 	l = list_advance_x(l, dir, &at->y, &at->x);

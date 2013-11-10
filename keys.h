@@ -20,7 +20,7 @@ union keyarg_u
 
 typedef struct nkey_t
 {
-	char ch;
+	const char *str;
 	key_func *func;
 	keyarg_u arg;
 	enum buf_mode mode;
@@ -35,7 +35,14 @@ typedef struct motionkey_t
 /* returns 0 on success */
 const motion *motion_read(unsigned *repeat);
 
+int keys_filter(
+		enum io io_m,
+		char *struc, unsigned n_ents,
+		unsigned st_off, unsigned st_sz,
+		int mode_off);
+
 key_func k_cmd, k_set_mode;
+key_func k_escape;
 key_func k_redraw;
 key_func k_scroll;
 key_func k_winsel;
