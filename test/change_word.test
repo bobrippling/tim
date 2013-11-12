@@ -1,0 +1,9 @@
+cwhij0cehij0clhi
+__IN__
+pick abc123
+pick xyz987
+pick 123456
+__OUT__
+hi abc123
+hi xyz987
+hiick 123456

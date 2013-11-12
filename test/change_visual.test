@@ -1,0 +1,5 @@
+f(lvt)c
+__IN__
+hello(inside);
+__OUT__
+hello();
