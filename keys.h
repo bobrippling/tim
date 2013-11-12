@@ -2,6 +2,7 @@
 #define KEYS_H
 
 #include <stdbool.h>
+#include "surround.h"
 
 typedef union keyarg_u keyarg_u;
 
@@ -47,8 +48,8 @@ typedef struct motionkey_t
 	motion motion;
 } motionkey_t;
 
-/* returns 0 on success */
 const motion *motion_read(unsigned *repeat, bool apply_maps);
+const surround_key_t *surround_read(int surround_ch);
 
 int keys_filter(
 		enum io io_m,

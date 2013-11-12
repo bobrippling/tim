@@ -18,4 +18,6 @@ surround_func surround_block;
 surround_func surround_para;
 surround_func surround_word;
 
+#define surround_beginning_char(ch) ((ch) == 'a' || (ch) == 'i')
+
 #endif

@@ -145,7 +145,6 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 	return motion_read(repeat, apply_maps);
 }
 
-static
 const surround_key_t *surround_read(int surround_ch)
 {
 	/* check surrounds */
@@ -448,7 +447,7 @@ static bool around_motion(
 			repeat = 0;
 			m = &m_doubletap;
 		}else{
-			if(ch == 'a' || ch == 'i'){
+			if(surround_beginning_char(ch)){
 				int surround_ch = io_getch(IO_NOMAP, &raw, /*domaps*/false);
 
 				const surround_key_t *surround = surround_read(surround_ch);

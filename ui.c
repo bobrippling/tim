@@ -14,6 +14,8 @@
 #include "ui.h"
 #include "motion.h"
 #include "cmds.h"
+#include "io.h"
+#include "surround.h"
 #include "keys.h"
 #include "buffers.h"
 #include "mem.h"
@@ -185,6 +187,42 @@ static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 	}
 }
 
+static bool try_surround(buffer_t *buf, unsigned repeat)
+{
+	if(buf->ui_mode & UI_VISUAL_ANY){
+		/* check surround */
+		bool raw;
+		int sur_ch = io_getch(IO_MAPV, &raw, /*domaps*/false);
+
+		if(surround_beginning_char(sur_ch)){
+			int sur_type = io_getch(IO_NOMAP, &raw, false);
+			const surround_key_t *sur = surround_read(sur_type);
+
+			if(sur){
+				region_t r;
+
+				if(sur->func(sur_type, repeat, buf, &r)){
+					buf->ui_npos = r.begin;
+					buf->ui_vpos = r.end;
+
+					switch(r.type){
+						case REGION_CHAR: ui_set_bufmode(UI_VISUAL_CHAR); break;
+						case REGION_COL:  ui_set_bufmode(UI_VISUAL_COL); break;
+						case REGION_LINE: ui_set_bufmode(UI_VISUAL_LN); break;
+					}
+				}else{
+					ui_status("visual surround failed");
+				}
+				return true;
+			}
+			io_ungetch(sur_type, false);
+		}
+
+		io_ungetch(sur_ch, false);
+	}
+	return false;
+}
+
 void ui_normal_1(unsigned *repeat, enum io io_mode)
 {
 	buffer_t *buf = buffers_cur();
@@ -200,6 +238,9 @@ void ui_normal_1(unsigned *repeat, enum io io_mode)
 
 			return;
 		} /* else no motion */
+
+		if(try_surround(buf, *repeat))
+			return;
 	} /* else insert */
 
 	ui_handle_next_ch(io_mode, *repeat);
