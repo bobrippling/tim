@@ -18,7 +18,7 @@
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
 static
-int buffer_replace_file(buffer_t *b, FILE *f, bool reset_pos);
+int buffer_replace_file(buffer_t *b, FILE *f);
 
 void buffer_free(buffer_t *b)
 {
@@ -65,7 +65,7 @@ buffer_t *buffer_new_file(FILE *f)
 {
 	/* TODO: mmap() */
 	buffer_t *b = buffer_new();
-	buffer_replace_file(b, f, false);
+	buffer_replace_file(b, f);
 
 	return b;
 }
@@ -96,7 +96,7 @@ fin:
 	*pb = b;
 }
 
-int buffer_replace_file(buffer_t *b, FILE *f, bool reset_pos)
+int buffer_replace_file(buffer_t *b, FILE *f)
 {
 	list_t *l = list_new_file(f, &b->eol);
 
@@ -105,8 +105,6 @@ int buffer_replace_file(buffer_t *b, FILE *f, bool reset_pos)
 
 	list_free(b->head);
 	b->head = l;
-	if(reset_pos)
-		b->ui_npos = b->ui_vpos = (point_t){ 0 };
 
 	return 1;
 }
@@ -119,8 +117,11 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 	if(!f)
 		return 0;
 
-	r = buffer_replace_file(b, f, true);
+	r = buffer_replace_file(b, f);
 	fclose(f);
+
+	if(r)
+		b->ui_pos->y = MIN(b->ui_pos->y, list_count(b->head));
 
 	return r;
 }
