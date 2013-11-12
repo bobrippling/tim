@@ -145,6 +145,17 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 	return motion_read(repeat, apply_maps);
 }
 
+static
+const surround_key_t *surround_read(int surround_ch)
+{
+	/* check surrounds */
+	for(size_t i = 0; i < ARRAY_SZ(surrounds); i++)
+		if(strchr(surrounds[i].matches, surround_ch))
+			return &surrounds[i];
+
+	return NULL;
+}
+
 void k_prompt_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
 	char *const cmd = prompt(from_ch);
@@ -440,35 +451,38 @@ static bool around_motion(
 			if(ch == 'a' || ch == 'i'){
 				int surround_ch = io_getch(IO_NOMAP, &raw, /*domaps*/false);
 
-				/* check surrounds */
-				for(size_t i = 0; i < ARRAY_SZ(surrounds); i++){
-					if(strchr(surrounds[i].matches, surround_ch)){
-						buffer_t *buf = buffers_cur();
+				const surround_key_t *surround = surround_read(surround_ch);
 
-						region_t r = {
-							.type = surrounds[i].type,
-							.begin = buf->ui_npos,
-							.end = buf->ui_vpos,
-						};
-
-						if(surrounds[i].func(from_ch, repeat, buf, &r)){
-							around_motion_apply(
-									action, buf,
-									&r, used_region);
-							return true;
-						}
-						ui_status("%c%c surround failed", ch, surround_ch);
-						return false;
-					}
+				if(!surround){
+					if(surround_ch != K_ESC)
+						ui_status("no surround '%c%c'", ch, surround_ch);
+					return false;
 				}
 
-				if(surround_ch != K_ESC)
-					ui_status("no surround '%c%c'", ch, surround_ch);
+				buffer_t *buf = buffers_cur();
+
+				region_t r = {
+					.type = surround->type,
+					.begin = buf->ui_npos,
+					.end = buf->ui_vpos,
+				};
+
+
+				if(surround->func(from_ch, repeat, buf, &r)){
+					around_motion_apply(
+							action, buf,
+							&r, used_region);
+					return true;
+				}
+
+				if(ch != K_ESC)
+					ui_status("%c%c surround failed", ch, surround_ch);
 				return false;
 			}
 
 			if(ch != K_ESC)
 				ui_err("no motion '%c'", ch);
+			return false;
 		}
 	}
 
