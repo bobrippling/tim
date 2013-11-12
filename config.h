@@ -4,6 +4,8 @@
 #define KEY_ARG_NONE        { 0 }
 #define MOTION_ARG_NONE     { 0 }
 
+#define ARRAY_SZ(ar) (sizeof(ar) / sizeof *(ar))
+
 const motionkey_t motion_keys[] = {
 	{ "w",  { m_word, { .word_type = WORD_NONE                }, M_EXCLUSIVE } },
 	{ "b",  { m_word, { .word_type = WORD_BACKWARD            }, M_EXCLUSIVE } },
@@ -58,11 +60,20 @@ const motionkey_t motion_keys[] = {
 	{ "n",            { m_searchnext, { +1 }, M_EXCLUSIVE } },
 	{ "N",            { m_searchnext, { -1 }, M_EXCLUSIVE } },
 };
-const size_t motion_keys_cnt = sizeof motion_keys / sizeof *motion_keys;
+const size_t motion_keys_cnt = ARRAY_SZ(motion_keys);
 
 /* called from around_motion() and in visual mode */
-const motion_surround_key_t surrounds = {
-	/* TODO: [ai]["'([<{bpsw] */
+const surround_key_t surrounds[] = {
+	{ REGION_CHAR, "{}",  surround_paren },
+	{ REGION_CHAR, "()",  surround_paren },
+	{ REGION_CHAR, "[]",  surround_paren },
+	{ REGION_CHAR, "<>",  surround_paren },
+
+	{ REGION_CHAR, "\"'", surround_quote },
+
+	{ REGION_CHAR, "b", surround_block },
+	{ REGION_CHAR, "p", surround_para },
+	{ REGION_CHAR, "w", surround_word },
 };
 
 #define K_STR(k) (char[]){ k, 0 }
@@ -138,7 +149,7 @@ const nkey_t nkeys[] = {
 	/* leaders: */
 	{ "\\x", k_docmd, { .cmd = { .argv = (const char *[]){ "r", "xselo", NULL }, .fn = { .f_arg1 = c_r, .single_arg = true, .inverse = true } } }, UI_NORMAL },
 };
-const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
+const size_t nkeys_cnt = ARRAY_SZ(nkeys);
 
 const keymap_t maps[] = {
 	{ IO_MAP, 'I', "^i" },

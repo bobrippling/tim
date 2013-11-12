@@ -23,6 +23,7 @@
 #include "prompt.h"
 #include "map.h"
 #include "parse_cmd.h"
+#include "surround.h"
 
 #include "buffers.h"
 
@@ -391,6 +392,24 @@ struct around_motion
 	};
 };
 
+static void around_motion_apply(
+		struct around_motion *action, buffer_t *b,
+		const region_t *r, region_t *used_region)
+{
+	if(used_region)
+		*used_region = *r;
+
+	/* reset cursor to beginning, then allow adjustments */
+	*b->ui_pos = r->begin;
+	if(action)
+		action->fn(b, r, b->ui_pos, action);
+
+	ui_set_bufmode(UI_NORMAL);
+
+	ui_redraw();
+	ui_cur_changed();
+}
+
 static bool around_motion(
 		unsigned repeat, const int from_ch,
 		bool always_linewise,
@@ -418,9 +437,38 @@ static bool around_motion(
 			repeat = 0;
 			m = &m_doubletap;
 		}else{
+			if(ch == 'a' || ch == 'i'){
+				int surround_ch = io_getch(IO_NOMAP, &raw, /*domaps*/false);
+
+				/* check surrounds */
+				for(size_t i = 0; i < ARRAY_SZ(surrounds); i++){
+					if(strchr(surrounds[i].matches, surround_ch)){
+						buffer_t *buf = buffers_cur();
+
+						region_t r = {
+							.type = surrounds[i].type,
+							.begin = buf->ui_npos,
+							.end = buf->ui_vpos,
+						};
+
+						if(surrounds[i].func(from_ch, repeat, buf, &r)){
+							around_motion_apply(
+									action, buf,
+									&r, used_region);
+							return true;
+						}
+						ui_status("%c%c surround failed", ch, surround_ch);
+						return false;
+					}
+				}
+
+				if(surround_ch != K_ESC)
+					ui_status("no surround '%c%c'", ch, surround_ch);
+				return false;
+			}
+
 			if(ch != K_ESC)
 				ui_err("no motion '%c'", ch);
-			/*io_ungetch(ch);*/
 		}
 	}
 
@@ -440,19 +488,7 @@ static bool around_motion(
 		if(!motion_to_region(m, repeat, always_linewise, b, &r))
 			return false;
 
-		if(used_region)
-			*used_region = r;
-
-		/* reset cursor to beginning, then allow adjustments */
-		*b->ui_pos = r.begin;
-		if(action)
-			action->fn(b, &r, b->ui_pos, action);
-
-		ui_set_bufmode(UI_NORMAL);
-
-		ui_redraw();
-		ui_cur_changed();
-
+		around_motion_apply(action, b, &r, used_region);
 		return true;
 	}
 

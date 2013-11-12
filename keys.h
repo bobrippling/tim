@@ -47,13 +47,6 @@ typedef struct motionkey_t
 	motion motion;
 } motionkey_t;
 
-typedef struct motion_surround_key
-{
-	char ch;
-	bool inside;
-	motion motion;
-} motion_surround_key_t;
-
 /* returns 0 on success */
 const motion *motion_read(unsigned *repeat, bool apply_maps);
 
