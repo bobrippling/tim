@@ -32,38 +32,44 @@ static int m_line_goto(int *y, unsigned repeat, bool end, buffer_t *buf)
 	return MOTION_SUCCESS;
 }
 
-int m_eof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_eof(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	return m_line_goto(&to->y, repeat, true, buf);
 }
 
-int m_eol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_eol(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false);
+	list_t *l = list_seek(buf->head, from->y, false);
 
 	to->x = l && l->len_line > 0 ? l->len_line - 1 : 0;
 	return MOTION_SUCCESS;
 }
 
-int m_sos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_sos(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	to->y = UI_TOP(buf);
 	return MOTION_SUCCESS;
 }
 
-int m_eos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_eos(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	to->y = UI_TOP(buf) + buf->screen_coord.h - 1;
 	return MOTION_SUCCESS;
 }
 
-int m_mos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_mos(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	to->y = UI_TOP(buf) + buf->screen_coord.h / 2 - 1;
 	return MOTION_SUCCESS;
 }
 
-int m_goto(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_goto(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	if(m->pos.y > -1)
 		to->y = m->pos.y * DEFAULT_REPEAT(repeat);
@@ -74,7 +80,8 @@ int m_goto(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	to->y += m->pos.y * DEFAULT_REPEAT(repeat);
 	to->x += m->pos.x * DEFAULT_REPEAT(repeat);
@@ -83,14 +90,16 @@ int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-int m_sof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_sof(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	return m_line_goto(&to->y, repeat, false, buf);
 }
 
-int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false);
+	list_t *l = list_seek(buf->head, from->y, false);
 	unsigned int i;
 
 	if(l){
@@ -104,14 +113,15 @@ int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 }
 
 static int m_linesearch(
-		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
+		motion_arg const *arg, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to,
 		list_t *sfn(motion_arg const *, list_t *, int *, const void *),
 		const void *ctx)
 {
-	list_t *l = buffer_current_line(buf, false); /* fine - repeat handled */
+	list_t *l = list_seek(buf->head, from->y, false);
 	int n = 0;
 
-	*to = *buf->ui_pos;
+	*to = *from;
 
 	if(!l)
 		goto limit;
@@ -148,9 +158,10 @@ static list_t *m_search_para(
 	return l;
 }
 
-int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
-	return m_linesearch(m, repeat, buf, to, m_search_para, NULL);
+	return m_linesearch(m, repeat, buf, from, to, m_search_para, NULL);
 }
 
 static list_t *m_search_func(
@@ -169,9 +180,10 @@ static list_t *m_search_func(
 	return l;
 }
 
-int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
-	int r = m_linesearch(m, repeat, buf, to, m_search_func, &m->scan_ch);
+	int r = m_linesearch(m, repeat, buf, from, to, m_search_func, &m->scan_ch);
 	if(r == MOTION_SUCCESS)
 		to->x = 0;
 	return r;
@@ -281,7 +293,7 @@ static int m_word1(
 	return MOTION_SUCCESS;
 }
 
-int m_word(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_word(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t const *from, point_t *to)
 {
 	const int dir = m->word_type & WORD_BACKWARD ? -1 : 1;
 	const bool end = m->word_type & WORD_END;
@@ -302,14 +314,17 @@ static char *strchrdir(char *p, char ch, bool forward, char *start, size_t len)
 		return memchr(p, ch, len - (p - start));
 }
 
-static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buffer_t *buf, point_t *to)
+static int m_findnext2(
+		const int ch, enum find_type ftype,
+		unsigned repeat, buffer_t *buf,
+		const point_t *from, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false); /* fine - repeat handled */
+	list_t *l = list_seek(buf->head, from->y, false);
 
 	if(!l)
 		return MOTION_FAILURE;
 
-	point_t bpos = *buf->ui_pos;
+	point_t bpos = *from;
 
 	if(!(ftype & F_REV)){
 		bpos.x++;
@@ -358,29 +373,30 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buff
 static int last_find_ch;
 static enum find_type last_find_type;
 
-int m_findnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_findnext(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	return m_findnext2(
 			last_find_ch,
 			m->find_type ^ last_find_type,
-			repeat,
-			buf,
-			to);
+			repeat, buf,
+			from, to);
 }
 
-int m_find(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_find(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t const *from, point_t *to)
 {
 	bool raw;
 	return m_findnext2(
 			last_find_ch = io_getch(IO_NOMAP /* vim doesn't mapraw here */, &raw, true),
 			last_find_type = m->find_type,
-			repeat, buf, to);
+			repeat, buf, from, to);
 }
 
 static char *lastsearch;
 static bool lastsearch_forward;
 
-int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	if(!lastsearch){
 		ui_err("no last search");
@@ -390,7 +406,7 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 	const int dir = ((m->i > 0) == lastsearch_forward) ? 1 : -1;
 
 	repeat = DEFAULT_REPEAT(repeat);
-	*to = *buf->ui_pos;
+	*to = *from;
 	while(repeat --> 0){
 		if(!buffer_findat(buf, lastsearch, to, dir)){
 			ui_err("search pattern not found");
@@ -402,7 +418,8 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 	return MOTION_SUCCESS;
 }
 
-int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
 {
 	lastsearch_forward = m->i > 0;
 
@@ -413,12 +430,12 @@ int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	free(lastsearch);
 	lastsearch = target;
 
-	return m_searchnext(m, repeat, buf, to);
+	return m_searchnext(m, repeat, buf, from, to);
 }
 
 int m_visual(
 		motion_arg const *arg, unsigned repeat,
-		buffer_t *buf, point_t *to)
+		buffer_t *buf, point_t const *from, point_t *to)
 {
 	(void)repeat;
 
@@ -495,9 +512,9 @@ static bool find_unnested_paren(
 
 int m_paren(
 		motion_arg const *arg, unsigned repeat,
-		buffer_t *buf, point_t *to)
+		buffer_t *buf, point_t const *from, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false);
+	list_t *l = list_seek(buf->head, from->y, false);
 	if(!l)
 		return MOTION_FAILURE;
 
@@ -509,8 +526,8 @@ int m_paren(
 		{
 			/* look forward for a paren on this line, then match */
 			char paren = 0, opp;
-			unsigned x = buf->ui_pos->x;
-			unsigned y = buf->ui_pos->y;
+			unsigned x = from->x;
+			unsigned y = from->y;
 
 			if(x >= l->len_line)
 				x = l->len_line - 1;
@@ -546,7 +563,7 @@ int m_paren(
 			/* look for an unmatched `arg->i' */
 			char paren = arg->i, opp = paren_opposite(paren);
 
-			point_t pos = *buf->ui_pos;
+			point_t pos = *from;
 
 			int dir = paren_left(paren) ? -1 : 1;
 			bool done_one = false;
@@ -587,10 +604,11 @@ int m_paren(
 
 int motion_apply_buf_dry(
 		const motion *m, unsigned repeat,
-		buffer_t *buf, point_t *out)
+		buffer_t *buf,
+		const point_t *from, point_t *out)
 {
-	*out = *buf->ui_pos;
-	int r = m->func(&m->arg, repeat, buf, out);
+	*out = *from;
+	int r = m->func(&m->arg, repeat, buf, from, out);
 	if(r == MOTION_SUCCESS){
 		if(out->y < 0 || out->x < 0)
 			r = MOTION_FAILURE;
@@ -602,7 +620,7 @@ int motion_apply_buf(const motion *m, unsigned repeat, buffer_t *buf)
 {
 	point_t to;
 
-	if(motion_apply_buf_dry(m, repeat, buf, &to)){
+	if(motion_apply_buf_dry(m, repeat, buf, buf->ui_pos, &to)){
 		if(memcmp(buf->ui_pos, &to, sizeof to)){
 			*buf->ui_pos = to;
 			ui_cur_changed();
@@ -619,7 +637,7 @@ bool motion_to_region(
 	region_t r = {
 		.begin = *buf->ui_pos
 	};
-	if(!motion_apply_buf_dry(m, repeat, buf, &r.end))
+	if(!motion_apply_buf_dry(m, repeat, buf, &r.begin, &r.end))
 		return false;
 
 	/* reverse if negative range */

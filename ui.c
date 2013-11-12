@@ -118,7 +118,7 @@ void ui_rstatus(const char *fmt, ...)
 static void ui_match_paren(buffer_t *buf)
 {
 	list_t *l = buffer_current_line(buf, false);
-	int x = buf->ui_pos->x;
+	const int x = buf->ui_pos->x;
 	bool redraw = false;
 
 	if(buf->ui_paren.x != -1)
@@ -140,7 +140,7 @@ static void ui_match_paren(buffer_t *buf)
 		.how = M_EXCLUSIVE
 	};
 	point_t loc;
-	if(!motion_apply_buf_dry(&opposite, 0, buf, &loc))
+	if(!motion_apply_buf_dry(&opposite, 0, buf, buf->ui_pos, &loc))
 		goto out;
 
 	buf->ui_paren = loc;

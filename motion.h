@@ -7,8 +7,7 @@ typedef int motion_func(
 		motion_arg const *,
 		unsigned repeat,
 		buffer_t *,
-		/*point_t *current, * both changeable */
-		point_t *to);
+		const point_t *from, point_t *to);
 
 enum motion_wise
 {
@@ -68,7 +67,8 @@ int motion_apply_buf(
 
 int motion_apply_buf_dry(
 		const motion *, unsigned rep,
-		buffer_t *, point_t *to);
+		buffer_t *,
+		point_t const *from, point_t *to);
 
 bool motion_to_region(
 		const motion *m, unsigned repeat, bool always_linewise,

@@ -468,7 +468,7 @@ static bool around_motion(
 				};
 
 
-				if(surround->func(from_ch, repeat, buf, &r)){
+				if(surround->func(surround_ch, repeat, buf, &r)){
 					around_motion_apply(
 							action, buf,
 							&r, used_region);

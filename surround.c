@@ -18,8 +18,12 @@ static bool surround_via_motions(
 		motion const *m2, unsigned repeat2,
 		buffer_t *buf, region_t *surround)
 {
-	return motion_apply_buf_dry(m1, repeat1, buf, &surround->begin)
-		&& motion_apply_buf_dry(m2, repeat2, buf, &surround->end);
+	return
+		motion_apply_buf_dry(m1, repeat1, buf,
+				buf->ui_pos, &surround->begin)
+		&&
+		motion_apply_buf_dry(m2, repeat2, buf,
+				&surround->begin, &surround->end);
 }
 
 bool surround_paren(
