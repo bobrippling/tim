@@ -101,12 +101,14 @@ out:
 	return ret;
 }
 
-const motion *motion_read(unsigned *repeat)
+const motion *motion_read(unsigned *repeat, bool apply_maps)
 {
 	const enum io io_m =
-		buffers_cur()->ui_mode & UI_VISUAL_ANY
-		? IO_MAPV
-		: IO_MAP;
+		apply_maps ?
+			buffers_cur()->ui_mode & UI_VISUAL_ANY
+				? IO_MAPV
+				: IO_MAP
+			: IO_NOMAP;
 
 	*repeat = io_read_repeat(io_m);
 
@@ -122,7 +124,7 @@ const motion *motion_read(unsigned *repeat)
 }
 
 static
-const motion *motion_read_or_visual(unsigned *repeat)
+const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 {
 	buffer_t *buf = buffers_cur();
 	if(buf->ui_mode & UI_VISUAL_ANY){
@@ -136,7 +138,7 @@ const motion *motion_read_or_visual(unsigned *repeat)
 		return &visual;
 	}
 
-	return motion_read(repeat);
+	return motion_read(repeat, apply_maps);
 }
 
 static
@@ -429,7 +431,8 @@ static bool around_motion(
 	};
 
 	unsigned repeat_motion;
-	const motion *m = motion_read_or_visual(&repeat_motion);
+	const motion *m = motion_read_or_visual(
+			&repeat_motion, /* operator pending - no maps: */ false);
 
 	if(!m){
 		/* check for dd, etc */

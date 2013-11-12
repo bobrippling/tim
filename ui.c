@@ -158,7 +158,7 @@ void ui_main()
 		unsigned repeat = 0;
 
 		if(!ins){
-			const motion *m = motion_read(&repeat);
+			const motion *m = motion_read(&repeat, /*map:*/true);
 
 			if(m){
 				motion_apply_buf(m, repeat, buf);

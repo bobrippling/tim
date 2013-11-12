@@ -32,7 +32,7 @@ typedef struct motionkey_t
 } motionkey_t;
 
 /* returns 0 on success */
-const motion *motion_read(unsigned *repeat);
+const motion *motion_read(unsigned *repeat, bool apply_maps);
 
 int keys_filter(
 		enum io io_m,
