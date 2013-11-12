@@ -201,7 +201,7 @@ static bool try_surround(buffer_t *buf, unsigned repeat)
 			if(sur){
 				region_t r;
 
-				if(sur->func(sur_type, repeat, buf, &r)){
+				if(surround_apply(sur, sur_ch, sur_type, repeat, buf, &r)){
 					buf->ui_npos = r.begin;
 					buf->ui_vpos = r.end;
 

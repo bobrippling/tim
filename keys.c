@@ -466,8 +466,7 @@ static bool around_motion(
 					.end = buf->ui_vpos,
 				};
 
-
-				if(surround->func(surround_ch, repeat, buf, &r)){
+				if(surround_apply(surround, ch, surround_ch, repeat, buf, &r)){
 					around_motion_apply(
 							action, buf,
 							&r, used_region);

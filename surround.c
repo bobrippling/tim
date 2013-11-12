@@ -13,6 +13,36 @@
 
 #include "surround.h"
 
+bool surround_apply(const surround_key_t *k,
+		char in_around, char type, unsigned repeat,
+		buffer_t *buf, region_t *r)
+{
+	if(!k->func(type, repeat, buf, r))
+		return false;
+
+	if(in_around == 'i'){
+		int xdiff = r->end.x - r->begin.x;
+
+		if(r->end.y - r->begin.y == 0){
+			if(xdiff == 0)
+				return false;
+		}else{
+			xdiff = 1; /* anything > 0 */
+		}
+
+		list_advance_x(
+				list_seek(buf->head, r->begin.y, false),
+				+1, &r->begin.y, &r->begin.x);
+
+		if(xdiff > 0){
+			list_advance_x(
+					list_seek(buf->head, r->end.y, false),
+					-1, &r->end.y, &r->end.x);
+		}
+	}
+	return true;
+}
+
 static bool surround_via_motions(
 		motion const *m1, unsigned repeat1,
 		motion const *m2, unsigned repeat2,

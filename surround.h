@@ -18,6 +18,10 @@ surround_func surround_block;
 surround_func surround_para;
 surround_func surround_word;
 
+bool surround_apply(const surround_key_t *k,
+		char in_around, char type, unsigned repeat,
+		buffer_t *buf, region_t *r);
+
 #define surround_beginning_char(ch) ((ch) == 'a' || (ch) == 'i')
 
 #endif
