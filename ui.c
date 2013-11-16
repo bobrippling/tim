@@ -305,11 +305,13 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		nc_highlight(0);
 	}
 
+	nc_style(COL_BLUE | ATTR_BOLD);
 	for(; y < r->h; y++){
 		nc_set_yx(r->y + y, r->x);
 		nc_addch('~');
 		nc_clrtoeol();
 	}
+	nc_style(0);
 }
 
 static

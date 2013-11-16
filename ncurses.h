@@ -28,4 +28,11 @@ int nc_getch(bool mapraw, bool *wasraw);
 
 int nc_charlen(int ch);
 
+enum nc_style
+{
+	COL_BLUE = 1 << 0,
+	ATTR_BOLD = 1 << 1
+};
+void nc_style(enum nc_style);
+
 #endif

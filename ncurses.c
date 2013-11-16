@@ -146,6 +146,19 @@ void nc_addch(char c)
 	addch(c & 0xff);
 }
 
+void nc_style(enum nc_style s)
+{
+	int to_set = A_NORMAL;
+
+	if(s & COL_BLUE)
+		to_set |= COLOR_PAIR(1 + COLOR_BLUE);
+
+	if(s & ATTR_BOLD)
+		to_set |= A_BOLD;
+
+	attrset(to_set);
+}
+
 void nc_addstr(char *s)
 {
 	addstr(s);
