@@ -41,7 +41,9 @@ void ui_set_bufmode(enum buf_mode m)
 	}else{
 		ui_redraw();
 		ui_cur_changed();
+		nc_style(COL_BROWN);
 		ui_status("%s", ui_bufmode_str(buf->ui_mode));
+		nc_style(0);
 	}
 }
 

@@ -30,8 +30,9 @@ int nc_charlen(int ch);
 
 enum nc_style
 {
-	COL_BLUE = 1 << 0,
-	ATTR_BOLD = 1 << 1
+	ATTR_BOLD = 1 << 0,
+	COL_BLUE = 1 << 1,
+	COL_BROWN = 1 << 2,
 };
 void nc_style(enum nc_style);
 

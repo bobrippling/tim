@@ -152,6 +152,8 @@ void nc_style(enum nc_style s)
 
 	if(s & COL_BLUE)
 		to_set |= COLOR_PAIR(1 + COLOR_BLUE);
+	else if(s & COL_BROWN)
+		to_set |= COLOR_PAIR(1 + COLOR_YELLOW);
 
 	if(s & ATTR_BOLD)
 		to_set |= A_BOLD;
