@@ -19,7 +19,7 @@ enum
 	CMD_SUCCESS,
 };
 
-int c_q(int argc, char **argv)
+int c_q(int argc, char **argv, bool force)
 {
 	if(argc != 1){
 		ui_status("usage: %s", *argv);
@@ -31,7 +31,7 @@ int c_q(int argc, char **argv)
 	return CMD_SUCCESS;
 }
 
-int c_w(int argc, char **argv)
+int c_w(int argc, char **argv, bool force)
 {
 	if(argc == 2){
 		buffer_set_fname(buffers_cur(), argv[1]);
@@ -69,12 +69,12 @@ got_err:
 	return CMD_SUCCESS;
 }
 
-int c_x(int argc, char **argv)
+int c_x(int argc, char **argv, bool force)
 {
-	return c_w(argc, argv) && c_q(argc, argv);
+	return c_w(argc, argv, false) && c_q(argc, argv, false);
 }
 
-int c_e(int argc, char **argv)
+int c_e(int argc, char **argv, bool force)
 {
 	const char *fname;
 
@@ -108,7 +108,7 @@ int c_e(int argc, char **argv)
 }
 
 static
-int c_split(enum buffer_neighbour ne, int argc, char **argv)
+int c_split(enum buffer_neighbour ne, int argc, char **argv, bool force)
 {
 	buffer_t *b;
 
@@ -134,17 +134,17 @@ int c_split(enum buffer_neighbour ne, int argc, char **argv)
 	return CMD_SUCCESS;
 }
 
-int c_vs(int argc, char **argv)
+int c_vs(int argc, char **argv, bool force)
 {
-	return c_split(BUF_RIGHT, argc, argv);
+	return c_split(BUF_RIGHT, argc, argv, force);
 }
 
-int c_sp(int argc, char **argv)
+int c_sp(int argc, char **argv, bool force)
 {
-	return c_split(BUF_DOWN, argc, argv);
+	return c_split(BUF_DOWN, argc, argv, force);
 }
 
-int c_run(int argc, char **argv)
+int c_run(int argc, char **argv, bool force)
 {
 	if(argc == 1){
 		shellout(NULL);

@@ -160,7 +160,7 @@ char *parse_arg(const char *arg)
 }
 
 static
-void parse_cmd(char *cmd, int *pargc, char ***pargv)
+void parse_cmd(char *cmd, int *pargc, char ***pargv, bool *force)
 {
 	int argc = *pargc;
 	char **argv = *pargv;
@@ -181,8 +181,21 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv)
 		argv = urealloc(argv, (argc + 2) * sizeof *argv);
 		argv[argc++] = parse_arg(p);
 	}
-	if(argc)
-		argv[argc] = NULL;
+	argv[argc] = NULL;
+
+	/* special case: check for '!' in the first cmd */
+	if(argc >= 1 && (p = strchr(argv[0], '!'))){
+		*force = true;
+		*p = '\0';
+		if(p[1]){
+			/* split, e.g. "w!hello" -> "w", "hello" */
+			argv = urealloc(argv, (++argc + 1) * sizeof *argv);
+			for(int i = argc - 1; i > 1; i--)
+				argv[i] = argv[i - 1];
+
+			argv[1] = ustrdup(p + 1);
+		}
+	}
 
 	*pargv = argv;
 	*pargc = argc;
@@ -231,35 +244,36 @@ void filter_cmd(int *pargc, char ***pargv)
 
 void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	int i;
-	char **argv = NULL;
-	int argc = 0;
 	char *cmd = prompt(':');
 
 	if(!cmd)
 		goto cancel;
 
-	parse_cmd(cmd, &argc, &argv);
+	char **argv = NULL;
+	int argc = 0;
+	bool force = false;
+	parse_cmd(cmd, &argc, &argv, &force);
 
 	filter_cmd(&argc, &argv);
 
 	if(!argc)
 		goto cancel;
 
+	int i;
 	for(i = 0; cmds[i].cmd; i++)
 		if(!strcmp(cmds[i].cmd, argv[0])){
-			cmds[i].func(argc, argv);
+			cmds[i].func(argc, argv, force);
 			break;
 		}
 
 	if(!cmds[i].cmd)
 		ui_status("unknown command %s", argv[0]);
 
-cancel:
-	free(cmd);
 	for(i = 0; i < argc; i++)
 		free(argv[i]);
 	free(argv);
+cancel:
+	free(cmd);
 }
 
 void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
