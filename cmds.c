@@ -3,6 +3,10 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "cmds.h"
 #include "pos.h"
 #include "region.h"
@@ -26,6 +30,11 @@ int c_q(int argc, char **argv, bool force)
 		return CMD_FAILURE;
 	}
 
+	if(!force && buffers_cur()->modified){
+		ui_status("buffer modified");
+		return CMD_FAILURE;
+	}
+
 	ui_running = 0;
 
 	return CMD_SUCCESS;
@@ -33,17 +42,42 @@ int c_q(int argc, char **argv, bool force)
 
 int c_w(int argc, char **argv, bool force)
 {
+	buffer_t *const buf = buffers_cur();
+
+	bool newfname = false;
 	if(argc == 2){
-		buffer_set_fname(buffers_cur(), argv[1]);
+		const char *old = buffer_fname(buf);
+
+		newfname = !old || strcmp(old, argv[1]);
+
+		buffer_set_fname(buf, argv[1]);
 	}else if(argc != 1){
 		ui_status("usage: %s filename", *argv);
 		return CMD_FAILURE;
 	}
 
-	const char *fname = buffer_fname(buffers_cur());
+	const char *fname = buffer_fname(buf);
 	if(!fname){
 		ui_status("no filename");
 		return CMD_FAILURE;
+	}
+
+	struct stat st;
+	if(!force){
+		if(stat(fname, &st) == 0){
+			if(newfname && access(fname, F_OK) == 0){
+				ui_status("file already exists");
+				return CMD_FAILURE;
+			}
+
+			if(st.st_mtime > buf->mtime){
+				ui_status("file modified externally");
+				return CMD_FAILURE;
+			}
+		}else if(errno != ENOENT){
+			ui_status("stat(%s): %s", buffer_shortfname(fname), strerror(errno));
+			return CMD_FAILURE;
+		}
 	}
 
 	FILE *f = fopen(fname, "w");
@@ -56,8 +90,7 @@ got_err:
 		return CMD_FAILURE;
 	}
 
-	buffer_t *b = buffers_cur();
-	buffer_write_file(b, -1, f, b->eol);
+	buffer_write_file(buf, -1, f, buf->eol);
 
 	if(fclose(f)){
 		f = NULL;

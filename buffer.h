@@ -2,6 +2,7 @@
 #define BUFFER_H
 
 #include <stdbool.h>
+#include <time.h> /* time_t */
 
 typedef struct buffer buffer_t;
 
@@ -35,6 +36,8 @@ struct buffer
 
 	char *fname;
 	bool eol;
+	bool modified;
+	time_t mtime;
 
 	enum buf_mode
 	{

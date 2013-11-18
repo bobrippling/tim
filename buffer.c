@@ -106,6 +106,8 @@ int buffer_replace_file(buffer_t *b, FILE *f)
 	list_free(b->head);
 	b->head = l;
 
+	b->mtime = time(NULL);
+
 	return 1;
 }
 
@@ -128,7 +130,10 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 
 int buffer_write_file(buffer_t *b, int n, FILE *f, bool eol)
 {
-	return list_write_file(b->head, n, f, eol);
+	int r = list_write_file(b->head, n, f, eol);
+	b->mtime = time(NULL);
+	b->modified = false;
+	return r;
 }
 
 void buffer_set_fname(buffer_t *b, const char *s)
@@ -147,17 +152,20 @@ const char *buffer_fname(const buffer_t *b)
 void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
 {
 	list_inschar(&buf->head, x, y, ch);
+	buf->modified = true;
 }
 
 void buffer_delchar(buffer_t *buf, int *x, int *y)
 {
 	list_delchar(buf->head, x, y);
+	buf->modified = true;
 }
 
 static
 void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	list_delregion(&buf->head, region);
+	buf->modified = true;
 }
 struct buffer_action buffer_delregion = {
 	.fn = buffer_delregion_f
@@ -174,6 +182,7 @@ void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
 
 	if(l)
 		out->x = mid;
+	buf->modified = true;
 }
 struct buffer_action buffer_joinregion = {
 	.fn = buffer_joinregion_f,
@@ -216,12 +225,14 @@ void buffer_indent2(
 			}
 		}
 	}
+	buf->modified = true;
 }
 
 int buffer_filter(
 		buffer_t *buf, const region_t *reg,
 		const char *cmd)
 {
+	buf->modified = true;
 	return list_filter(&buf->head, reg, cmd);
 }
 
@@ -229,6 +240,7 @@ static
 void buffer_indent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, 1);
+	buf->modified = true;
 }
 struct buffer_action buffer_indent = {
 	.fn = buffer_indent_f,
@@ -239,6 +251,7 @@ static
 void buffer_unindent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, -1);
+	buf->modified = true;
 }
 struct buffer_action buffer_unindent = {
 	.fn = buffer_unindent_f,
@@ -257,6 +270,7 @@ void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
 			with);
 
 	free(with);
+	buf->modified = true;
 }
 
 static int ctoggle(int c)
@@ -284,11 +298,13 @@ void buffer_caseregion(
 	assert(f);
 
 	list_iter_region(buf->head, r, buffer_case_cb, &f);
+	buf->modified = true;
 }
 
 void buffer_insline(buffer_t *buf, int dir)
 {
 	list_insline(&buf->head, &buf->ui_pos->x, &buf->ui_pos->y, dir);
+	buf->modified = true;
 }
 
 buffer_t *buffer_topleftmost(buffer_t *b)
