@@ -9,6 +9,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "pos.h"
 #include "region.h"
 #include "list.h"
@@ -553,7 +556,8 @@ int list_filter(
 		return -1;
 	}
 
-	switch(fork()){
+	int pid = fork();
+	switch(pid){
 		case -1:
 		{
 			const int e = errno;
@@ -593,6 +597,9 @@ int list_filter(
 	bool eol;
 	list_t *l_read = list_new_fd(child_out[0], &eol);
 	close(child_out[0]);
+
+	/* reap */
+	(void)waitpid(pid, NULL, 0);
 
 	list_t *const gone = *pl;
 
