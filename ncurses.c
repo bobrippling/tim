@@ -149,11 +149,17 @@ void nc_addch(char c)
 void nc_style(enum nc_style s)
 {
 	int to_set = A_NORMAL;
+	int col = -1;
 
 	if(s & COL_BLUE)
-		to_set |= COLOR_PAIR(1 + COLOR_BLUE);
+		col = COLOR_BLUE;
 	else if(s & COL_BROWN)
-		to_set |= COLOR_PAIR(1 + COLOR_YELLOW);
+		col = COLOR_YELLOW;
+	else if(s & COL_RED)
+		col = COLOR_RED;
+
+	if(col != -1)
+		to_set |= COLOR_PAIR(1 + col);
 
 	if(s & ATTR_BOLD)
 		to_set |= A_BOLD;

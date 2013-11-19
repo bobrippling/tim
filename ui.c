@@ -37,7 +37,7 @@ void ui_set_bufmode(enum buf_mode m)
 	buffer_t *buf = buffers_cur();
 
 	if(buffer_setmode(buf, m)){
-		ui_status("bad mode 0x%x", m);
+		ui_err("bad mode 0x%x", m);
 	}else{
 		ui_redraw();
 		ui_cur_changed();
@@ -53,13 +53,17 @@ void ui_init()
 }
 
 static
-void ui_vstatus(const char *fmt, va_list l, int right)
+void ui_vstatus(bool err, const char *fmt, va_list l, int right)
 {
 	int y, x;
 
 	nc_get_yx(&y, &x);
 
+	if(err)
+		nc_style(COL_RED);
 	nc_vstatus(fmt, l, right);
+	if(err)
+		nc_style(0);
 
 	nc_set_yx(y, x);
 }
@@ -68,7 +72,15 @@ void ui_status(const char *fmt, ...)
 {
 	va_list l;
 	va_start(l, fmt);
-	ui_vstatus(fmt, l, 0);
+	ui_vstatus(false, fmt, l, 0);
+	va_end(l);
+}
+
+void ui_err(const char *fmt, ...)
+{
+	va_list l;
+	va_start(l, fmt);
+	ui_vstatus(true, fmt, l, 0);
 	va_end(l);
 }
 
@@ -77,7 +89,7 @@ void ui_rstatus(const char *fmt, ...)
 {
 	va_list l;
 	va_start(l, fmt);
-	ui_vstatus(fmt, l, 1);
+	ui_vstatus(false, fmt, l, 1);
 	va_end(l);
 }
 
@@ -204,7 +216,7 @@ int ui_main()
 				break;
 			default:
 				if(ch != K_ESC)
-					ui_status("unknown key %c", ch);
+					ui_err("unknown key %c", ch);
 		}
 
 		switch(ui_run){

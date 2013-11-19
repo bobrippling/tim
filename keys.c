@@ -268,7 +268,7 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 		}
 
 	if(!cmds[i].cmd)
-		ui_status("unknown command %s", argv[0]);
+		ui_err("unknown command %s", argv[0]);
 
 	for(i = 0; i < argc; i++)
 		free(argv[i]);
@@ -368,7 +368,7 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 		ui_redraw();
 		ui_cur_changed();
 	}else{
-		ui_status("no buffer");
+		ui_err("no buffer");
 	}
 }
 
@@ -459,7 +459,7 @@ static bool around_motion(
 			m = &m_doubletap;
 		}else{
 			if(ch != K_ESC)
-				ui_status("no motion '%c'", ch);
+				ui_err("no motion '%c'", ch);
 			/*io_ungetch(ch);*/
 		}
 	}
@@ -596,7 +596,7 @@ static void filter(
 	}
 
 	if(buffer_filter(buf, region, cmd))
-		ui_status("filter: %s", strerror(errno));
+		ui_err("filter: %s", strerror(errno));
 
 	if(cmd != around->filter_cmd)
 		free(cmd);

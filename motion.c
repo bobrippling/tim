@@ -365,7 +365,7 @@ static char *lastsearch;
 int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	if(!lastsearch){
-		ui_status("no last search");
+		ui_err("no last search");
 		return MOTION_FAILURE;
 	}
 
@@ -373,7 +373,7 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 	*to = *buf->ui_pos;
 	while(repeat --> 0){
 		if(!buffer_findat(buf, lastsearch, to, m->i)){
-			ui_status("search pattern not found");
+			ui_err("search pattern not found");
 			return MOTION_FAILURE;
 		}
 	}
@@ -481,7 +481,7 @@ int m_paren(
 
 	switch(arg->i){
 		default:
-			ui_status("bad m_paren arg");
+			ui_err("bad m_paren arg");
 			break;
 
 		case '%':
