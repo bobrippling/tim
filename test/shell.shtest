@@ -1,0 +1,5 @@
+$tim <<!
+:!echo hello > $tmp
+:q!
+!
+grep 'hello' $tmp

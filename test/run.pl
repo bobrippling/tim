@@ -135,6 +135,7 @@ my($n, $pass) = (0,0);
 
 # for shtests
 $ENV{tim} = $tim;
+$ENV{tmp} = "$tdir/tmp";
 
 for my $f (@tests){
 	my $r;
