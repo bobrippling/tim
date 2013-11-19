@@ -565,6 +565,7 @@ int list_filter(
 		case 0:
 			dup2(child_in[0], 0);
 			dup2(child_out[1], 1);
+			dup2(child_out[1], 2); /* capture stderr too */
 			for(int i = 0; i < 2; i++)
 				close(child_in[i]), close(child_out[i]);
 
