@@ -165,9 +165,10 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv, bool *force)
 	int argc = *pargc;
 	char **argv = *pargv;
 	char *p;
+	bool had_punct;
 
 	/* special case */
-	if(ispunct(cmd[0])){
+	if((had_punct = ispunct(cmd[0]))){
 		argv = urealloc(argv, (argc + 2) * sizeof *argv);
 
 		snprintf(
@@ -184,7 +185,7 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv, bool *force)
 	argv[argc] = NULL;
 
 	/* special case: check for '!' in the first cmd */
-	if(argc >= 1 && (p = strchr(argv[0], '!'))){
+	if(!had_punct && argc >= 1 && (p = strchr(argv[0], '!'))){
 		*force = true;
 		*p = '\0';
 		if(p[1]){
