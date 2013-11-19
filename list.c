@@ -580,7 +580,9 @@ int list_filter(
 	/* parent */
 	close(child_in[0]), close(child_out[1]);
 
-	const unsigned region_height = region->end.y - region->begin.y;
+	unsigned region_height = region->end.y - region->begin.y;
+	if(region->type != REGION_LINE)
+		region_height++;
 
 	list_t **phead = pl;
 	list_t *tail = list_seek(*phead, region_height, false);
