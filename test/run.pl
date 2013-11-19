@@ -144,6 +144,11 @@ for my $f (@tests){
 	}else{
 		$r = runshtest $f;
 	}
+
+	if($r){
+		system('stty', qw(isig onlcr icrnl ixon brkint -noflsh));
+	}
+
 	$pass += ($r == 0);
 	$n++;
 }
