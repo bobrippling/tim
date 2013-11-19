@@ -429,7 +429,7 @@ struct around_motion
 	union
 	{
 		buffer_action_f *forward;
-		char *filter_cmd;
+		const struct filter_input *filter;
 		enum case_tog case_ty;
 	};
 };
@@ -587,18 +587,28 @@ static void filter(
 		point_t *out,
 		struct around_motion *around)
 {
-	char *cmd = around->filter_cmd;
+	const struct filter_input *pf = around->filter;
+	bool free_cmd = false;
+	char *cmd;
 
-	if(!cmd){
-		cmd = prompt('!');
-		if(!cmd)
-			return;
+	switch(pf->type){
+		case FILTER_CMD:
+			cmd = pf->s;
+			if(!cmd){
+				cmd = prompt('!');
+				if(!cmd)
+					return;
+				free_cmd = true;
+			}
+			break;
+		case FILTER_SELF:
+			cmd = "sh";
 	}
 
 	if(buffer_filter(buf, region, cmd))
 		ui_err("filter: %s", strerror(errno));
 
-	if(cmd != around->filter_cmd)
+	if(free_cmd)
 		free(cmd);
 }
 
@@ -606,7 +616,7 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	struct around_motion around = {
 		.fn = filter,
-		.filter_cmd = a->s
+		.filter = &a->filter
 	};
 
 	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);

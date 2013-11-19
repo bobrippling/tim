@@ -13,7 +13,14 @@ union keyarg_u
 		motion m;
 		unsigned repeat;
 	} motion;
-	char *s;
+	struct filter_input
+	{
+		enum
+		{
+			FILTER_SELF, FILTER_CMD
+		} type;
+		char *s;
+	} filter;
 	point_t pos;
 };
 

@@ -1,4 +1,4 @@
-jVj!sed 's/^/HI/'
+jVj!sed 's/^/HI/'GOecho hellog!0
 __IN__
 hello
 there
@@ -8,4 +8,5 @@ __OUT__
 hello
 HIthere
 HIabc
+hello
 xyz
