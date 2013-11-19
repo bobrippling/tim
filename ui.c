@@ -175,6 +175,9 @@ int ui_main()
 		bool wasraw;
 		int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
 
+		if(ch == -1) /* eof */
+			ui_run = UI_EXIT_1;
+
 		bool found = false;
 		if(!wasraw){
 			io_ungetch(ch);
