@@ -137,6 +137,8 @@ my($n, $pass) = (0,0);
 $ENV{tim} = $tim;
 $ENV{tmp} = "$tdir/tmp";
 
+my @failures;
+
 for my $f (@tests){
 	my $r;
 	if($f =~ /\.test$/){
@@ -147,11 +149,13 @@ for my $f (@tests){
 
 	if($r){
 		system('stty', qw(isig onlcr icrnl ixon brkint -noflsh));
+		push @failures, $f;
 	}
 
 	$pass += ($r == 0);
 	$n++;
 }
 
+print "failure summary: @failures\n" if @failures;
 print "$n tests, $pass pass, " . ($n-$pass) . " fail\n";
 exit ($pass == $n ? 0 : 1);
