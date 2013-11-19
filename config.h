@@ -126,6 +126,7 @@ const keymap_t maps[] = {
 
 const cmd_t cmds[] = {
 	{ "q",   c_q     },
+	{ "cq",  c_cq    },
 	{ "w",   c_w     },
 	{ "e",   c_e     },
 

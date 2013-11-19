@@ -17,7 +17,7 @@
 
 #define UI_MODE() buffers_cur()->ui_mode
 
-int ui_running = 1;
+enum ui_ec ui_run = UI_RUNNING;
 
 static const char *ui_bufmode_str(enum buf_mode m)
 {
@@ -137,7 +137,7 @@ void ui_inscolchar(char ch)
 	ui_redraw();
 }
 
-void ui_main()
+int ui_main()
 {
 	extern nkey_t nkeys[];
 	extern const size_t nkeys_cnt;
@@ -145,7 +145,7 @@ void ui_main()
 	ui_redraw(); /* this first, to frame buf_sel */
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
-	while(ui_running){
+	while(1){
 		buffer_t *buf = buffers_cur();
 
 		if(UI_MODE() & UI_VISUAL_ANY){
@@ -202,6 +202,12 @@ void ui_main()
 			default:
 				if(ch != K_ESC)
 					ui_status("unknown key %c", ch);
+		}
+
+		switch(ui_run){
+			case UI_RUNNING: continue;
+			case UI_EXIT_0: return 0;
+			case UI_EXIT_1: return 1;
 		}
 	}
 }

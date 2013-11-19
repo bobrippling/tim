@@ -35,7 +35,20 @@ int c_q(int argc, char **argv, bool force)
 		return CMD_FAILURE;
 	}
 
-	ui_running = 0;
+	ui_run = UI_EXIT_0;
+
+	return CMD_SUCCESS;
+}
+
+int c_cq(int argc, char **argv, bool force)
+{
+	if(argc != 1){
+		ui_status("usage: %s", *argv);
+		return CMD_FAILURE;
+	}
+
+	/* no buffer checks */
+	ui_run = UI_EXIT_1;
 
 	return CMD_SUCCESS;
 }

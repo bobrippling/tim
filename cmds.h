@@ -13,7 +13,7 @@ typedef struct cmd_t
 	cmd_func *func;
 } cmd_t;
 
-cmd_func c_q;
+cmd_func c_q, c_cq;
 cmd_func c_w;
 cmd_func c_x;
 cmd_func c_e;
