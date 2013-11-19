@@ -608,7 +608,8 @@ int list_filter(
 	*pl = l_read;
 	for(; l_read->next; l_read = l_read->next);
 	l_read->next = tail;
-	tail->prev = l_read;
+	if(tail)
+		tail->prev = l_read;
 
 	list_t *gone_tail;
 	for(gone_tail = gone;
