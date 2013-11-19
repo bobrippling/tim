@@ -137,12 +137,19 @@ int c_e(int argc, char **argv, bool force)
 		return CMD_FAILURE;
 	}
 
-	if(!buffer_replace_fname(buffers_cur(), fname)){
+	buffer_t *const buf = buffers_cur();
+	if(!force && buf->modified){
+		ui_status("buffer modified");
+		return CMD_FAILURE;
+	}
+
+	if(!buffer_replace_fname(buf, fname)){
 		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
 		buffers_set_cur(b);
 		ui_status("%s: %s", buffer_shortfname(fname), strerror(errno));
 	}else{
 		ui_status("%s: loaded", buffer_shortfname(fname));
+		buffers_cur()->modified = false;
 	}
 
 	buffer_set_fname(buffers_cur(), fname);
