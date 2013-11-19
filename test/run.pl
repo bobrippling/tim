@@ -86,6 +86,14 @@ sub runtest
 	return $rc;
 }
 
+sub runshtest
+{
+	my $f = shift;
+	my $r = system('sh', $f);
+	printf "%s: %s\n", $r ? "failure" : "success", $f;
+	return $r;
+}
+
 sub run_tim
 {
 	my $pid = fork();
@@ -122,11 +130,19 @@ if(@ARGV and $ARGV[0] eq '-v'){
 	shift @ARGV;
 }
 
-my @tests = @ARGV ? @ARGV : glob '*.test';
+my @tests = @ARGV ? @ARGV : glob '*test';
 my($n, $pass) = (0,0);
 
+# for shtests
+$ENV{tim} = $tim;
+
 for my $f (@tests){
-	my $r = runtest $f;
+	my $r;
+	if($f =~ /\.test$/){
+		$r = runtest $f;
+	}else{
+		$r = runshtest $f;
+	}
 	$pass += ($r == 0);
 	$n++;
 }
