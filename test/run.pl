@@ -89,7 +89,7 @@ sub runtest
 sub runshtest
 {
 	my $f = shift;
-	my $r = system('sh', $f);
+	my $r = system("sh $f >/dev/null 2>&1");
 	printf "%s: %s\n", $r ? "failure" : "success", $f;
 	return $r;
 }
