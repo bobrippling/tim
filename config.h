@@ -106,6 +106,9 @@ const nkey_t nkeys[] = {
 	{ K_STR(CTRL_AND('w')),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('g')),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
+
+	{ K_STR(CTRL_AND('y')), k_ins_colcopy, { -1 }, UI_INSERT },
+	{ K_STR(CTRL_AND('e')), k_ins_colcopy, { +1 }, UI_INSERT },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 

@@ -636,3 +636,27 @@ void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	around_motion(repeat, from_ch, /*always_linewise:*/false, &around, NULL);
 }
+
+void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *const buf = buffers_cur();
+
+	list_t *line = buffer_current_line(buf);
+	if(!line)
+		return;
+	line = a->i > 0 ? line->next : line->prev;
+	if(!line)
+		return;
+
+	if((unsigned)buf->ui_pos->x >= line->len_line)
+		return;
+
+	buffer_inschar(
+			buf,
+			&buf->ui_pos->x,
+			&buf->ui_pos->y,
+			line->line[buf->ui_pos->x]);
+
+	ui_redraw();
+	ui_cur_changed();
+}
