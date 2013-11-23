@@ -180,10 +180,7 @@ int ui_main()
 			}
 		}
 
-		const enum io io_mode = ins
-			? IO_NOMAP
-			: (buf->ui_mode & UI_VISUAL_ANY ? IO_MAPV : IO_MAP);
-
+		const enum io io_mode = bufmode_to_iomap(buf->ui_mode);
 		bool wasraw;
 		int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
 

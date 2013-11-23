@@ -6,6 +6,8 @@
 #include "ncurses.h"
 #include "mem.h"
 #include "io.h"
+#include "bufmode.h"
+#include "map.h"
 
 extern const keymap_t maps[];
 
@@ -53,11 +55,22 @@ static int io_fifo_pop(void)
 	return ret;
 }
 
-static void io_map(int ch, int visual)
+static void io_map(int ch, enum io mode_mask)
 {
 	for(const keymap_t *m = maps; m->to; m++)
-		if(m->from == ch)
-			io_fifo_push(visual ? m->to_visual : m->to);
+		if(m->mode & mode_mask && m->from == ch)
+			io_fifo_push(m->to);
+}
+
+enum io bufmode_to_iomap(enum buf_mode bufmode)
+{
+	if(bufmode & UI_INSERT_ANY)
+		return IO_MAPI;
+
+	if(bufmode & UI_VISUAL_ANY)
+		return IO_MAPV;
+
+	return IO_MAP;
 }
 
 int io_getch(enum io ty, bool *wasraw)
@@ -70,17 +83,9 @@ int io_getch(enum io ty, bool *wasraw)
 
 	int ch = nc_getch(ty & IO_MAPRAW, wasraw);
 
-	switch((int)(ty & ~IO_MAPRAW)){
-		case IO_MAP:
-		case IO_MAPV:
-			io_map(ch, ty == IO_MAPV);
-			if(io_fifoused)
-				return io_fifo_pop();
-			/* fall */
-
-		case IO_NOMAP:
-			break;
-	}
+	io_map(ch, ty & ~IO_MAPRAW);
+	if(io_fifoused)
+		return io_fifo_pop();
 
 	return ch;
 }

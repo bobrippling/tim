@@ -104,11 +104,7 @@ out:
 const motion *motion_read(unsigned *repeat, bool apply_maps)
 {
 	const enum io io_m =
-		apply_maps ?
-			buffers_cur()->ui_mode & UI_VISUAL_ANY
-				? IO_MAPV
-				: IO_MAP
-			: IO_NOMAP;
+		apply_maps ? bufmode_to_iomap(buffers_cur()->ui_mode) : IO_NOMAP;
 
 	*repeat = io_read_repeat(io_m);
 

@@ -3,9 +3,9 @@
 
 typedef struct keymap
 {
+	enum io mode;
 	char from;
 	const char *to;
-	const char *to_visual;
 } keymap_t;
 
 #endif

@@ -110,17 +110,25 @@ const nkey_t nkeys[] = {
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 
 const keymap_t maps[] = {
-	{ 'I', "^i", NULL },
-	{ 'a', "li", NULL },
-	{ 'A', "$li", NULL }, /* remap not allowed, hence "$a" wouldn't work */
-	{ 'C', "c$", "c" },
-	{ 'D', "d$", "d" },
+	{ IO_MAP, 'I', "^i" },
+	{ IO_MAP, 'a', "li" },
+	{ IO_MAP, 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
 
-	{ 'x', "dl", "d" }, /* TODO: delete command needs to handle count */
-	{ 'X', "dh", "d" },
+	{ IO_MAP, 'C', "c$" },
+	{ IO_MAP, 'D', "d$" },
+	{ IO_MAPV, 'C', "c" },
+	{ IO_MAPV, 'D', "d" },
 
-	{ 's', "cl", "c" }, /* TODO: change command needs to handle count */
-	{ 'S', "0c$", NULL },
+	/* TODO: delete command needs to handle count */
+	{ IO_MAP, 'x', "dl" },
+	{ IO_MAP, 'X', "dh" },
+	{ IO_MAPV, 'x', "d" },
+	{ IO_MAPV, 'X', "d" },
+
+	/* TODO: change command needs to handle count */
+	{ IO_MAP, 's', "cl" },
+	{ IO_MAP, 'S', "0c$" },
+	{ IO_MAPV, 's', "c" },
 
 	{ 0 }
 };
