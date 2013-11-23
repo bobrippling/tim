@@ -130,6 +130,11 @@ const keymap_t maps[] = {
 	{ IO_MAP, 'S', "0c$" },
 	{ IO_MAPV, 's', "c" },
 
+	/* insert mode keys - ^U, ^K and ^W */
+	{ IO_MAPI, CTRL_AND('U'), (char[]){ K_ESC, 'l', 'd', '0', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('K'), (char[]){ K_ESC, 'l', 'd', '$', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('W'), (char[]){ K_ESC, 'l', 'd', 'b', 'i', 0 } },
+
 	{ 0 }
 };
 
