@@ -22,4 +22,6 @@ char *tim_strstr(
 		size_t len,
 		const char *restrict needle);
 
+#define iswordchar(ch) (isalnum(ch) || (ch) == '_')
+
 #endif

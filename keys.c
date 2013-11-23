@@ -23,6 +23,8 @@
 #include "prompt.h"
 #include "map.h"
 
+#include "str.h" /* iswordchar() */
+
 #include "buffers.h"
 
 #include "config.h"
@@ -431,6 +433,10 @@ struct around_motion
 		buffer_action_f *forward;
 		const struct filter_input *filter;
 		enum case_tog case_ty;
+		struct
+		{
+			unsigned start, end;
+		};
 	};
 };
 
@@ -639,4 +645,51 @@ void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
 	};
 
 	around_motion(repeat, from_ch, /*always_linewise:*/false, &around, NULL);
+}
+
+static void rename_in_scope(
+		buffer_t *buf,
+		const region_t *region,
+		point_t *out,
+		struct around_motion *around)
+{
+	//char *with =
+	//around->start = start;
+	//around->end = end
+}
+
+void k_rename_in_scope(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *const buf = buffers_cur();
+	list_t *pos = buffer_current_line(buf);
+
+	if(!pos || (unsigned)buf->ui_pos->x >= pos->len_line)
+		goto not_word;
+
+	/* TODO: use iw motion? */
+	size_t start = buf->ui_pos->x;
+	if(!iswordchar(pos->line[start]))
+		goto not_word;
+
+	size_t end = start;
+	while(start > 0 && iswordchar(pos->line[start - 1]))
+		start--;
+
+	while(end + 1 < pos->len_line && iswordchar(pos->line[end + 1]))
+		end++;
+
+	char *word = ustrdup_len(pos->line + start, end - start + 1);
+
+	struct around_motion around = {
+		.fn = rename_in_scope,
+		.start = start,
+		.end = end
+	};
+	around_motion(repeat, from_ch, /*always_linewise:*/false, &around, NULL);
+
+	free(word);
+	return;
+
+not_word:
+	ui_status("not on a word");
 }
