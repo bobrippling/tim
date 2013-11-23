@@ -32,6 +32,7 @@ char *ustrdup_len(const char *s, size_t len)
 {
 	char *r = umalloc(len + 1);
 	memcpy(r, s, len);
+	r[len] = '\0';
 	return r;
 }
 
