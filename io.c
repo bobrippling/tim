@@ -83,9 +83,12 @@ int io_getch(enum io ty, bool *wasraw)
 
 	int ch = nc_getch(ty & IO_MAPRAW, wasraw);
 
-	io_map(ch, ty & ~IO_MAPRAW);
-	if(io_fifoused)
-		return io_fifo_pop();
+	/* don't run maps for raw keys */
+	if(!wasraw || !*wasraw){
+		io_map(ch, ty & ~IO_MAPRAW);
+		if(io_fifoused)
+			return io_fifo_pop();
+	}
 
 	return ch;
 }
