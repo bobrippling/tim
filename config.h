@@ -106,21 +106,37 @@ const nkey_t nkeys[] = {
 	{ K_STR(CTRL_AND('w')),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('g')),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
+
+	{ K_STR(CTRL_AND('y')), k_ins_colcopy, { -1 }, UI_INSERT },
+	{ K_STR(CTRL_AND('e')), k_ins_colcopy, { +1 }, UI_INSERT },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 
 const keymap_t maps[] = {
-	{ 'I', "^i", NULL },
-	{ 'a', "li", NULL },
-	{ 'A', "$li", NULL }, /* remap not allowed, hence "$a" wouldn't work */
-	{ 'C', "c$", "c" },
-	{ 'D', "d$", "d" },
+	{ IO_MAP, 'I', "^i" },
+	{ IO_MAP, 'a', "li" },
+	{ IO_MAP, 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
 
-	{ 'x', "dl", "d" }, /* TODO: delete command needs to handle count */
-	{ 'X', "dh", "d" },
+	{ IO_MAP, 'C', "c$" },
+	{ IO_MAP, 'D', "d$" },
+	{ IO_MAPV, 'C', "c" },
+	{ IO_MAPV, 'D', "d" },
 
-	{ 's', "cl", "c" }, /* TODO: change command needs to handle count */
-	{ 'S', "0c$", NULL },
+	/* TODO: delete command needs to handle count */
+	{ IO_MAP, 'x', "dl" },
+	{ IO_MAP, 'X', "dh" },
+	{ IO_MAPV, 'x', "d" },
+	{ IO_MAPV, 'X', "d" },
+
+	/* TODO: change command needs to handle count */
+	{ IO_MAP, 's', "cl" },
+	{ IO_MAP, 'S', "0c$" },
+	{ IO_MAPV, 's', "c" },
+
+	/* insert mode keys - ^U, ^K and ^W */
+	{ IO_MAPI, CTRL_AND('U'), (char[]){ K_ESC, 'l', 'd', '0', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('K'), (char[]){ K_ESC, 'l', 'd', '$', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('W'), (char[]){ K_ESC, 'l', 'd', 'b', 'i', 0 } },
 
 	{ 0 }
 };
