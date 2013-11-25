@@ -281,11 +281,6 @@ void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
-{
-	ui_set_bufmode(a->i);
-}
-
 void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf = buffers_cur();
@@ -502,7 +497,8 @@ static bool around_motion(
 
 		/* reset cursor to beginning, then allow adjustments */
 		*b->ui_pos = r.begin;
-		action->fn(b, &r, b->ui_pos, action);
+		if(action)
+			action->fn(b, &r, b->ui_pos, action);
 
 		ui_set_bufmode(UI_NORMAL);
 
@@ -531,6 +527,23 @@ static bool around_motion_bufaction(
 				.fn = buffer_forward,
 				.forward = buf_act->fn
 			}, out_region);
+}
+
+void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	/* if we're in visual-col and told to insert like that... */
+	if(buf->ui_mode == UI_VISUAL_COL && a->i == UI_INSERT_COL){
+		region_t r;
+
+		if(around_motion(repeat, from_ch, false, /*noop:*/NULL, &r)){
+			buf->col_insert_height = r.end.y - r.begin.y + 1;
+			ui_set_bufmode(UI_INSERT_COL);
+		}
+	}else{
+		ui_set_bufmode(a->i);
+	}
 }
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
