@@ -573,7 +573,7 @@ void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_togglev(buffers_cur());
+	buffer_togglev(buffers_cur(), a->i != 0);
 	ui_cur_changed();
 }
 

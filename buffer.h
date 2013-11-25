@@ -50,7 +50,7 @@ buffer_t *buffer_new(void);
 void buffer_new_fname(buffer_t **, const char *, int *err);
 
 int buffer_setmode(buffer_t *, enum buf_mode m); /* 0 = success */
-void buffer_togglev(buffer_t *);
+void buffer_togglev(buffer_t *, bool corner_toggle);
 
 void buffer_free(buffer_t *);
 

@@ -36,11 +36,19 @@ buffer_t *buffer_new()
 	return b;
 }
 
-void buffer_togglev(buffer_t *buf)
+void buffer_togglev(buffer_t *buf, bool corner_toggle)
 {
-	buf->ui_pos = (buf->ui_pos == &buf->ui_npos)
-		? &buf->ui_vpos
-		: &buf->ui_npos;
+	if(corner_toggle){
+		point_t *alt = buffer_uipos_alt(buf);
+
+		int tmp = buf->ui_pos->x;
+		buf->ui_pos->x = alt->x;
+		alt->x = tmp;
+	}else{
+		buf->ui_pos = (buf->ui_pos == &buf->ui_npos)
+			? &buf->ui_vpos
+			: &buf->ui_npos;
+	}
 }
 
 int buffer_setmode(buffer_t *buf, enum buf_mode m)

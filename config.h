@@ -71,7 +71,8 @@ const nkey_t nkeys[] = {
 
 	{ "o",            k_open,       {  1 },                   UI_NORMAL },
 	{ "O",            k_open,       { -1 },                   UI_NORMAL },
-	{ "o",            k_vtoggle,    KEY_ARG_NONE, UI_VISUAL_ANY },
+	{ "o",            k_vtoggle,    { 0 }, UI_VISUAL_ANY },
+	{ "O",            k_vtoggle,    { 1 }, UI_VISUAL_ANY },
 
 	{ "d",            k_del,        KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 	{ "c",            k_change,     KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
