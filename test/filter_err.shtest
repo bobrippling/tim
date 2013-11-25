@@ -1,0 +1,9 @@
+cat >$tmp <<!
+non-existant-command
+!
+
+$tim $tmp <<!
+g!$:wq
+!
+
+grep 'non-existant-command: not found' $tmp
