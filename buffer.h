@@ -60,8 +60,9 @@ int buffer_write_file(buffer_t *, int n, FILE *, bool eol);
 void buffer_set_fname(buffer_t *, const char *);
 const char *buffer_fname(const buffer_t *);
 
+void buffer_inschar(buffer_t *, char ch);
+void buffer_inschar_at(buffer_t *, char ch, int *x, int *y);
 /* TODO: remove arg 2 and 3 */
-void buffer_inschar(buffer_t *, int *x, int *y, char ch);
 void buffer_delchar(buffer_t *, int *x, int *y);
 
 typedef void buffer_action_f(

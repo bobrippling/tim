@@ -149,10 +149,52 @@ const char *buffer_fname(const buffer_t *b)
 	return b->fname;
 }
 
-void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
+void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 {
-	list_inschar(&buf->head, x, y, ch);
+	switch(ch){
+		case CTRL_AND('?'):
+		case CTRL_AND('H'):
+		case 127:
+			if(*x > 0)
+				buffer_delchar(buf, x, y);
+			break;
+
+		default:
+			list_inschar(&buf->head, x, y, ch);
+			break;
+	}
 	buf->modified = true;
+}
+
+static void buffer_inscolchar(buffer_t *buf, char ch, unsigned ncols)
+{
+	for(int i = ncols - 1; i >= 0; i--){
+		int y = buf->ui_pos->y + i;
+		int x = buf->ui_pos->x;
+		int *px = &x;
+		int *py = &y;
+
+		/* update x and y in the last case */
+		if(i == 0){
+			px = &buf->ui_pos->x;
+			py = &buf->ui_pos->y;
+		}
+
+		buffer_inschar_at(buf, ch, px, py);
+	}
+}
+
+void buffer_inschar(buffer_t *buf, char ch)
+{
+	if(buf->ui_mode != UI_INSERT_COL || isnewline(ch)){
+		/* can't col-insert a newline, revert */
+		if(buf->ui_mode == UI_INSERT_COL)
+			buffer_setmode(buf, UI_INSERT);
+
+		buffer_inscolchar(buf, ch, 1);
+	}else{
+		buffer_inscolchar(buf, ch, buf->col_insert_height);
+	}
 }
 
 void buffer_delchar(buffer_t *buf, int *x, int *y)
@@ -213,7 +255,7 @@ void buffer_indent2(
 		}
 
 		if(dir > 0){
-			buffer_inschar(buf, &x, &y, '\t');
+			buffer_inschar_at(buf, '\t', &x, &y);
 		}else{
 			if(pos){
 				if(pos->len_line > 0 && pos->line[0] == '\t')

@@ -93,62 +93,6 @@ void ui_rstatus(const char *fmt, ...)
 	va_end(l);
 }
 
-static
-void ui_inschar_buf_xy(buffer_t *buf, char ch, int *x, int *y)
-{
-	switch(ch){
-		case CTRL_AND('?'):
-		case CTRL_AND('H'):
-		case 127:
-			if(buf->ui_pos->x > 0)
-				buffer_delchar(buf, x, y);
-			break;
-
-		default:
-			buffer_inschar(buf, x, y, ch);
-			break;
-	}
-}
-
-static
-void ui_inschar(char ch)
-{
-	buffer_t *buf = buffers_cur();
-
-	ui_inschar_buf_xy(buf, ch, &buf->ui_pos->x, &buf->ui_pos->y);
-
-	ui_cur_changed();
-	ui_redraw();
-}
-
-static
-void ui_inscolchar(char ch)
-{
-	buffer_t *buf = buffers_cur();
-
-	if(isnewline(ch)){
-		/* can't col-insert a newline, revert */
-		ui_set_bufmode(UI_INSERT);
-		ui_inschar(ch);
-		return;
-	}
-
-	for(unsigned i = 1; i <= buf->col_insert_height; i++){
-		int y = buf->ui_pos->y + i - 1;
-		int x = buf->ui_pos->x;
-		int *px = &x;
-
-		/* never care about y, and update x in the last case */
-		if(i == buf->col_insert_height)
-			px = &buf->ui_pos->x;
-
-		ui_inschar_buf_xy(buf, ch, px, &y);
-	}
-
-	ui_cur_changed();
-	ui_redraw();
-}
-
 int ui_main()
 {
 	extern nkey_t nkeys[];
@@ -204,16 +148,14 @@ int ui_main()
 			}
 		}
 
-		if(!found) switch(UI_MODE()){
-			case UI_INSERT:
-				ui_inschar(ch);
-				break;
-			case UI_INSERT_COL:
-				ui_inscolchar(ch);
-				break;
-			default:
-				if(ch != K_ESC)
-					ui_err("unknown key %c", ch);
+		if(!found){
+			if(UI_MODE() & UI_INSERT_ANY){
+				buffer_inschar(buf, ch);
+				ui_redraw();
+				ui_cur_changed();
+			}else if(ch != K_ESC){
+				ui_err("unknown key %c", ch);
+			}
 		}
 
 		switch(ui_run){

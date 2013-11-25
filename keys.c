@@ -653,8 +653,6 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	buffer_inschar(
 			buf,
-			&buf->ui_pos->x,
-			&buf->ui_pos->y,
 			line->line[buf->ui_pos->x]);
 
 	ui_redraw();
