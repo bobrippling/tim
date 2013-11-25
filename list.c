@@ -336,8 +336,10 @@ void list_dellines(list_t **pl, list_t *prev, unsigned n)
 
 void list_delregion(list_t **pl, const region_t *region)
 {
-	assert(region->begin.y <= region->end.y);
-	assert(region->begin.y < region->end.y || region->begin.x < region->end.x);
+	if(!(region->begin.y <= region->end.y))
+		return;
+	if(!(region->begin.y < region->end.y || region->begin.x < region->end.x))
+		return;
 
 	list_t **seeked = list_seekp(pl, region->begin.y, false);
 
