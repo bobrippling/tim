@@ -31,6 +31,13 @@ struct buffer
 	point_t ui_vpos;  /* when in visual mode - other point */
 	point_t *ui_pos; /* which one is in use? */
 
+	/* used for `gv' */
+	struct
+	{
+		point_t npos, vpos;
+		enum buf_mode mode;
+	} prev_visual;
+
 	point_t ui_start;     /* offset into buffer */
 	rect_t  screen_coord; /* buffer pos in screen */
 

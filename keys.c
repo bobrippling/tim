@@ -590,6 +590,18 @@ void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
+void k_go_visual(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	ui_set_bufmode(buf->prev_visual.mode);
+
+	*buf->ui_pos = buf->prev_visual.npos;
+	*buffer_uipos_alt(buf) = buf->prev_visual.vpos;
+
+	ui_cur_changed();
+}
+
 static void filter(
 		buffer_t *buf,
 		const region_t *region,
