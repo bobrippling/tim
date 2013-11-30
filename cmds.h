@@ -23,6 +23,8 @@ cmd_func c_y;
 cmd_func c_vs;
 cmd_func c_sp;
 
+cmd_func c_reg;
+
 cmd_func c_run;
 
 #endif

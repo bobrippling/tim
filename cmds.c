@@ -198,6 +198,19 @@ bool c_sp(int argc, char **argv, bool force)
 	return c_split(BUF_DOWN, argc, argv, force);
 }
 
+bool c_reg(int argc, char **argv, bool force)
+{
+	if(argc == 1){
+		/* show all */
+	}else{
+		for(int i = 0; i < argc; i++){
+			/* ... */
+		}
+	}
+
+	return CMD_SUCCESS;
+}
+
 bool c_run(int argc, char **argv, bool force)
 {
 	if(argc == 1){

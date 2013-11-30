@@ -183,6 +183,8 @@ const cmd_t cmds[] = {
 
 	{ "y", c_y },
 
+	{ "reg", c_reg   },
+
 	{ "!",   c_run   },
 
 	{ NULL }
