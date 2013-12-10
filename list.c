@@ -315,6 +315,7 @@ list_t *list_dellines(list_t **pl, list_t *prev, unsigned n)
 
 	if(!l)
 		return NULL;
+	l->prev = NULL;
 
 	if(n == 1){
 		list_t *adv = l->next;
