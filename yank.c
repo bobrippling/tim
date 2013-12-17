@@ -96,12 +96,9 @@ static void charwise_put(
 
 			head->len_line += append.len;
 		}
-
-		if(!prepend)
-			++*px;
-	}else{
-		*px += ynk->list->len_line - prepend;
 	}
+
+	--*px;
 }
 
 void yank_put_in_list(
