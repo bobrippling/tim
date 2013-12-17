@@ -86,19 +86,15 @@ static void charwise_put(
 				head = head->next;
 
 			/* head is now the last inserted line */
-			struct str save = { head->line, head->len_line };
-			head->line = append.str;
-			head->len_line = append.len;
-
 			unsigned len = head->len_line + append.len;
 			head->len_malloc = len + 1;
 			head->line = urealloc(head->line, head->len_malloc);
 
 			memcpy(head->line + head->len_line,
-					save.str,
-					save.len);
+					append.str,
+					append.len);
 
-			head->len_line += save.len;
+			head->len_line += append.len;
 		}
 
 		if(!prepend)
