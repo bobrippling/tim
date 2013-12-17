@@ -9,7 +9,7 @@ cmds.o: cmds.c cmds.h pos.h region.h list.h buffer.h yank.h ui.h \
  buffers.h external.h mem.h
 buffer.o: buffer.c pos.h region.h list.h buffer.h yank.h mem.h macros.h \
  ncurses.h str.h
-list.o: list.c pos.h region.h list.h mem.h str.h
+list.o: list.c pos.h region.h list.h mem.h str.h macros.h
 buffers.o: buffers.c pos.h region.h list.h buffer.h yank.h buffers.h \
  mem.h ui.h
 motion.o: motion.c pos.h region.h list.h buffer.h yank.h motion.h ui.h \

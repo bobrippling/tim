@@ -15,6 +15,7 @@
 #include "mem.h"
 #include "str.h"
 #include "mem.h"
+#include "macros.h"
 
 list_t *list_new(list_t *prev)
 {
@@ -383,11 +384,36 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 			list_t *l = *seeked;
 			size_t line_change = region->end.y - region->begin.y;
 
-			if(line_change > 1)
+			/* create `deleted' */
+			{
+				deleted = list_new(NULL);
+
+				if((unsigned)region->begin.x < l->len_line){
+					char *this_line = l->line;
+					size_t len = line_change == 0
+							? (unsigned)region->end.x - region->begin.x
+							: l->len_line - region->begin.x;
+
+					char *pulled_out = ustrdup_len(
+							this_line + region->begin.x,
+							len);
+
+					deleted->line = pulled_out;
+					deleted->len_line = deleted->len_malloc = len;
+				}
+				/* else we leave deleted empty */
+			}
+
+			if(line_change > 1){
 				deleted = list_append(
 						deleted,
-						list_dellines(&l->next, l, line_change));
+						list_dellines(
+							&l->next, l->prev,
+							line_change));
+			}
 
+
+			/* wipe lines */
 			if(line_change > 0){
 				/* join the lines */
 				list_t *next = l->next;
@@ -402,14 +428,22 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 				if(l->len_malloc < fulllen)
 					l->line = urealloc(l->line, l->len_malloc = fulllen);
 
+				{
+					list_t *pullout = list_new(NULL);
+					deleted = list_append(deleted, pullout);
+
+					size_t len = MIN((unsigned)region->end.x, next->len_line);
+					pullout->len_malloc = pullout->len_line = len;
+
+					pullout->line = ustrdup_len(next->line, len);
+				}
+
 				memcpy(l->line + region->begin.x,
 						next->line + region->end.x,
 						nextlen);
 				l->len_line = fulllen;
 
-				deleted = list_append(
-						deleted,
-						list_dellines(&l->next, l, 1));
+				list_free(list_dellines(&l->next, l->prev, 1));
 
 			}else{
 				if(!l->len_line || (unsigned)region->end.x > l->len_line)
@@ -429,8 +463,6 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 						l->len_line - region->end.x);
 
 				l->len_line -= diff;
-
-				deleted = list_append(deleted, part);
 			}
 			break;
 		}
