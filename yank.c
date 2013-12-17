@@ -42,6 +42,65 @@ const yank *yank_top()
 	return yank_buf;
 }
 
+static void charwise_put(
+		const yank *ynk, list_t *head,
+		int *px, int *py, bool prepend)
+{
+	/* first line */
+	const list_t *ins_iter = ynk->list;
+	for(unsigned i = 0; i < ins_iter->len_line; i++)
+		list_inschar(head,
+				&(int){ *px + i + !prepend },
+				&(int){ 0 },
+				ins_iter->line[i]);
+
+	/* if we have multiple lines... */
+	if((ins_iter = ins_iter->next)){
+		unsigned off = *px + ins_iter->len_line;
+		struct str
+		{
+			char *str;
+			size_t len;
+		} insert = { .str = NULL };
+
+		if(off < head->len_line){
+			insert.len = head->len_line - off;
+			insert.str = ustrdup_len(
+					head->line + off, insert.len);
+		}
+
+		/* cut this line, append ins_iter - 2 lines */
+		head->len_line = off;
+
+		list_append(head, list_copy_deep(ins_iter, /*prev:*/head));
+
+		if(insert.str){
+			for(; ins_iter; ins_iter = ins_iter->next)
+				head = head->next;
+
+			/* head is now the last inserted line */
+			struct str save = { head->line, head->len_line };
+			head->line = insert.str;
+			head->len_line = insert.len;
+
+			unsigned len = head->len_line + insert.len;
+			head->len_malloc = len + 1;
+			head->line = urealloc(head->line, head->len_malloc);
+
+			memcpy(head->line + head->len_line,
+					save.str,
+					save.len);
+
+			head->len_line += save.len;
+		}
+
+		if(!prepend)
+			++*px;
+	}else{
+		*px += ynk->list->len_line - prepend;
+	}
+}
+
 void yank_put_in_list(
 		const yank *ynk, list_t **phead,
 		const bool prepend,
@@ -49,64 +108,9 @@ void yank_put_in_list(
 {
 	switch(ynk->as){
 		case REGION_CHAR:
-		{
-			list_t *head = *phead;
-
-			/* first line */
-			const list_t *ins_iter = ynk->list;
-			for(unsigned i = 0; i < ins_iter->len_line; i++)
-				list_inschar(head,
-						&(int){ *px + i + !prepend },
-						&(int){ 0 },
-						ins_iter->line[i]);
-
-			/* if we have multiple lines... */
-			if((ins_iter = ins_iter->next)){
-				unsigned off = *px + ins_iter->len_line;
-				struct str
-				{
-					char *str;
-					size_t len;
-				} insert = { .str = NULL };
-
-				if(off < head->len_line){
-					insert.len = head->len_line - off;
-					insert.str = ustrdup_len(
-							head->line + off, insert.len);
-				}
-
-				/* cut this line, append ins_iter - 2 lines */
-				head->len_line = off;
-
-				list_append(head, list_copy_deep(ins_iter, /*prev:*/head));
-
-				if(insert.str){
-					for(; ins_iter; ins_iter = ins_iter->next)
-						head = head->next;
-
-					/* head is now the last inserted line */
-					struct str save = { head->line, head->len_line };
-					head->line = insert.str;
-					head->len_line = insert.len;
-
-					unsigned len = head->len_line + insert.len;
-					head->len_malloc = len + 1;
-					head->line = urealloc(head->line, head->len_malloc);
-
-					memcpy(head->line + head->len_line,
-							save.str,
-							save.len);
-
-					head->len_line += save.len;
-				}
-
-				if(!prepend)
-					++*px;
-			}else{
-				*px += ynk->list->len_line - prepend;
-			}
+			charwise_put(ynk, *phead, px, py, prepend);
 			break;
-		}
+
 		case REGION_LINE:
 		{
 			list_t *copy = list_copy_deep(ynk->list, NULL);
