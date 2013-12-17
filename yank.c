@@ -57,6 +57,8 @@ static void charwise_put(
 				&(int){ 0 },
 				ins_iter->line[i]);
 
+	int final_x = *px - 1;
+
 	/* if we have multiple lines... */
 	if((ins_iter = ins_iter->next)){
 		struct str
@@ -98,7 +100,7 @@ static void charwise_put(
 		}
 	}
 
-	--*px;
+	*px = final_x;
 }
 
 void yank_put_in_list(
