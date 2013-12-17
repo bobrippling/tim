@@ -447,7 +447,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 
 			}else{
 				if(!l->len_line || (unsigned)region->end.x > l->len_line)
-					return NULL;
+					return deleted;
 
 				size_t diff = region->end.x - region->begin.x;
 
