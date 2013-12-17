@@ -521,6 +521,10 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 					new->line = removed.str;
 					new->len_malloc = new->len_line = removed.len;
 					deleted = list_append(deleted, list_tail(deleted), new);
+				}else{
+					deleted = list_append(
+							deleted, list_tail(deleted),
+							list_new(NULL));
 				}
 			}
 			break;
