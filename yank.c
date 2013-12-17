@@ -48,42 +48,49 @@ static void charwise_put(
 {
 	/* first line */
 	const list_t *ins_iter = ynk->list;
+
+	*px += !prepend;
+
 	for(unsigned i = 0; i < ins_iter->len_line; i++)
 		list_inschar(head,
-				&(int){ *px + i + !prepend },
+				px,
 				&(int){ 0 },
 				ins_iter->line[i]);
 
 	/* if we have multiple lines... */
 	if((ins_iter = ins_iter->next)){
-		unsigned off = *px + ins_iter->len_line;
 		struct str
 		{
 			char *str;
 			size_t len;
-		} insert = { .str = NULL };
+		};
 
+		/* need to pull out the rest of the line */
+		struct str append = { .str = NULL };
+
+		unsigned off = *px;
 		if(off < head->len_line){
-			insert.len = head->len_line - off;
-			insert.str = ustrdup_len(
-					head->line + off, insert.len);
-		}
+			unsigned len = head->len_line - *px;
 
-		head->len_line = off;
+			append.str = ustrdup_len(head->line + *px, len);
+			append.len = len;
+
+			head->len_line = *px;
+		}
 
 		/* append ins_iter - 2 lines */
 		list_append(head, head, list_copy_deep(ins_iter, /*prev:*/head));
 
-		if(insert.str){
+		if(append.str){
 			for(; ins_iter; ins_iter = ins_iter->next)
 				head = head->next;
 
 			/* head is now the last inserted line */
 			struct str save = { head->line, head->len_line };
-			head->line = insert.str;
-			head->len_line = insert.len;
+			head->line = append.str;
+			head->len_line = append.len;
 
-			unsigned len = head->len_line + insert.len;
+			unsigned len = head->len_line + append.len;
 			head->len_malloc = len + 1;
 			head->line = urealloc(head->line, head->len_malloc);
 
