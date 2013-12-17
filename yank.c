@@ -69,10 +69,10 @@ static void charwise_put(
 					head->line + off, insert.len);
 		}
 
-		/* cut this line, append ins_iter - 2 lines */
 		head->len_line = off;
 
-		list_append(head, list_copy_deep(ins_iter, /*prev:*/head));
+		/* append ins_iter - 2 lines */
+		list_append(head, head, list_copy_deep(ins_iter, /*prev:*/head));
 
 		if(insert.str){
 			for(; ins_iter; ins_iter = ins_iter->next)

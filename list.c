@@ -344,19 +344,24 @@ list_t *list_dellines(list_t **pl, list_t *prev, unsigned n)
 
 list_t *list_tail(list_t *l)
 {
-	for(; l->next; l = l->next);
+	for(; l && l->next; l = l->next);
 	return l;
 }
 
-list_t *list_append(list_t *accum, list_t *new)
+list_t *list_append(list_t *accum, list_t *at, list_t *new)
 {
 	if(!accum)
 		return new;
 
-	list_t *last = list_tail(accum);
+	list_t *after = at->next;
+	at->next = new;
+	new->prev = at;
 
-	last->next = new;
-	new->prev = last;
+	if(after){
+		list_t *newtail = list_tail(new);
+		newtail->next = after;
+		after->prev = newtail;
+	}
 
 	return accum;
 }
@@ -407,6 +412,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 			if(line_change > 1){
 				deleted = list_append(
 						deleted,
+						list_tail(deleted),
 						list_dellines(
 							&l->next, l->prev,
 							line_change));
@@ -430,7 +436,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 
 				{
 					list_t *pullout = list_new(NULL);
-					deleted = list_append(deleted, pullout);
+					deleted = list_append(deleted, list_tail(deleted), pullout);
 
 					size_t len = MIN((unsigned)region->end.x, next->len_line);
 					pullout->len_malloc = pullout->len_line = len;
@@ -514,7 +520,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 					list_t *new = list_new(NULL);
 					new->line = removed.str;
 					new->len_malloc = new->len_line = removed.len;
-					deleted = list_append(deleted, new);
+					deleted = list_append(deleted, list_tail(deleted), new);
 				}
 			}
 			break;
