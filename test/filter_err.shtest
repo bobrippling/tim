@@ -6,4 +6,4 @@ $tim $tmp <<!
 g!$:wq
 !
 
-grep 'non-existant-command: not found' $tmp
+grep 'non-existant-command:.*not found' $tmp
