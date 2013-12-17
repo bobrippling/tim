@@ -12,6 +12,7 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "yank.h"
 
 #include "ui.h"
 #include "motion.h"
@@ -573,6 +574,11 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 	}
 }
 
+void k_yank(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	around_motion_bufaction(repeat, from_ch, &buffer_yankregion, NULL);
+}
+
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion_bufaction(repeat, from_ch, &buffer_joinregion, NULL);
@@ -599,6 +605,18 @@ void k_go_visual(const keyarg_u *a, unsigned repeat, const int from_ch)
 	*buf->ui_pos = buf->prev_visual.npos;
 	*buffer_uipos_alt(buf) = buf->prev_visual.vpos;
 
+	ui_cur_changed();
+}
+
+void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	const yank *yank = yank_top();
+
+	repeat = DEFAULT_REPEAT(repeat);
+	while(repeat --> 0)
+		buffer_insyank(buffers_cur(), yank, a->b);
+
+	ui_redraw();
 	ui_cur_changed();
 }
 

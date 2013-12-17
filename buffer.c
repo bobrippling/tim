@@ -11,6 +11,7 @@
 #include "list.h"
 #include "buffer.h"
 #include "mem.h"
+#include "yank.h"
 #include "macros.h"
 #include "ncurses.h"
 #include "str.h"
@@ -174,7 +175,7 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 			break;
 
 		default:
-			list_inschar(&buf->head, x, y, ch);
+			list_inschar(buf->head, x, y, ch);
 			break;
 	}
 	buf->modified = true;
@@ -220,12 +221,40 @@ void buffer_delchar(buffer_t *buf, int *x, int *y)
 static
 void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
-	list_delregion(&buf->head, region);
+	list_t *del = list_delregion(&buf->head, region);
+
+	yank_push(yank_new(del, region->type));
+
 	buf->modified = true;
 }
 struct buffer_action buffer_delregion = {
 	.fn = buffer_delregion_f
 };
+
+static
+void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
+{
+	list_t *yanked = list_delregion(&buf->head, region);
+
+	yank *yank = yank_new(yanked, region->type);
+	yank_push(yank);
+
+	buffer_insyank(buf, yank, /*prepend:*/true);
+
+	/* restore ui pos (set in buffer_insyank) */
+	*out = region->begin;
+}
+struct buffer_action buffer_yankregion = {
+	.fn = buffer_yankregion_f
+};
+
+void buffer_insyank(buffer_t *buf, const yank *y, bool prepend)
+{
+	yank_put_in_list(y,
+			list_seekp(&buf->head, buf->ui_pos->y, true),
+			prepend,
+			&buf->ui_pos->y, &buf->ui_pos->x);
+}
 
 static
 void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)

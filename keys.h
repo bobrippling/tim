@@ -8,6 +8,7 @@ typedef void key_func(const keyarg_u *, unsigned repeat, const int ch);
 union keyarg_u
 {
 	int i;
+	bool b;
 	struct
 	{
 		motion m;
@@ -54,11 +55,12 @@ key_func k_scroll;
 key_func k_winsel;
 key_func k_show;
 key_func k_open;
-key_func k_del, k_change;
+key_func k_del, k_change, k_yank;
 key_func k_motion;
 key_func k_replace;
 key_func k_join;
 key_func k_indent;
+key_func k_put;
 key_func k_case;
 key_func k_filter;
 key_func k_ins_colcopy;

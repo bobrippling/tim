@@ -77,6 +77,11 @@ const nkey_t nkeys[] = {
 	{ "d",            k_del,        KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 	{ "c",            k_change,     KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 
+	{ "y",            k_yank, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY },
+	{ "p",            k_put, { false }, UI_NORMAL },
+	{ "P",            k_put, { true }, UI_NORMAL },
+	/* TODO: p-in-visual */
+
 	{ "J",            k_join,       KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 
 	{ ">",            k_indent,     { +1 },  UI_NORMAL | UI_VISUAL_ANY },
@@ -142,6 +147,9 @@ const keymap_t maps[] = {
 	{ IO_MAPI, CTRL_AND('U'), (char[]){ K_ESC, 'l', 'd', '0', 'i', 0 } },
 	{ IO_MAPI, CTRL_AND('K'), (char[]){ K_ESC, 'l', 'd', '$', 'i', 0 } },
 	{ IO_MAPI, CTRL_AND('W'), (char[]){ K_ESC, 'l', 'd', 'b', 'i', 0 } },
+
+	{ IO_MAP, 'Y', "y$" },
+	{ IO_MAPV, 'Y', "y" },
 
 	{ 0 }
 };
