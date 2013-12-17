@@ -239,7 +239,7 @@ void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
 	yank *yank = yank_new(yanked, region->type);
 	yank_push(yank);
 
-	buffer_insyank(buf, yank, /*prepend:*/true);
+	buffer_insyank(buf, yank, /*prepend:*/true, /*modify:*/false);
 
 	/* restore ui pos (set in buffer_insyank) */
 	*out = region->begin;
@@ -248,12 +248,15 @@ struct buffer_action buffer_yankregion = {
 	.fn = buffer_yankregion_f
 };
 
-void buffer_insyank(buffer_t *buf, const yank *y, bool prepend)
+void buffer_insyank(buffer_t *buf, const yank *y, bool prepend, bool modify)
 {
 	yank_put_in_list(y,
 			list_seekp(&buf->head, buf->ui_pos->y, true),
 			prepend,
 			&buf->ui_pos->y, &buf->ui_pos->x);
+
+	if(modify)
+		buf->modified = true;
 }
 
 static

@@ -87,7 +87,7 @@ extern struct buffer_action
 	buffer_delregion, buffer_joinregion, buffer_yankregion,
 	buffer_indent, buffer_unindent;
 
-void buffer_insyank(buffer_t *, const yank *, bool prepend);
+void buffer_insyank(buffer_t *, const yank *, bool prepend, bool modify);
 
 int buffer_filter(
 		buffer_t *,

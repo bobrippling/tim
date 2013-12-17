@@ -614,7 +614,7 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	repeat = DEFAULT_REPEAT(repeat);
 	while(repeat --> 0)
-		buffer_insyank(buffers_cur(), yank, a->b);
+		buffer_insyank(buffers_cur(), yank, /*prepend:*/a->b, /*modify:*/true);
 
 	ui_redraw();
 	ui_cur_changed();
