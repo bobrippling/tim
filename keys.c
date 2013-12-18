@@ -386,6 +386,11 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
+static void replace_iter(char *ch, void *ctx)
+{
+	*ch = *(int *)ctx;
+}
+
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	if(a->i == 1){
@@ -401,10 +406,26 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ch == '\r')
 			ch = '\n';
 
-		buffer_replace_chars(
-				buffers_cur(),
-				ch,
-				DEFAULT_REPEAT(repeat));
+		buffer_t *buf = buffers_cur();
+
+		unsigned mrepeat;
+		const motion *m = motion_read_or_visual(&mrepeat, false);
+
+		if(!m)
+			return;
+
+		region_t r;
+		if(!motion_to_region(m,
+					DEFAULT_REPEAT(mrepeat) * DEFAULT_REPEAT(repeat),
+					false, buf, &r))
+		{
+			return;
+		}
+
+		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
+
+		buf->modified = true;
+		buf->ui_mode = UI_NORMAL;
 	}
 	ui_redraw();
 	ui_cur_changed();

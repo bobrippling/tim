@@ -94,8 +94,6 @@ int buffer_filter(
 		const region_t *,
 		const char *cmd);
 
-void buffer_replace_chars(buffer_t *, int ch, unsigned n);
-
 void buffer_insline(buffer_t *, int dir);
 
 list_t *buffer_current_line(const buffer_t *);

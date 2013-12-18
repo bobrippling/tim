@@ -31,17 +31,17 @@ list_t *list_delregion(list_t **pl, const region_t *);
 /* *pl isn't changed - ABI compat with list_delregion */
 void list_joinregion(list_t **pl, const region_t *);
 
-void list_replace_at(list_t *, int *px, int *py, char *with);
-
 int list_filter(
 		list_t **pl, const region_t *,
 		const char *cmd);
 
 void list_iter_region(
 		list_t *, const region_t *,
+		bool evalnl,
 		void fn(char *, void *), void *ctx);
 
 void list_insline(list_t **, int *x, int *y, int dir);
+int list_evalnewlines1(list_t *l);
 
 int list_count(const list_t *);
 list_t *list_tail(list_t *);

@@ -352,21 +352,6 @@ struct buffer_action buffer_unindent = {
 	.always_linewise = true
 };
 
-void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
-{
-	char *with = umalloc(n + 1);
-
-	memset(with, ch, n);
-	with[n] = '\0';
-
-	list_replace_at(buf->head,
-			&buf->ui_pos->x, &buf->ui_pos->y,
-			with);
-
-	free(with);
-	buf->modified = true;
-}
-
 static int ctoggle(int c)
 {
 	return islower(c) ? toupper(c) : tolower(c);
@@ -391,7 +376,7 @@ void buffer_caseregion(
 	}
 	assert(f);
 
-	list_iter_region(buf->head, r, buffer_case_cb, &f);
+	list_iter_region(buf->head, r, false, buffer_case_cb, &f);
 	buf->modified = true;
 }
 
