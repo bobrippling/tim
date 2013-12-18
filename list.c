@@ -642,7 +642,7 @@ void list_replace_at(list_t *l, int *px, int *py, char *with)
 	}
 }
 
-int list_count(list_t *l)
+int list_count(const list_t *l)
 {
 	int i;
 	for(i = 0; l->next; l = l->next, i++);

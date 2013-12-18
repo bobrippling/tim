@@ -27,6 +27,8 @@ void list_inschar(list_t *, int *x, int *y, char ch);
 void list_delchar(list_t *, int *x, int *y);
 
 list_t *list_delregion(list_t **pl, const region_t *);
+
+/* *pl isn't changed - ABI compat with list_delregion */
 void list_joinregion(list_t **pl, const region_t *);
 
 void list_replace_at(list_t *, int *px, int *py, char *with);
@@ -41,7 +43,7 @@ void list_iter_region(
 
 void list_insline(list_t **, int *x, int *y, int dir);
 
-int list_count(list_t *);
+int list_count(const list_t *);
 list_t *list_tail(list_t *);
 
 #define isnewline(ch) ((ch) == '\n' || (ch) == '\r')
