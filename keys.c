@@ -428,6 +428,46 @@ struct around_motion
 	};
 };
 
+static bool motion_to_region(
+		const motion *m, unsigned repeat, bool always_linewise,
+		buffer_t *buf, region_t *out)
+{
+	region_t r = {
+		.begin = *buf->ui_pos
+	};
+	if(!motion_apply_buf_dry(m, repeat, buf, &r.end))
+		return false;
+
+	/* reverse if negative range */
+	point_sort_yx(&r.begin, &r.end);
+
+	if(m->how & M_COLUMN){
+		r.type = REGION_COL;
+
+		/* needs to be done before incrementing r.end.x/y below */
+		point_sort_full(&r.begin, &r.end);
+
+	}else if(m->how & M_LINEWISE){
+		r.type = REGION_LINE;
+
+	}else{
+		r.type = REGION_CHAR;
+	}
+
+	if(buf->ui_mode & UI_VISUAL_ANY){
+		/* only increment y in the line case */
+		r.end.x++;
+		if(m->how & M_LINEWISE || always_linewise)
+			r.end.y++;
+
+	}else if(!(m->how & M_EXCLUSIVE)){
+		m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
+	}
+
+	*out = r;
+	return true;
+}
+
 static bool around_motion(
 		unsigned repeat, const int from_ch,
 		bool always_linewise,
@@ -463,37 +503,9 @@ static bool around_motion(
 
 		buffer_t *b = buffers_cur();
 
-		region_t r = {
-			.begin = *b->ui_pos
-		};
-		if(!motion_apply_buf_dry(m, repeat, b, &r.end))
+		region_t r;
+		if(!motion_to_region(m, repeat, always_linewise, b, &r))
 			return false;
-
-		/* reverse if negative range */
-		point_sort_yx(&r.begin, &r.end);
-
-		if(m->how & M_COLUMN){
-			r.type = REGION_COL;
-
-			/* needs to be done before incrementing r.end.x/y below */
-			point_sort_full(&r.begin, &r.end);
-
-		}else if(m->how & M_LINEWISE){
-			r.type = REGION_LINE;
-
-		}else{
-			r.type = REGION_CHAR;
-		}
-
-		if(b->ui_mode & UI_VISUAL_ANY){
-			/* only increment y in the line case */
-			r.end.x++;
-			if(m->how & M_LINEWISE || always_linewise)
-				r.end.y++;
-
-		}else if(!(m->how & M_EXCLUSIVE)){
-			m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
-		}
 
 		if(used_region)
 			*used_region = r;
