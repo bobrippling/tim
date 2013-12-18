@@ -15,6 +15,7 @@
 #include "macros.h"
 #include "ncurses.h"
 #include "str.h"
+#include "retain.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
@@ -224,7 +225,7 @@ void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 	list_t *del = list_delregion(&buf->head, region);
 
 	if(del){
-		yank_push(yank_new(del, region->type));
+		release(yank_push(yank_new(del, region->type)), yank_free);
 
 		buf->modified = true;
 	}
@@ -243,6 +244,7 @@ void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
 		yank_push(yank);
 
 		buffer_insyank(buf, yank, /*prepend:*/true, /*modify:*/false);
+		release(yank, yank_free);
 	}
 
 	/* restore ui pos (set in buffer_insyank) */

@@ -8,9 +8,11 @@
 #include "list.h"
 #include "yank.h"
 #include "mem.h"
+#include "retain.h"
 
 struct yank
 {
+	struct retain;
 	list_t *list;
 	enum region_type as;
 };
@@ -19,24 +21,25 @@ static yank *yank_buf;
 
 yank *yank_new(list_t *l, enum region_type as)
 {
-	yank *y = umalloc(sizeof *y);
+	yank *y = retain(umalloc(sizeof *y));
 	assert(l && !l->prev);
 	y->list = l;
 	y->as = as;
 	return y;
 }
 
-static void yank_free(yank *y)
+void yank_free(const yank *y)
 {
 	list_free(y->list);
-	free(y);
+	free((yank *)y);
 }
 
-void yank_push(yank *y)
+yank *yank_push(yank *y)
 {
 	if(yank_buf)
-		yank_free(yank_buf);
-	yank_buf = y;
+		release(yank_buf, yank_free);
+	yank_buf = retain(y);
+	return yank_buf;
 }
 
 const yank *yank_top()

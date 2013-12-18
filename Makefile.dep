@@ -6,11 +6,11 @@ ui.o: ui.c pos.h ncurses.h region.h list.h buffer.h bufmode.h yank.h ui.h \
 mem.o: mem.c mem.h
 keys.o: keys.c pos.h region.h list.h buffer.h bufmode.h yank.h ui.h \
  motion.h io.h keys.h ncurses.h mem.h cmds.h prompt.h map.h buffers.h \
- config.h
+ retain.h config.h
 cmds.o: cmds.c cmds.h pos.h region.h list.h buffer.h bufmode.h yank.h \
  ui.h buffers.h external.h mem.h
 buffer.o: buffer.c pos.h region.h list.h buffer.h bufmode.h yank.h mem.h \
- macros.h ncurses.h str.h
+ macros.h ncurses.h str.h retain.h
 list.o: list.c pos.h region.h list.h mem.h str.h macros.h
 buffers.o: buffers.c pos.h region.h list.h buffer.h bufmode.h yank.h \
  buffers.h mem.h ui.h
@@ -20,6 +20,7 @@ external.o: external.c mem.h ui.h external.h
 str.o: str.c str.h
 prompt.o: prompt.c prompt.h ncurses.h io.h bufmode.h mem.h
 io.o: io.c ncurses.h mem.h io.h bufmode.h map.h
-yank.o: yank.c pos.h region.h list.h yank.h mem.h
+yank.o: yank.c pos.h region.h list.h yank.h mem.h retain.h
 pos.o: pos.c pos.h
 region.o: region.c pos.h region.h
+retain.o: retain.c retain.h

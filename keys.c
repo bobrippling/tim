@@ -26,6 +26,8 @@
 
 #include "buffers.h"
 
+#include "retain.h"
+
 #include "config.h"
 
 int keys_filter(

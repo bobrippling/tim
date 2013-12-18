@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -pedantic -g -std=c11 -fms-extensions -fno-common \
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o buffers.o motion.o external.o str.o prompt.o io.o \
-	yank.o pos.o region.o
+	yank.o pos.o region.o retain.o
 
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
