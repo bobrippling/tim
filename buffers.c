@@ -52,7 +52,6 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 		buffer_t *prev_buf = buf_sel;
 		for(i = 1; i < argc; i++){
 			buffer_t *b;
-			int err;
 
 			buffer_new_fname(&b, argv[i], &err);
 			/* FIXME: ignore errors? */

@@ -614,10 +614,10 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 	if(buf->ui_mode & UI_VISUAL_ANY){
 		/* delete what we have, then paste */
 		region_t r;
-		unsigned repeat;
-		const motion *m = motion_read_or_visual(&repeat, false);
+		unsigned mrepeat;
+		const motion *m = motion_read_or_visual(&mrepeat, false);
 
-		if(!motion_to_region(m, repeat, false, buf, &r))
+		if(!motion_to_region(m, mrepeat, false, buf, &r))
 			return;
 
 		/* necessary so we insert at the right place later on */
