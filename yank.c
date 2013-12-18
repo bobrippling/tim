@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "pos.h"
 #include "region.h"
@@ -19,6 +20,7 @@ static yank *yank_buf;
 yank *yank_new(list_t *l, enum region_type as)
 {
 	yank *y = umalloc(sizeof *y);
+	assert(l && !l->prev);
 	y->list = l;
 	y->as = as;
 	return y;

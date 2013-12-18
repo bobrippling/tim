@@ -341,6 +341,8 @@ list_t *list_dellines(list_t **pl, list_t *prev, unsigned n)
 
 	if(*pl)
 		(*pl)->prev = prev;
+	if(l)
+		l->prev = NULL;
 
 	return l;
 }

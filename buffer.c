@@ -223,9 +223,11 @@ void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	list_t *del = list_delregion(&buf->head, region);
 
-	yank_push(yank_new(del, region->type));
+	if(del){
+		yank_push(yank_new(del, region->type));
 
-	buf->modified = true;
+		buf->modified = true;
+	}
 }
 struct buffer_action buffer_delregion = {
 	.fn = buffer_delregion_f
@@ -236,10 +238,12 @@ void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	list_t *yanked = list_delregion(&buf->head, region);
 
-	yank *yank = yank_new(yanked, region->type);
-	yank_push(yank);
+	if(yanked){
+		yank *yank = yank_new(yanked, region->type);
+		yank_push(yank);
 
-	buffer_insyank(buf, yank, /*prepend:*/true, /*modify:*/false);
+		buffer_insyank(buf, yank, /*prepend:*/true, /*modify:*/false);
+	}
 
 	/* restore ui pos (set in buffer_insyank) */
 	*out = region->begin;
