@@ -4,6 +4,7 @@
 #define KEY_ARG_NONE        { 0 }
 #define MOTION_ARG_NONE     { 0 }
 
+// TODO: :he jump-motions
 const motionkey_t motion_keys[] = {
 	{ "w",  { m_word, { .word_type = WORD_NONE                }, M_EXCLUSIVE } },
 	{ "b",  { m_word, { .word_type = WORD_BACKWARD            }, M_EXCLUSIVE } },
