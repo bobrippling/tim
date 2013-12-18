@@ -624,14 +624,40 @@ void k_go_visual(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	const yank *yank = yank_top();
+	bool prepend = a->b;
+	const yank *yank = retain(yank_top());
+	if(!yank)
+		return;
+
+	buffer_t *buf = buffers_cur();
+	if(buf->ui_mode & UI_VISUAL_ANY){
+		/* delete what we have, then paste */
+		region_t r;
+		unsigned repeat;
+		const motion *m = motion_read_or_visual(&repeat, false);
+
+		if(!motion_to_region(m, repeat, false, buf, &r))
+			return;
+
+		/* necessary so we insert at the right place later on */
+		point_sort_full(&buf->ui_npos, &buf->ui_vpos);
+
+		buffer_delregion.fn(buf, &r, &(point_t){0});
+
+		/* unconditional for visual-put */
+		prepend = true;
+	}
 
 	repeat = DEFAULT_REPEAT(repeat);
 	while(repeat --> 0)
-		buffer_insyank(buffers_cur(), yank, /*prepend:*/a->b, /*modify:*/true);
+		buffer_insyank(buffers_cur(), yank, prepend, /*modify:*/true);
+
+	buf->ui_mode = UI_NORMAL; /* remove visual */
 
 	ui_redraw();
 	ui_cur_changed();
+
+	release(yank, yank_free);
 }
 
 static void filter(

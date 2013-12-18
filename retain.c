@@ -2,7 +2,8 @@
 
 void *retain_nochk(struct retain *r)
 {
-	r->rcount++;
+	if(r)
+		r->rcount++;
 	return r;
 }
 
