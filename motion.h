@@ -65,4 +65,8 @@ int motion_apply_buf_dry(
 		const motion *, unsigned rep,
 		buffer_t *, point_t *to);
 
+bool motion_to_region(
+		const motion *m, unsigned repeat, bool always_linewise,
+		buffer_t *buf, region_t *out);
+
 #endif
