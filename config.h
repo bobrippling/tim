@@ -86,6 +86,7 @@ const nkey_t nkeys[] = {
 	{ ">",            k_indent,     { +1 },  UI_NORMAL | UI_VISUAL_ANY },
 	{ "<",            k_indent,     { -1 },  UI_NORMAL | UI_VISUAL_ANY },
 
+	/* TODO: visual replace */
 	{ "r",            k_replace,    { 0 },         UI_NORMAL | UI_VISUAL_ANY },
 	{ "R", /* TODO */ k_replace,    { 1 },         UI_NORMAL },
 

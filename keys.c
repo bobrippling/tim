@@ -407,21 +407,17 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ch == '\r')
 			ch = '\n';
 
+		motion m = {
+			.func = m_move,
+			.arg.pos.x = DEFAULT_REPEAT(repeat)-1,
+			.how = M_NONE
+		};
+
 		buffer_t *buf = buffers_cur();
 
-		unsigned mrepeat;
-		const motion *m = motion_read_or_visual(&mrepeat, false);
-
-		if(!m)
-			return;
-
 		region_t r;
-		if(!motion_to_region(m,
-					DEFAULT_REPEAT(mrepeat) * DEFAULT_REPEAT(repeat),
-					false, buf, &r))
-		{
+		if(!motion_to_region(&m, 1, false, buf, &r))
 			return;
-		}
 
 		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
 
