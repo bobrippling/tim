@@ -181,7 +181,8 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv, bool *force)
 		argv = urealloc(argv, (argc + 2) * sizeof *argv);
 		argv[argc++] = parse_arg(p);
 	}
-	argv[argc] = NULL;
+	if(argv)
+		argv[argc] = NULL;
 
 	/* special case: check for '!' in the first cmd */
 	if(!had_punct && argc >= 1 && (p = strchr(argv[0], '!'))){
@@ -254,10 +255,10 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	bool force = false;
 	parse_cmd(cmd, &argc, &argv, &force);
 
-	filter_cmd(&argc, &argv);
-
 	if(!argc)
 		goto cancel;
+
+	filter_cmd(&argc, &argv);
 
 	int i;
 	for(i = 0; cmds[i].cmd; i++)
