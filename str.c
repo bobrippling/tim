@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "str.h"
+#include "mem.h"
 
 char *strchr_rev(const char *s, int ch, const char *start)
 {
@@ -117,4 +118,19 @@ void str_rtrim(char *s, size_t *pl)
 
 	if(isspace(s[i + 1]))
 		s[i + 1] = '\0';
+}
+
+char *word_before(char *line, int x)
+{
+	int start;
+	for(start = x - 1; start > 0;)
+		if(isalnum(line[start - 1]))
+			start--;
+		else
+			break;
+
+	if(start < 0)
+		start = 0;
+
+	return ustrdup_len(line + start, x - start);
 }

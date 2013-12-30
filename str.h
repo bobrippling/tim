@@ -22,4 +22,6 @@ char *tim_strstr(
 		size_t len,
 		const char *restrict needle);
 
+char *word_before(char *line, int x);
+
 #endif

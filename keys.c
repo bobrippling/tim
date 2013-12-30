@@ -23,6 +23,8 @@
 #include "cmds.h"
 #include "prompt.h"
 #include "map.h"
+#include "complete.h"
+#include "hash.h"
 
 #include "buffers.h"
 
@@ -722,4 +724,32 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
+	buffer_t *b = buffers_cur();
+	region_t r = {
+		.type = REGION_LINE,
+		.end.y = buffer_nlines(b)
+	};
+
+	list_t *l = buffer_current_line(b);
+
+	if(!l)
+		return;
+
+	struct complete_ctx ctx;
+	if(!complete_init(&ctx, l->line, l->len_line, b->ui_pos->x)){
+		ui_err("can't complete");
+		return;
+	}
+
+	list_iter_region(b->head, &r, /*evalnl:*/false,
+			complete_gather, &ctx);
+
+	unsigned i = 0;
+	char *p;
+
+	for(; (p = hash_ent(ctx.ents, i)); i++){
+		/* TODO */
+	}
+
+	complete_teardown(&ctx);
 }

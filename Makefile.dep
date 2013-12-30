@@ -5,8 +5,8 @@ ui.o: ui.c pos.h ncurses.h region.h list.h buffer.h bufmode.h yank.h ui.h \
  motion.h io.h keys.h buffers.h
 mem.o: mem.c mem.h
 keys.o: keys.c pos.h region.h list.h buffer.h bufmode.h yank.h ui.h \
- motion.h io.h keys.h ncurses.h mem.h cmds.h prompt.h map.h buffers.h \
- retain.h config.h
+ motion.h io.h keys.h ncurses.h mem.h cmds.h prompt.h map.h complete.h \
+ hash.h buffers.h retain.h config.h
 cmds.o: cmds.c cmds.h pos.h region.h list.h buffer.h bufmode.h yank.h \
  ui.h buffers.h external.h mem.h
 buffer.o: buffer.c pos.h region.h list.h buffer.h bufmode.h yank.h mem.h \
@@ -17,10 +17,12 @@ buffers.o: buffers.c pos.h region.h list.h buffer.h bufmode.h yank.h \
 motion.o: motion.c pos.h region.h list.h buffer.h bufmode.h yank.h \
  motion.h ui.h io.h str.h prompt.h
 external.o: external.c mem.h ui.h external.h
-str.o: str.c str.h
+str.o: str.c str.h mem.h
 prompt.o: prompt.c prompt.h ncurses.h io.h bufmode.h mem.h
 io.o: io.c ncurses.h mem.h io.h bufmode.h map.h
 yank.o: yank.c pos.h region.h list.h yank.h mem.h retain.h
 pos.o: pos.c pos.h
 region.o: region.c pos.h region.h
 retain.o: retain.c retain.h
+complete.o: complete.c complete.h hash.h str.h mem.h
+hash.o: hash.c mem.h hash.h
