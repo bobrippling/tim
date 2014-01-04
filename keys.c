@@ -407,9 +407,11 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ch == '\r')
 			ch = '\n';
 
+		repeat = DEFAULT_REPEAT(repeat);
+
 		motion m = {
 			.func = m_move,
-			.arg.pos.x = DEFAULT_REPEAT(repeat)-1,
+			.arg.pos.x = repeat - 1,
 			.how = M_NONE
 		};
 
@@ -420,6 +422,11 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 			return;
 
 		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
+
+		if(ch == '\n'){
+			buf->ui_pos->x = 0;
+			buf->ui_pos->y += repeat;
+		}
 
 		buf->modified = true;
 		buf->ui_mode = UI_NORMAL;
