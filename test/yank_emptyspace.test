@@ -1,0 +1,9 @@
+l2j2ly$3lp
+__IN__
+#include "a"
+#include "b"
+#include "c"
+__OUT__
+#include "a"   inc
+#include "b"   inc
+#include "c"   inc

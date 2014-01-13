@@ -71,27 +71,36 @@ const nkey_t nkeys[] = {
 
 	{ "o",            k_open,       {  1 },                   UI_NORMAL },
 	{ "O",            k_open,       { -1 },                   UI_NORMAL },
-	{ "o",            k_vtoggle,    KEY_ARG_NONE, UI_VISUAL_ANY },
+	{ "o",            k_vtoggle,    { 0 }, UI_VISUAL_ANY },
+	{ "O",            k_vtoggle,    { 1 }, UI_VISUAL_ANY },
 
 	{ "d",            k_del,        KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 	{ "c",            k_change,     KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
+
+	{ "y",            k_yank, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY },
+	{ "p",            k_put, { false }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "P",            k_put, { true }, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ "J",            k_join,       KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
 
 	{ ">",            k_indent,     { +1 },  UI_NORMAL | UI_VISUAL_ANY },
 	{ "<",            k_indent,     { -1 },  UI_NORMAL | UI_VISUAL_ANY },
 
+	/* TODO: visual replace */
 	{ "r",            k_replace,    { 0 },         UI_NORMAL | UI_VISUAL_ANY },
-	{ "R", /* TODO */ k_replace,    { 1 },         UI_NORMAL | UI_VISUAL_ANY },
+	{ "R", /* TODO */ k_replace,    { 1 },         UI_NORMAL },
 
 	{ ":",            k_cmd,        KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
 
-	{ "!",            k_filter,     { .s = NULL }, UI_NORMAL | UI_VISUAL_ANY },
-	{ "q",            k_filter,     { .s = "fmt" }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "!",            k_filter,     { .filter = { FILTER_CMD, NULL }}, UI_NORMAL | UI_VISUAL_ANY },
+	{ "g!",           k_filter,     { .filter.type = FILTER_SELF }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "gq",           k_filter,     { .filter = { FILTER_CMD, "fmt" }}, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ "~",            k_case, { CASE_TOGGLE }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "gU",           k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL | UI_VISUAL_ANY },
+
+	{ "gv", k_go_visual, KEY_ARG_NONE, UI_NORMAL },
 
 	{ K_STR(CTRL_AND('l')),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY },
 
@@ -105,27 +114,51 @@ const nkey_t nkeys[] = {
 	{ K_STR(CTRL_AND('w')),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('g')),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
+
+	{ K_STR(CTRL_AND('y')), k_ins_colcopy, { -1 }, UI_INSERT_ANY },
+	{ K_STR(CTRL_AND('e')), k_ins_colcopy, { +1 }, UI_INSERT_ANY },
+
+	{ "I", k_set_mode, { UI_INSERT_COL }, UI_VISUAL_COL },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 
 const keymap_t maps[] = {
-	{ 'I', "^i", NULL },
-	{ 'a', "li", NULL },
-	{ 'A', "$li", NULL }, /* remap not allowed, hence "$a" wouldn't work */
-	{ 'C', "c$", "c" },
-	{ 'D', "d$", "d" },
+	{ IO_MAP, 'I', "^i" },
+	{ IO_MAP, 'a', "li" },
+	{ IO_MAP, 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
 
-	{ 'x', "dl", "d" }, /* TODO: delete command needs to handle count */
-	{ 'X', "dh", "d" },
+	{ IO_MAP, 'C', "c$" },
+	{ IO_MAP, 'D', "d$" },
+	{ IO_MAPV, 'C', "c" },
+	{ IO_MAPV, 'D', "d" },
 
-	{ 's', "cl", "c" }, /* TODO: change command needs to handle count */
-	{ 'S', "0c$", NULL },
+	/* TODO: delete command needs to handle count */
+	{ IO_MAP, 'x', "dl" },
+	{ IO_MAP, 'X', "dh" },
+	{ IO_MAPV, 'x', "d" },
+	{ IO_MAPV, 'X', "d" },
+
+	/* TODO: change command needs to handle count */
+	{ IO_MAP, 's', "cl" },
+	{ IO_MAP, 'S', "0c$" },
+	{ IO_MAPV, 's', "c" },
+
+	/* insert mode keys - ^U, ^K and ^W */
+	{ IO_MAPI, CTRL_AND('U'), (char[]){ K_ESC, 'l', 'd', '0', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('K'), (char[]){ K_ESC, 'l', 'd', '$', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('W'), (char[]){ K_ESC, 'l', 'd', 'b', 'i', 0 } },
+
+	{ IO_MAP, 'Y', "y$" },
+	{ IO_MAPV, 'Y', "y" },
+
+	{ IO_MAPV, 'R', "c" },
 
 	{ 0 }
 };
 
 const cmd_t cmds[] = {
 	{ "q",   c_q     },
+	{ "cq",  c_cq    },
 	{ "w",   c_w     },
 	{ "e",   c_e     },
 

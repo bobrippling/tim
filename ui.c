@@ -17,7 +17,7 @@
 
 #define UI_MODE() buffers_cur()->ui_mode
 
-int ui_running = 1;
+enum ui_ec ui_run = UI_RUNNING;
 
 static const char *ui_bufmode_str(enum buf_mode m)
 {
@@ -37,11 +37,13 @@ void ui_set_bufmode(enum buf_mode m)
 	buffer_t *buf = buffers_cur();
 
 	if(buffer_setmode(buf, m)){
-		ui_status("bad mode 0x%x", m);
+		ui_err("bad mode 0x%x", m);
 	}else{
 		ui_redraw();
 		ui_cur_changed();
+		nc_style(COL_BROWN);
 		ui_status("%s", ui_bufmode_str(buf->ui_mode));
+		nc_style(0);
 	}
 }
 
@@ -51,13 +53,17 @@ void ui_init()
 }
 
 static
-void ui_vstatus(const char *fmt, va_list l, int right)
+void ui_vstatus(bool err, const char *fmt, va_list l, int right)
 {
 	int y, x;
 
 	nc_get_yx(&y, &x);
 
+	if(err)
+		nc_style(COL_RED);
 	nc_vstatus(fmt, l, right);
+	if(err)
+		nc_style(0);
 
 	nc_set_yx(y, x);
 }
@@ -66,7 +72,15 @@ void ui_status(const char *fmt, ...)
 {
 	va_list l;
 	va_start(l, fmt);
-	ui_vstatus(fmt, l, 0);
+	ui_vstatus(false, fmt, l, 0);
+	va_end(l);
+}
+
+void ui_err(const char *fmt, ...)
+{
+	va_list l;
+	va_start(l, fmt);
+	ui_vstatus(true, fmt, l, 0);
 	va_end(l);
 }
 
@@ -75,67 +89,11 @@ void ui_rstatus(const char *fmt, ...)
 {
 	va_list l;
 	va_start(l, fmt);
-	ui_vstatus(fmt, l, 1);
+	ui_vstatus(false, fmt, l, 1);
 	va_end(l);
 }
 
-static
-void ui_inschar_buf_xy(buffer_t *buf, char ch, int *x, int *y)
-{
-	switch(ch){
-		case CTRL_AND('?'):
-		case CTRL_AND('H'):
-		case 127:
-			if(buf->ui_pos->x > 0)
-				buffer_delchar(buf, x, y);
-			break;
-
-		default:
-			buffer_inschar(buf, x, y, ch);
-			break;
-	}
-}
-
-static
-void ui_inschar(char ch)
-{
-	buffer_t *buf = buffers_cur();
-
-	ui_inschar_buf_xy(buf, ch, &buf->ui_pos->x, &buf->ui_pos->y);
-
-	ui_cur_changed();
-	ui_redraw();
-}
-
-static
-void ui_inscolchar(char ch)
-{
-	buffer_t *buf = buffers_cur();
-
-	if(isnewline(ch)){
-		/* can't col-insert a newline, revert */
-		ui_set_bufmode(UI_INSERT);
-		ui_inschar(ch);
-		return;
-	}
-
-	for(unsigned i = 1; i <= buf->col_insert_height; i++){
-		int y = buf->ui_pos->y + i - 1;
-		int x = buf->ui_pos->x;
-		int *px = &x;
-
-		/* never care about y, and update x in the last case */
-		if(i == buf->col_insert_height)
-			px = &buf->ui_pos->x;
-
-		ui_inschar_buf_xy(buf, ch, px, &y);
-	}
-
-	ui_cur_changed();
-	ui_redraw();
-}
-
-void ui_main()
+int ui_main()
 {
 	extern nkey_t nkeys[];
 	extern const size_t nkeys_cnt;
@@ -143,7 +101,7 @@ void ui_main()
 	ui_redraw(); /* this first, to frame buf_sel */
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
-	while(ui_running){
+	while(1){
 		buffer_t *buf = buffers_cur();
 
 		if(UI_MODE() & UI_VISUAL_ANY){
@@ -166,12 +124,12 @@ void ui_main()
 			}
 		}
 
-		const enum io io_mode = ins
-			? IO_NOMAP
-			: (buf->ui_mode & UI_VISUAL_ANY ? IO_MAPV : IO_MAP);
-
+		const enum io io_mode = bufmode_to_iomap(buf->ui_mode);
 		bool wasraw;
 		int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
+
+		if(ch == -1) /* eof */
+			ui_run = UI_EXIT_1;
 
 		bool found = false;
 		if(!wasraw){
@@ -190,16 +148,20 @@ void ui_main()
 			}
 		}
 
-		if(!found) switch(UI_MODE()){
-			case UI_INSERT:
-				ui_inschar(ch);
-				break;
-			case UI_INSERT_COL:
-				ui_inscolchar(ch);
-				break;
-			default:
-				if(ch != K_ESC)
-					ui_status("unknown key %c", ch);
+		if(!found){
+			if(UI_MODE() & UI_INSERT_ANY){
+				buffer_inschar(buf, ch);
+				ui_redraw();
+				ui_cur_changed();
+			}else if(ch != K_ESC){
+				ui_err("unknown key %c", ch);
+			}
+		}
+
+		switch(ui_run){
+			case UI_RUNNING: continue;
+			case UI_EXIT_0: return 0;
+			case UI_EXIT_1: return 1;
 		}
 	}
 }
@@ -305,11 +267,13 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		nc_highlight(0);
 	}
 
+	nc_style(COL_BLUE | ATTR_BOLD);
 	for(; y < r->h; y++){
 		nc_set_yx(r->y + y, r->x);
 		nc_addch('~');
 		nc_clrtoeol();
 	}
+	nc_style(0);
 }
 
 static

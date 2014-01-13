@@ -1,18 +1,19 @@
 #ifndef IO_H
 #define IO_H
 
-#include "map.h"
+#include "bufmode.h"
 
 enum io
 {
-	/* one of: */
-	IO_NOMAP = 0,
-	IO_MAP   = 1,
-	IO_MAPV  = 2, /* use the visual entry? */
+	IO_NOMAP = 1 << 0,
+	IO_MAP   = 1 << 1,
+	IO_MAPV  = 1 << 2,
+	IO_MAPI  = 1 << 3,
 
-	/* optional, or'd in */
-	IO_MAPRAW = 4, /* change ^Vx to literal x */
+	IO_MAPRAW = 1 << 4, /* change ^Vx to literal x */
 };
+
+enum io bufmode_to_iomap(enum buf_mode);
 
 int io_getch(enum io, bool *wasraw);
 void io_ungetch(int);

@@ -1,0 +1,4 @@
+$tim $tmp <<!
+ihello:e /tmp/hi:wq
+!
+grep hello $tmp

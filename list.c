@@ -9,18 +9,34 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "pos.h"
 #include "region.h"
 #include "list.h"
 #include "mem.h"
 #include "str.h"
 #include "mem.h"
+#include "macros.h"
 
 list_t *list_new(list_t *prev)
 {
 	list_t *l = umalloc(sizeof *l);
 	l->prev = prev;
 	return l;
+}
+
+list_t *list_copy_deep(const list_t *const l, list_t *prev)
+{
+	if(!l)
+		return NULL;
+	list_t *new = list_new(prev);
+	new->len_line = l->len_line;
+	new->len_malloc = l->len_line; /* len_line, not len_malloc */
+	new->line = ustrdup_len(l->line, l->len_line);
+	new->next = list_copy_deep(l->next, new);
+	return new;
 }
 
 static void mmap_new_line(list_t **pcur, char *p, char **panchor)
@@ -65,14 +81,14 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 	int r;
 	while((r = read(fd, &ch, 1)) == 1){
 		if(nl){
-			list_inschar(&l, &x, &y, '\n');
+			list_inschar(l, &x, &y, '\n');
 			nl = false;
 		}
 
 		if(ch == '\n')
 			nl = true;
 		else
-			list_inschar(&l, &x, &y, ch);
+			list_inschar(l, &x, &y, ch);
 
 		empty = false;
 	}
@@ -175,7 +191,6 @@ void list_free(list_t *l)
 	}
 }
 
-static
 list_t **list_seekp(list_t **pl, int y, bool creat)
 {
 	if(!*pl){
@@ -206,7 +221,7 @@ list_t *list_seek(list_t *l, int y, bool creat)
 	return p ? *p : NULL;
 }
 
-static int list_evalnewlines(list_t *l)
+int list_evalnewlines1(list_t *l)
 {
 	if(l->len_line == 0)
 		return 0;
@@ -247,11 +262,9 @@ static int list_evalnewlines(list_t *l)
 	return r;
 }
 
-void list_inschar(list_t **pl, int *x, int *y, char ch)
+void list_inschar(list_t *l, int *x, int *y, char ch)
 {
-	list_t *l;
-
-	l = *(pl = list_seekp(pl, *y, true));
+	l = list_seek(l, *y, true);
 
 	if((unsigned)*x >= l->len_malloc){
 		const int old_len = l->len_malloc;
@@ -273,7 +286,7 @@ void list_inschar(list_t **pl, int *x, int *y, char ch)
 
 	l->line[*x] = ch;
 	l->len_line++;
-	if(list_evalnewlines(l)){
+	if(list_evalnewlines1(l)){
 		*x = 0;
 		++*y;
 	}else{
@@ -297,15 +310,16 @@ void list_delchar(list_t *l, int *x, int *y)
 }
 
 static
-void list_dellines(list_t **pl, list_t *prev, unsigned n)
+list_t *list_dellines(list_t **pl, list_t *prev, unsigned n)
 {
 	if(n == 0)
-		return;
+		return NULL;
 
 	list_t *l = *pl;
 
 	if(!l)
-		return;
+		return NULL;
+	l->prev = NULL;
 
 	if(n == 1){
 		list_t *adv = l->next;
@@ -327,32 +341,92 @@ void list_dellines(list_t **pl, list_t *prev, unsigned n)
 
 	if(*pl)
 		(*pl)->prev = prev;
+	if(l)
+		l->prev = NULL;
 
-	list_free(l);
+	return l;
 }
 
-void list_delregion(list_t **pl, const region_t *region)
+list_t *list_tail(list_t *l)
 {
-	assert(region->begin.y <= region->end.y);
-	assert(region->begin.y < region->end.y || region->begin.x < region->end.x);
+	for(; l && l->next; l = l->next);
+	return l;
+}
+
+list_t *list_append(list_t *accum, list_t *at, list_t *new)
+{
+	if(!accum)
+		return new;
+
+	list_t *after = at->next;
+	at->next = new;
+	new->prev = at;
+
+	if(after){
+		list_t *newtail = list_tail(new);
+		newtail->next = after;
+		after->prev = newtail;
+	}
+
+	return accum;
+}
+
+list_t *list_delregion(list_t **pl, const region_t *region)
+{
+	if(!(region->begin.y <= region->end.y))
+		return NULL;
+	if(!(region->begin.y < region->end.y || region->begin.x < region->end.x))
+		return NULL;
 
 	list_t **seeked = list_seekp(pl, region->begin.y, false);
 
 	if(!seeked || !*seeked)
-		return;
+		return NULL;
+
+	list_t *deleted = NULL;
 
 	switch(region->type){
 		case REGION_LINE:
-			list_dellines(seeked, (*seeked)->prev, region->end.y - region->begin.y + 1);
+			deleted = list_dellines(
+					seeked, (*seeked)->prev,
+					region->end.y - region->begin.y + 1);
 			break;
 		case REGION_CHAR:
 		{
 			list_t *l = *seeked;
 			size_t line_change = region->end.y - region->begin.y;
 
-			if(line_change > 1)
-				list_dellines(&l->next, l, line_change);
+			/* create `deleted' */
+			{
+				deleted = list_new(NULL);
 
+				if((unsigned)region->begin.x < l->len_line){
+					char *this_line = l->line;
+					size_t len = line_change == 0
+							? (unsigned)region->end.x - region->begin.x
+							: l->len_line - region->begin.x;
+
+					char *pulled_out = ustrdup_len(
+							this_line + region->begin.x,
+							len);
+
+					deleted->line = pulled_out;
+					deleted->len_line = deleted->len_malloc = len;
+				}
+				/* else we leave deleted empty */
+			}
+
+			if(line_change > 1){
+				deleted = list_append(
+						deleted,
+						list_tail(deleted),
+						list_dellines(
+							&l->next, l->prev,
+							line_change));
+			}
+
+
+			/* wipe lines */
 			if(line_change > 0){
 				/* join the lines */
 				list_t *next = l->next;
@@ -367,18 +441,34 @@ void list_delregion(list_t **pl, const region_t *region)
 				if(l->len_malloc < fulllen)
 					l->line = urealloc(l->line, l->len_malloc = fulllen);
 
+				{
+					list_t *pullout = list_new(NULL);
+					deleted = list_append(deleted, list_tail(deleted), pullout);
+
+					size_t len = MIN((unsigned)region->end.x, next->len_line);
+					pullout->len_malloc = pullout->len_line = len;
+
+					pullout->line = ustrdup_len(next->line, len);
+				}
+
 				memcpy(l->line + region->begin.x,
 						next->line + region->end.x,
 						nextlen);
 				l->len_line = fulllen;
 
-				list_dellines(&l->next, l, 1);
+				list_free(list_dellines(&l->next, l->prev, 1));
 
 			}else{
 				if(!l->len_line || (unsigned)region->end.x > l->len_line)
-					return;
+					return deleted;
 
 				size_t diff = region->end.x - region->begin.x;
+
+				list_t *part = list_new(NULL);
+				part->line = umalloc(diff + 1);
+				part->len_line = diff;
+				part->len_malloc = diff + 1;
+				memcpy(part->line, l->line + region->begin.x, diff);
 
 				memmove(
 						l->line + region->begin.x,
@@ -402,12 +492,28 @@ void list_delregion(list_t **pl, const region_t *region)
 					i++, pos = pos->next)
 			{
 				if((unsigned)begin.x < pos->len_line){
+					struct
+					{
+						char *str;
+						size_t len;
+					} removed;
+
 					if((unsigned)end.x >= pos->len_line){
 						/* delete all */
+						removed.len = pos->len_line - begin.x + 1;
+						removed.str = ustrdup_len(
+								pos->line + begin.x,
+								removed.len);
+
 						pos->len_line = begin.x;
 
 					}else{
 						char *str = pos->line;
+
+						removed.len = end.x - begin.x;
+						removed.str = ustrdup_len(
+								str + begin.x,
+								removed.len);
 
 						memmove(
 								str + begin.x,
@@ -416,11 +522,23 @@ void list_delregion(list_t **pl, const region_t *region)
 
 						pos->len_line -= end.x - begin.x;
 					}
+
+					/* removed text */
+					list_t *new = list_new(NULL);
+					new->line = removed.str;
+					new->len_malloc = new->len_line = removed.len;
+					deleted = list_append(deleted, list_tail(deleted), new);
+				}else{
+					deleted = list_append(
+							deleted, list_tail(deleted),
+							list_new(NULL));
 				}
 			}
 			break;
 		}
 	}
+
+	return deleted;
 }
 
 void list_joinregion(list_t **pl, const region_t *region)
@@ -500,33 +618,7 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	++*y;
 }
 
-void list_replace_at(list_t *l, int *px, int *py, char *with)
-{
-	l = list_seek(l, *py, true);
-
-	const int with_len = strlen(with);
-	int x = *px;
-
-	if((unsigned)(x + with_len) >= l->len_malloc){
-		size_t new_len = x + with_len + 1;
-		l->line = urealloc(l->line, new_len);
-		memset(l->line + l->len_malloc, ' ', new_len - l->len_malloc);
-		l->len_line = l->len_malloc = new_len;
-	}
-
-	char *p = l->line + x;
-	memcpy(p, with, with_len);
-
-	/* convert r\n to newlines */
-	if(list_evalnewlines(l)){
-		*px = 0;
-		++*py;
-	}else{
-		*px += with_len - 1;
-	}
-}
-
-int list_count(list_t *l)
+int list_count(const list_t *l)
 {
 	int i;
 	for(i = 0; l->next; l = l->next, i++);
@@ -553,7 +645,8 @@ int list_filter(
 		return -1;
 	}
 
-	switch(fork()){
+	int pid = fork();
+	switch(pid){
 		case -1:
 		{
 			const int e = errno;
@@ -565,6 +658,7 @@ int list_filter(
 		case 0:
 			dup2(child_in[0], 0);
 			dup2(child_out[1], 1);
+			dup2(child_out[1], 2); /* capture stderr too */
 			for(int i = 0; i < 2; i++)
 				close(child_in[i]), close(child_out[i]);
 
@@ -575,7 +669,9 @@ int list_filter(
 	/* parent */
 	close(child_in[0]), close(child_out[1]);
 
-	const unsigned region_height = region->end.y - region->begin.y;
+	unsigned region_height = region->end.y - region->begin.y;
+	if(region->type != REGION_LINE)
+		region_height++;
 
 	list_t **phead = pl;
 	list_t *tail = list_seek(*phead, region_height, false);
@@ -593,12 +689,16 @@ int list_filter(
 	list_t *l_read = list_new_fd(child_out[0], &eol);
 	close(child_out[0]);
 
+	/* reap */
+	(void)waitpid(pid, NULL, 0);
+
 	list_t *const gone = *pl;
 
 	*pl = l_read;
 	for(; l_read->next; l_read = l_read->next);
 	l_read->next = tail;
-	tail->prev = l_read;
+	if(tail)
+		tail->prev = l_read;
 
 	list_t *gone_tail;
 	for(gone_tail = gone;
@@ -623,6 +723,7 @@ static void line_iter(
 
 void list_iter_region(
 		list_t *l, const region_t *r,
+		bool evalnl,
 		void fn(char *, void *), void *ctx)
 {
 	size_t i = 0;
@@ -648,6 +749,8 @@ void list_iter_region(
 						fn, ctx);
 				break;
 		}
+		if(evalnl)
+			list_evalnewlines1(l);
 	}
 }
 

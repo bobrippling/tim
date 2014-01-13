@@ -39,7 +39,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 		int err;
 		buffer_new_fname(&buf_sel, argv[0], &err);
 		if(err)
-			ui_status("\"%s\": %s", buffer_shortfname(argv[0]), strerror(errno));
+			ui_err("\"%s\": %s", buffer_shortfname(argv[0]), strerror(errno));
 
 		enum buffer_neighbour dir;
 		switch(a){
@@ -52,7 +52,6 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 		buffer_t *prev_buf = buf_sel;
 		for(i = 1; i < argc; i++){
 			buffer_t *b;
-			int err;
 
 			buffer_new_fname(&b, argv[i], &err);
 			/* FIXME: ignore errors? */

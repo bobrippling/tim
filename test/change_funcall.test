@@ -1,0 +1,5 @@
+lc%X
+__IN__
+hello(abc, f(1, x, 2));
+__OUT__
+hX;

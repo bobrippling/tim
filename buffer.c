@@ -11,9 +11,11 @@
 #include "list.h"
 #include "buffer.h"
 #include "mem.h"
+#include "yank.h"
 #include "macros.h"
 #include "ncurses.h"
 #include "str.h"
+#include "retain.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 
@@ -36,11 +38,19 @@ buffer_t *buffer_new()
 	return b;
 }
 
-void buffer_togglev(buffer_t *buf)
+void buffer_togglev(buffer_t *buf, bool corner_toggle)
 {
-	buf->ui_pos = (buf->ui_pos == &buf->ui_npos)
-		? &buf->ui_vpos
-		: &buf->ui_npos;
+	if(corner_toggle){
+		point_t *alt = buffer_uipos_alt(buf);
+
+		int tmp = buf->ui_pos->x;
+		buf->ui_pos->x = alt->x;
+		alt->x = tmp;
+	}else{
+		buf->ui_pos = (buf->ui_pos == &buf->ui_npos)
+			? &buf->ui_vpos
+			: &buf->ui_npos;
+	}
 }
 
 int buffer_setmode(buffer_t *buf, enum buf_mode m)
@@ -48,11 +58,17 @@ int buffer_setmode(buffer_t *buf, enum buf_mode m)
 	if(!m || (m & (m - 1))){
 		return -1;
 	}else{
-		if((buf->ui_mode & UI_VISUAL_ANY) == 0
-		&& m & UI_VISUAL_ANY)
-		{
-			/* from non-visual to visual */
-			*buffer_uipos_alt(buf) = *buf->ui_pos;
+		if(m & UI_VISUAL_ANY){
+			if((buf->ui_mode & UI_VISUAL_ANY) == 0){
+				/* from non-visual to visual */
+				*buffer_uipos_alt(buf) = *buf->ui_pos;
+			}
+		}else{
+			/* from a visual, save state */
+			buf->prev_visual.mode = buf->ui_mode;
+
+			buf->prev_visual.npos = *buf->ui_pos;
+			buf->prev_visual.vpos = *buffer_uipos_alt(buf);
 		}
 
 		buf->ui_mode = m;
@@ -106,6 +122,8 @@ int buffer_replace_file(buffer_t *b, FILE *f)
 	list_free(b->head);
 	b->head = l;
 
+	b->mtime = time(NULL);
+
 	return 1;
 }
 
@@ -128,7 +146,10 @@ int buffer_replace_fname(buffer_t *b, const char *fname)
 
 int buffer_write_file(buffer_t *b, int n, FILE *f, bool eol)
 {
-	return list_write_file(b->head, n, f, eol);
+	int r = list_write_file(b->head, n, f, eol);
+	b->mtime = time(NULL);
+	b->modified = false;
+	return r;
 }
 
 void buffer_set_fname(buffer_t *b, const char *s)
@@ -144,24 +165,105 @@ const char *buffer_fname(const buffer_t *b)
 	return b->fname;
 }
 
-void buffer_inschar(buffer_t *buf, int *x, int *y, char ch)
+void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 {
-	list_inschar(&buf->head, x, y, ch);
+	switch(ch){
+		case CTRL_AND('?'):
+		case CTRL_AND('H'):
+		case 127:
+			if(*x > 0)
+				buffer_delchar(buf, x, y);
+			break;
+
+		default:
+			list_inschar(buf->head, x, y, ch);
+			break;
+	}
+	buf->modified = true;
+}
+
+static void buffer_inscolchar(buffer_t *buf, char ch, unsigned ncols)
+{
+	for(int i = ncols - 1; i >= 0; i--){
+		int y = buf->ui_pos->y + i;
+		int x = buf->ui_pos->x;
+		int *px = &x;
+		int *py = &y;
+
+		/* update x and y in the last case */
+		if(i == 0){
+			px = &buf->ui_pos->x;
+			py = &buf->ui_pos->y;
+		}
+
+		buffer_inschar_at(buf, ch, px, py);
+	}
+}
+
+void buffer_inschar(buffer_t *buf, char ch)
+{
+	if(buf->ui_mode != UI_INSERT_COL || isnewline(ch)){
+		/* can't col-insert a newline, revert */
+		if(buf->ui_mode == UI_INSERT_COL)
+			buffer_setmode(buf, UI_INSERT);
+
+		buffer_inscolchar(buf, ch, 1);
+	}else{
+		buffer_inscolchar(buf, ch, buf->col_insert_height);
+	}
 }
 
 void buffer_delchar(buffer_t *buf, int *x, int *y)
 {
 	list_delchar(buf->head, x, y);
+	buf->modified = true;
 }
 
 static
 void buffer_delregion_f(buffer_t *buf, const region_t *region, point_t *out)
 {
-	list_delregion(&buf->head, region);
+	list_t *del = list_delregion(&buf->head, region);
+
+	if(del){
+		release(yank_push(yank_new(del, region->type)), yank_free);
+
+		buf->modified = true;
+	}
 }
 struct buffer_action buffer_delregion = {
 	.fn = buffer_delregion_f
 };
+
+static
+void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
+{
+	list_t *yanked = list_delregion(&buf->head, region);
+
+	if(yanked){
+		yank *yank = yank_new(yanked, region->type);
+		yank_push(yank);
+
+		buffer_insyank(buf, yank, /*prepend:*/true, /*modify:*/false);
+		release(yank, yank_free);
+	}
+
+	/* restore ui pos (set in buffer_insyank) */
+	*out = region->begin;
+}
+struct buffer_action buffer_yankregion = {
+	.fn = buffer_yankregion_f
+};
+
+void buffer_insyank(buffer_t *buf, const yank *y, bool prepend, bool modify)
+{
+	yank_put_in_list(y,
+			list_seekp(&buf->head, buf->ui_pos->y, true),
+			prepend,
+			&buf->ui_pos->y, &buf->ui_pos->x);
+
+	if(modify)
+		buf->modified = true;
+}
 
 static
 void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
@@ -174,6 +276,7 @@ void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
 
 	if(l)
 		out->x = mid;
+	buf->modified = true;
 }
 struct buffer_action buffer_joinregion = {
 	.fn = buffer_joinregion_f,
@@ -204,7 +307,7 @@ void buffer_indent2(
 		}
 
 		if(dir > 0){
-			buffer_inschar(buf, &x, &y, '\t');
+			buffer_inschar_at(buf, '\t', &x, &y);
 		}else{
 			if(pos){
 				if(pos->len_line > 0 && pos->line[0] == '\t')
@@ -216,12 +319,14 @@ void buffer_indent2(
 			}
 		}
 	}
+	buf->modified = true;
 }
 
 int buffer_filter(
 		buffer_t *buf, const region_t *reg,
 		const char *cmd)
 {
+	buf->modified = true;
 	return list_filter(&buf->head, reg, cmd);
 }
 
@@ -229,6 +334,7 @@ static
 void buffer_indent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, 1);
+	buf->modified = true;
 }
 struct buffer_action buffer_indent = {
 	.fn = buffer_indent_f,
@@ -239,25 +345,12 @@ static
 void buffer_unindent_f(buffer_t *buf, const region_t *region, point_t *out)
 {
 	buffer_indent2(buf, region, out, -1);
+	buf->modified = true;
 }
 struct buffer_action buffer_unindent = {
 	.fn = buffer_unindent_f,
 	.always_linewise = true
 };
-
-void buffer_replace_chars(buffer_t *buf, int ch, unsigned n)
-{
-	char *with = umalloc(n + 1);
-
-	memset(with, ch, n);
-	with[n] = '\0';
-
-	list_replace_at(buf->head,
-			&buf->ui_pos->x, &buf->ui_pos->y,
-			with);
-
-	free(with);
-}
 
 static int ctoggle(int c)
 {
@@ -283,12 +376,14 @@ void buffer_caseregion(
 	}
 	assert(f);
 
-	list_iter_region(buf->head, r, buffer_case_cb, &f);
+	list_iter_region(buf->head, r, false, buffer_case_cb, &f);
+	buf->modified = true;
 }
 
 void buffer_insline(buffer_t *buf, int dir)
 {
 	list_insline(&buf->head, &buf->ui_pos->x, &buf->ui_pos->y, dir);
+	buf->modified = true;
 }
 
 buffer_t *buffer_topleftmost(buffer_t *b)

@@ -12,6 +12,7 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "yank.h"
 
 #include "ui.h"
 #include "motion.h"
@@ -24,6 +25,8 @@
 #include "map.h"
 
 #include "buffers.h"
+
+#include "retain.h"
 
 #include "config.h"
 
@@ -104,11 +107,7 @@ out:
 const motion *motion_read(unsigned *repeat, bool apply_maps)
 {
 	const enum io io_m =
-		apply_maps ?
-			buffers_cur()->ui_mode & UI_VISUAL_ANY
-				? IO_MAPV
-				: IO_MAP
-			: IO_NOMAP;
+		apply_maps ? bufmode_to_iomap(buffers_cur()->ui_mode) : IO_NOMAP;
 
 	*repeat = io_read_repeat(io_m);
 
@@ -160,14 +159,15 @@ char *parse_arg(const char *arg)
 }
 
 static
-void parse_cmd(char *cmd, int *pargc, char ***pargv)
+void parse_cmd(char *cmd, int *pargc, char ***pargv, bool *force)
 {
 	int argc = *pargc;
 	char **argv = *pargv;
 	char *p;
+	bool had_punct;
 
 	/* special case */
-	if(ispunct(cmd[0])){
+	if((had_punct = ispunct(cmd[0]))){
 		argv = urealloc(argv, (argc + 2) * sizeof *argv);
 
 		snprintf(
@@ -181,8 +181,22 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv)
 		argv = urealloc(argv, (argc + 2) * sizeof *argv);
 		argv[argc++] = parse_arg(p);
 	}
-	if(argc)
+	if(argv)
 		argv[argc] = NULL;
+
+	/* special case: check for '!' in the first cmd */
+	if(!had_punct && argc >= 1 && (p = strchr(argv[0], '!'))){
+		*force = true;
+		*p = '\0';
+		if(p[1]){
+			/* split, e.g. "w!hello" -> "w", "hello" */
+			argv = urealloc(argv, (++argc + 1) * sizeof *argv);
+			for(int i = argc - 1; i > 1; i--)
+				argv[i] = argv[i - 1];
+
+			argv[1] = ustrdup(p + 1);
+		}
+	}
 
 	*pargv = argv;
 	*pargc = argc;
@@ -231,35 +245,36 @@ void filter_cmd(int *pargc, char ***pargv)
 
 void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	int i;
-	char **argv = NULL;
-	int argc = 0;
 	char *cmd = prompt(':');
 
 	if(!cmd)
 		goto cancel;
 
-	parse_cmd(cmd, &argc, &argv);
-
-	filter_cmd(&argc, &argv);
+	char **argv = NULL;
+	int argc = 0;
+	bool force = false;
+	parse_cmd(cmd, &argc, &argv, &force);
 
 	if(!argc)
 		goto cancel;
 
+	filter_cmd(&argc, &argv);
+
+	int i;
 	for(i = 0; cmds[i].cmd; i++)
 		if(!strcmp(cmds[i].cmd, argv[0])){
-			cmds[i].func(argc, argv);
+			cmds[i].func(argc, argv, force);
 			break;
 		}
 
 	if(!cmds[i].cmd)
-		ui_status("unknown command %s", argv[0]);
+		ui_err("unknown command %s", argv[0]);
 
-cancel:
-	free(cmd);
 	for(i = 0; i < argc; i++)
 		free(argv[i]);
 	free(argv);
+cancel:
+	free(cmd);
 }
 
 void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -268,11 +283,6 @@ void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_clear();
 	ui_redraw();
 	ui_cur_changed();
-}
-
-void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
-{
-	ui_set_bufmode(a->i);
 }
 
 void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -353,7 +363,7 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 		ui_redraw();
 		ui_cur_changed();
 	}else{
-		ui_status("no buffer");
+		ui_err("no buffer");
 	}
 }
 
@@ -377,6 +387,11 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
+static void replace_iter(char *ch, void *ctx)
+{
+	*ch = *(int *)ctx;
+}
+
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	if(a->i == 1){
@@ -392,10 +407,22 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ch == '\r')
 			ch = '\n';
 
-		buffer_replace_chars(
-				buffers_cur(),
-				ch,
-				DEFAULT_REPEAT(repeat));
+		motion m = {
+			.func = m_move,
+			.arg.pos.x = DEFAULT_REPEAT(repeat)-1,
+			.how = M_NONE
+		};
+
+		buffer_t *buf = buffers_cur();
+
+		region_t r;
+		if(!motion_to_region(&m, 1, false, buf, &r))
+			return;
+
+		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
+
+		buf->modified = true;
+		buf->ui_mode = UI_NORMAL;
 	}
 	ui_redraw();
 	ui_cur_changed();
@@ -414,7 +441,7 @@ struct around_motion
 	union
 	{
 		buffer_action_f *forward;
-		char *filter_cmd;
+		const struct filter_input *filter;
 		enum case_tog case_ty;
 	};
 };
@@ -444,7 +471,7 @@ static bool around_motion(
 			m = &m_doubletap;
 		}else{
 			if(ch != K_ESC)
-				ui_status("no motion '%c'", ch);
+				ui_err("no motion '%c'", ch);
 			/*io_ungetch(ch);*/
 		}
 	}
@@ -454,44 +481,17 @@ static bool around_motion(
 
 		buffer_t *b = buffers_cur();
 
-		region_t r = {
-			.begin = *b->ui_pos
-		};
-		if(!motion_apply_buf_dry(m, repeat, b, &r.end))
+		region_t r;
+		if(!motion_to_region(m, repeat, always_linewise, b, &r))
 			return false;
-
-		/* reverse if negative range */
-		point_sort_yx(&r.begin, &r.end);
-
-		if(m->how & M_COLUMN){
-			r.type = REGION_COL;
-
-			/* needs to be done before incrementing r.end.x/y below */
-			point_sort_full(&r.begin, &r.end);
-
-		}else if(m->how & M_LINEWISE){
-			r.type = REGION_LINE;
-
-		}else{
-			r.type = REGION_CHAR;
-		}
-
-		if(b->ui_mode & UI_VISUAL_ANY){
-			/* only increment y in the line case */
-			r.end.x++;
-			if(m->how & M_LINEWISE || always_linewise)
-				r.end.y++;
-
-		}else if(!(m->how & M_EXCLUSIVE)){
-			m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
-		}
 
 		if(used_region)
 			*used_region = r;
 
 		/* reset cursor to beginning, then allow adjustments */
 		*b->ui_pos = r.begin;
-		action->fn(b, &r, b->ui_pos, action);
+		if(action)
+			action->fn(b, &r, b->ui_pos, action);
 
 		ui_set_bufmode(UI_NORMAL);
 
@@ -522,6 +522,23 @@ static bool around_motion_bufaction(
 			}, out_region);
 }
 
+void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	/* if we're in visual-col and told to insert like that... */
+	if(buf->ui_mode == UI_VISUAL_COL && a->i == UI_INSERT_COL){
+		region_t r;
+
+		if(around_motion(repeat, from_ch, false, /*noop:*/NULL, &r)){
+			buf->col_insert_height = r.end.y - r.begin.y + 1;
+			ui_set_bufmode(UI_INSERT_COL);
+		}
+	}else{
+		ui_set_bufmode(a->i);
+	}
+}
+
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion_bufaction(repeat, from_ch, &buffer_delregion, NULL);
@@ -549,6 +566,11 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 	}
 }
 
+void k_yank(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	around_motion_bufaction(repeat, from_ch, &buffer_yankregion, NULL);
+}
+
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion_bufaction(repeat, from_ch, &buffer_joinregion, NULL);
@@ -562,8 +584,58 @@ void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_togglev(buffers_cur());
+	buffer_togglev(buffers_cur(), a->i != 0);
 	ui_cur_changed();
+}
+
+void k_go_visual(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	ui_set_bufmode(buf->prev_visual.mode);
+
+	*buf->ui_pos = buf->prev_visual.npos;
+	*buffer_uipos_alt(buf) = buf->prev_visual.vpos;
+
+	ui_cur_changed();
+}
+
+void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	bool prepend = a->b;
+	const yank *yank = retain(yank_top());
+	if(!yank)
+		return;
+
+	buffer_t *buf = buffers_cur();
+	if(buf->ui_mode & UI_VISUAL_ANY){
+		/* delete what we have, then paste */
+		region_t r;
+		unsigned mrepeat;
+		const motion *m = motion_read_or_visual(&mrepeat, false);
+
+		if(!motion_to_region(m, mrepeat, false, buf, &r))
+			return;
+
+		/* necessary so we insert at the right place later on */
+		point_sort_full(&buf->ui_npos, &buf->ui_vpos);
+
+		buffer_delregion.fn(buf, &r, &(point_t){0});
+
+		/* unconditional for visual-put */
+		prepend = true;
+	}
+
+	repeat = DEFAULT_REPEAT(repeat);
+	while(repeat --> 0)
+		buffer_insyank(buffers_cur(), yank, prepend, /*modify:*/true);
+
+	buf->ui_mode = UI_NORMAL; /* remove visual */
+
+	ui_redraw();
+	ui_cur_changed();
+
+	release(yank, yank_free);
 }
 
 static void filter(
@@ -572,18 +644,28 @@ static void filter(
 		point_t *out,
 		struct around_motion *around)
 {
-	char *cmd = around->filter_cmd;
+	const struct filter_input *pf = around->filter;
+	bool free_cmd = false;
+	char *cmd;
 
-	if(!cmd){
-		cmd = prompt('!');
-		if(!cmd)
-			return;
+	switch(pf->type){
+		case FILTER_CMD:
+			cmd = pf->s;
+			if(!cmd){
+				cmd = prompt('!');
+				if(!cmd)
+					return;
+				free_cmd = true;
+			}
+			break;
+		case FILTER_SELF:
+			cmd = "sh";
 	}
 
 	if(buffer_filter(buf, region, cmd))
-		ui_status("filter: %s", strerror(errno));
+		ui_err("filter: %s", strerror(errno));
 
-	if(cmd != around->filter_cmd)
+	if(free_cmd)
 		free(cmd);
 }
 
@@ -591,7 +673,7 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	struct around_motion around = {
 		.fn = filter,
-		.filter_cmd = a->s
+		.filter = &a->filter
 	};
 
 	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);
@@ -614,4 +696,26 @@ void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
 	};
 
 	around_motion(repeat, from_ch, /*always_linewise:*/false, &around, NULL);
+}
+
+void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *const buf = buffers_cur();
+
+	list_t *line = buffer_current_line(buf);
+	if(!line)
+		return;
+	line = a->i > 0 ? line->next : line->prev;
+	if(!line)
+		return;
+
+	if((unsigned)buf->ui_pos->x >= line->len_line)
+		return;
+
+	buffer_inschar(
+			buf,
+			line->line[buf->ui_pos->x]);
+
+	ui_redraw();
+	ui_cur_changed();
 }

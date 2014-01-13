@@ -1,7 +1,11 @@
 #ifndef CMDS_H
 #define CMDS_H
 
-typedef int cmd_func(int argc, char **argv) __attribute__((nonnull));
+#include <stdbool.h>
+
+typedef int cmd_func(
+		int argc, char **argv, bool force)
+	__attribute__((nonnull));
 
 typedef struct cmd_t
 {
@@ -9,7 +13,7 @@ typedef struct cmd_t
 	cmd_func *func;
 } cmd_t;
 
-cmd_func c_q;
+cmd_func c_q, c_cq;
 cmd_func c_w;
 cmd_func c_x;
 cmd_func c_e;

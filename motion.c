@@ -365,7 +365,7 @@ static char *lastsearch;
 int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	if(!lastsearch){
-		ui_status("no last search");
+		ui_err("no last search");
 		return MOTION_FAILURE;
 	}
 
@@ -373,7 +373,7 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 	*to = *buf->ui_pos;
 	while(repeat --> 0){
 		if(!buffer_findat(buf, lastsearch, to, m->i)){
-			ui_status("search pattern not found");
+			ui_err("search pattern not found");
 			return MOTION_FAILURE;
 		}
 	}
@@ -481,7 +481,7 @@ int m_paren(
 
 	switch(arg->i){
 		default:
-			ui_status("bad m_paren arg");
+			ui_err("bad m_paren arg");
 			break;
 
 		case '%':
@@ -587,4 +587,44 @@ int motion_apply_buf(const motion *m, unsigned repeat, buffer_t *buf)
 		return MOTION_SUCCESS;
 	}
 	return MOTION_FAILURE;
+}
+
+bool motion_to_region(
+		const motion *m, unsigned repeat, bool always_linewise,
+		buffer_t *buf, region_t *out)
+{
+	region_t r = {
+		.begin = *buf->ui_pos
+	};
+	if(!motion_apply_buf_dry(m, repeat, buf, &r.end))
+		return false;
+
+	/* reverse if negative range */
+	point_sort_yx(&r.begin, &r.end);
+
+	if(m->how & M_COLUMN){
+		r.type = REGION_COL;
+
+		/* needs to be done before incrementing r.end.x/y below */
+		point_sort_full(&r.begin, &r.end);
+
+	}else if(m->how & M_LINEWISE){
+		r.type = REGION_LINE;
+
+	}else{
+		r.type = REGION_CHAR;
+	}
+
+	if(buf->ui_mode & UI_VISUAL_ANY){
+		/* only increment y in the line case */
+		r.end.x++;
+		if(m->how & M_LINEWISE || always_linewise)
+			r.end.y++;
+
+	}else if(!(m->how & M_EXCLUSIVE)){
+		m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
+	}
+
+	*out = r;
+	return true;
 }

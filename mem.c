@@ -28,6 +28,14 @@ char *ustrdup(const char *s)
 	return r;
 }
 
+char *ustrdup_len(const char *s, size_t len)
+{
+	char *r = umalloc(len + 1);
+	memcpy(r, s, len);
+	r[len] = '\0';
+	return r;
+}
+
 char *join(const char *sep, const char **vec, int n)
 {
 	const int len_sep = strlen(sep);

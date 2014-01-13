@@ -42,10 +42,10 @@ int main(int argc, char **argv)
 
 	buffers_init(argc - i, argv + i, initargs, offset);
 
-	ui_main();
+	int r = ui_main();
 	ui_term();
 
 	buffers_term();
 
-	return 0;
+	return r;
 }

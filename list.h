@@ -15,17 +15,21 @@ list_t *list_new(list_t *prev);
 list_t *list_new_file(FILE *, bool *eol);
 int list_write_file(list_t *l, int n, FILE *f, bool eol);
 
+list_t *list_copy_deep(const list_t *const l, list_t *prev);
+list_t *list_append(list_t *accum, list_t *at, list_t *new);
+
+list_t **list_seekp(list_t **pl, int y, bool creat);
 list_t *list_seek(list_t *l, int y, bool creat);
 
 void    list_free(list_t *);
 
-void list_inschar(list_t **, int *x, int *y, char ch);
+void list_inschar(list_t *, int *x, int *y, char ch);
 void list_delchar(list_t *, int *x, int *y);
 
-void list_delregion(list_t **pl, const region_t *);
-void list_joinregion(list_t **pl, const region_t *);
+list_t *list_delregion(list_t **pl, const region_t *);
 
-void list_replace_at(list_t *, int *px, int *py, char *with);
+/* *pl isn't changed - ABI compat with list_delregion */
+void list_joinregion(list_t **pl, const region_t *);
 
 int list_filter(
 		list_t **pl, const region_t *,
@@ -33,11 +37,14 @@ int list_filter(
 
 void list_iter_region(
 		list_t *, const region_t *,
+		bool evalnl,
 		void fn(char *, void *), void *ctx);
 
 void list_insline(list_t **, int *x, int *y, int dir);
+int list_evalnewlines1(list_t *l);
 
-int list_count(list_t *);
+int list_count(const list_t *);
+list_t *list_tail(list_t *);
 
 #define isnewline(ch) ((ch) == '\n' || (ch) == '\r')
 
