@@ -37,7 +37,6 @@ void complete_gather(char *line, void *c)
 	while(found){
 		char *end;
 		for(end = found + ctx->current_len; isalnum(*end); end++);
-		end--;
 
 		/* make sure it's a word start */
 		if(found > line && isalnum(found[-1])){
@@ -45,7 +44,7 @@ void complete_gather(char *line, void *c)
 			goto next;
 		}
 
-		char *new = ustrdup_len(found, end - found + 1);
+		char *new = ustrdup_len(found, end - found);
 
 		if(!hash_add(ctx->ents, new))
 			free(new);
