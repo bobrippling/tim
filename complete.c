@@ -80,26 +80,27 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 	/* XXX: lines with nuls in are ignored after the nul */
 	struct complete_ctx *ctx = c;
 
+	char *const line_end = line + line_len;
+
 	char *found = tim_strstr(line, line_len, ctx->current);
 	while(found){
+
+		char *end;
+		for(end = found + ctx->current_len; end < line_end && isalnum(*end); end++);
+
 		/* make sure it's a word start */
 		if(found > line && isalnum(found[-1])){
 			/* substring of another word, ignore */
-			goto next;
+		}else{
+			struct hash_str_ent *new = umalloc(sizeof *new);
+			new->str = ustrdup_len(found, end - found);
+
+			if(!hash_add(ctx->ents, new)){
+				free(new->str);
+				free(new);
+			}
 		}
 
-		char *end;
-		for(end = found + ctx->current_len; isalnum(*end); end++);
-
-		struct hash_str_ent *new = umalloc(sizeof *new);
-		new->str = ustrdup_len(found, end - found);
-
-		if(!hash_add(ctx->ents, new)){
-			free(new->str);
-			free(new);
-		}
-
-next:
 		found = tim_strstr(end, line_len - (end - line), ctx->current);
 	}
 }
