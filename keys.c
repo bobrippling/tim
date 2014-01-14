@@ -390,7 +390,7 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-static void replace_iter(char *ch, void *ctx)
+static void replace_iter(char *ch, size_t len, void *ctx)
 {
 	*ch = *(int *)ctx;
 }
@@ -422,7 +422,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(!motion_to_region(&m, 1, false, buf, &r))
 			return;
 
-		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
+		list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, replace_iter, &ch);
 
 		buf->modified = true;
 		buf->ui_mode = UI_NORMAL;
@@ -742,7 +742,7 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 		return;
 	}
 
-	list_iter_region(b->head, &r, /*evalnl:*/false,
+	list_iter_region(b->head, &r, LIST_ITER_WHOLE_LINE,
 			complete_gather, &ctx);
 
 	int sel = 0;

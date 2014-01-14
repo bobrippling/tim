@@ -357,8 +357,9 @@ static int ctoggle(int c)
 	return islower(c) ? toupper(c) : tolower(c);
 }
 
-static void buffer_case_cb(char *s, void *ctx)
+static void buffer_case_cb(char *s, size_t len, void *ctx)
 {
+	(void)len;
 	*s = (*(int (**)(int))ctx)(*s);
 }
 
@@ -376,7 +377,7 @@ void buffer_caseregion(
 	}
 	assert(f);
 
-	list_iter_region(buf->head, r, false, buffer_case_cb, &f);
+	list_iter_region(buf->head, r, 0, buffer_case_cb, &f);
 	buf->modified = true;
 }
 

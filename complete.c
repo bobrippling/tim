@@ -75,12 +75,12 @@ void complete_teardown(struct complete_ctx *c)
 	free(c->current);
 }
 
-void complete_gather(char *line, void *c)
+void complete_gather(char *const line, size_t const line_len, void *c)
 {
 	/* XXX: lines with nuls in are ignored after the nul */
 	struct complete_ctx *ctx = c;
 
-	char *found = strstr(line, ctx->current);
+	char *found = tim_strstr(line, line_len, ctx->current);
 	while(found){
 		/* make sure it's a word start */
 		if(found > line && isalnum(found[-1])){
@@ -100,7 +100,7 @@ void complete_gather(char *line, void *c)
 		}
 
 next:
-		found = strstr(end, ctx->current);
+		found = tim_strstr(end, line_len - (end - line), ctx->current);
 	}
 }
 
