@@ -283,7 +283,7 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-static void replace_iter(char *ch, size_t l, int y, void *ctx)
+static void replace_iter(char *ch, size_t len, int y, void *ctx)
 {
 	*ch = *(int *)ctx;
 }
@@ -329,7 +329,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ins_nl)
 			ch = '\n';
 
-		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
+		list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, replace_iter, &ch);
 
 		if(ins_nl){
 			buf->ui_pos->x = 0;

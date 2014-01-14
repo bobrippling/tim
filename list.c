@@ -719,12 +719,12 @@ static void line_iter(
 		list_iter_f fn, void *ctx)
 {
 	for(size_t i = start; i < end && i < l->len_line; i++)
-		fn(l->line + i, l->len_line - i, y, ctx);
+		fn(l->line + i, 1, y, ctx);
 }
 
 void list_iter_region(
 		list_t *l, const region_t *r,
-		bool evalnl,
+		enum list_iter_flags flags,
 		list_iter_f fn, void *ctx)
 {
 	size_t i = 0;
@@ -740,7 +740,10 @@ void list_iter_region(
 
 		switch(r->type){
 			case REGION_LINE:
-				line_iter(l, 0, l->len_line, y, fn, ctx);
+				if(flags & LIST_ITER_WHOLE_LINE)
+					fn(l->line, l->len_line, y, ctx);
+				else
+					line_iter(l, 0, l->len_line, y, fn, ctx);
 				break;
 			case REGION_COL:
 				line_iter(l, r->begin.x, r->end.x, y, fn, ctx);
@@ -752,7 +755,7 @@ void list_iter_region(
 						y, fn, ctx);
 				break;
 		}
-		if(evalnl)
+		if(flags & LIST_ITER_EVAL_NL)
 			list_evalnewlines1(l);
 	}
 }

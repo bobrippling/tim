@@ -39,9 +39,15 @@ int list_filter(
 
 typedef void list_iter_f(char *, size_t, int y, void *);
 
+enum list_iter_flags
+{
+	LIST_ITER_EVAL_NL = 1 << 0,
+	LIST_ITER_WHOLE_LINE = 1 << 1,
+};
+
 void list_iter_region(
 		list_t *, const region_t *,
-		bool evalnl,
+		enum list_iter_flags,
 		list_iter_f fn, void *ctx);
 
 void list_insline(list_t **, int *x, int *y, int dir);

@@ -406,7 +406,7 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 				.begin.y = range->start,
 				.end.y = range->end
 			},
-			/*evalnl:*/true,
+			LIST_ITER_WHOLE_LINE | LIST_ITER_EVAL_NL,
 			g_exec, &ctx);
 
 	*b->ui_pos = orig_pos;
