@@ -760,11 +760,11 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 			case CTRL_AND('p'):
 				// todo
 				break;
-			case_BACKSPACE:
-				// todo
-				break;
 			default:
 				complete_filter(&ctx, ch);
+				buffer_inschar(b, ch);
+				ui_cur_changed();
+				ui_redraw();
 		}
 	}
 
