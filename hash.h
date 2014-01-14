@@ -4,14 +4,16 @@
 #include <stdbool.h>
 
 struct hash;
+typedef unsigned hash_fn(const void *);
+typedef bool hash_eq_fn(const void *, const void *);
 
-struct hash *hash_new(void);
+struct hash *hash_new(hash_fn, hash_eq_fn);
 
-bool hash_add(struct hash *, char *);
-bool hash_exists(struct hash *, char *);
+bool hash_add(struct hash *, void *);
+bool hash_exists(struct hash *, void *);
 
-void hash_free(struct hash *);
+void hash_free(struct hash *, void fn(void *));
 
-char *hash_ent(struct hash *, unsigned);
+void *hash_ent(struct hash *, unsigned);
 
 #endif

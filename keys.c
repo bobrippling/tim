@@ -8,6 +8,8 @@
 #include <wordexp.h>
 #include <errno.h>
 
+#include "hash.h"
+
 #include "pos.h"
 #include "region.h"
 #include "list.h"
@@ -24,7 +26,6 @@
 #include "prompt.h"
 #include "map.h"
 #include "complete.h"
-#include "hash.h"
 
 #include "buffers.h"
 
@@ -727,7 +728,7 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 	buffer_t *b = buffers_cur();
 	region_t r = {
 		.type = REGION_LINE,
-		.end.y = buffer_nlines(b)
+		.end.y = buffer_nlines(b) + 1
 	};
 
 	list_t *l = buffer_current_line(b);
@@ -744,11 +745,32 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 	list_iter_region(b->head, &r, /*evalnl:*/false,
 			complete_gather, &ctx);
 
-	unsigned i = 0;
-	char *p;
+	int sel = 0;
+	for(;;){
+		ui_draw_completion(ctx.ents, sel, b->ui_pos, ctx.current_len,
+				&complete_1_ishidden, &complete_1_getstr);
 
-	for(; (p = hash_ent(ctx.ents, i)); i++){
-		/* TODO */
+		int ch = io_getch(IO_NOMAP, NULL);
+		switch(ch){
+			case K_ESC:
+				sel = -1;
+				goto cancel;
+			case CTRL_AND('n'):
+			case CTRL_AND('p'):
+				// todo
+				break;
+			case_BACKSPACE:
+				// todo
+				break;
+			default:
+				complete_filter(&ctx, ch);
+		}
+	}
+
+cancel:
+	if(sel == -1){
+		ui_set_bufmode(UI_NORMAL);
+	}else{
 	}
 
 	complete_teardown(&ctx);

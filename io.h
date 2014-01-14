@@ -21,5 +21,10 @@ void io_ungetstrr(const char *s, size_t n);
 unsigned io_read_repeat(enum io);
 
 #define K_ESC '\033'
+#define case_BACKSPACE     \
+			case CTRL_AND('?'):  \
+			case CTRL_AND('H'):  \
+			case 263:            \
+			case 127
 
 #endif

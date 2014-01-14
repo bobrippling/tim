@@ -26,11 +26,7 @@ char *prompt(char promp)
 		int ch = io_getch(IO_NOMAP | IO_MAPRAW, &wasraw);
 
 		switch(ch){
-			case CTRL_AND('?'):
-			case CTRL_AND('H'):
-			case 263:
-			case 127:
-				/* backspace */
+			case_BACKSPACE:
 				if(i == 0)
 					goto cancel;
 				buf[--i] = '\0';

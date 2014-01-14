@@ -12,29 +12,22 @@ struct hash
 {
 	struct ent
 	{
-		char *str;
+		void *p;
 		struct ent *next;
 	} ents[HASH_CNT];
+
+	hash_fn *hash;
+	hash_eq_fn *eq;
 };
 
-static unsigned hash_str(const char *s)
+static struct ent *hash_get(struct hash *h, void *p, bool *exists)
 {
-	unsigned hash = 0;
-
-	for(; *s; s++)
-		hash = *s + (hash << 6) + (hash << 16) - hash;
-
-	return hash;
-}
-
-static struct ent *hash_get(struct hash *h, char *s, bool *exists)
-{
-	struct ent *e = &h->ents[hash_str(s) % HASH_CNT];
+	struct ent *e = &h->ents[h->hash(p) % HASH_CNT];
 
 	*exists = false;
 
 	for(;;){
-		if(e->str && !strcmp(e->str, s)){
+		if(e->p && h->eq(e->p, p)){
 			*exists = true;
 			break;
 		}
@@ -47,71 +40,73 @@ static struct ent *hash_get(struct hash *h, char *s, bool *exists)
 	return e;
 }
 
-struct hash *hash_new()
+struct hash *hash_new(hash_fn hash, hash_eq_fn eq)
 {
-	return umalloc(sizeof *hash_new());
+	struct hash *h = umalloc(sizeof(struct hash));
+	h->hash = hash;
+	h->eq = eq;
+	return h;
 }
 
-bool hash_add(struct hash *h, char *s)
+bool hash_add(struct hash *h, void *p)
 {
 	bool exists;
-	struct ent *e = hash_get(h, s, &exists);
+	struct ent *e = hash_get(h, p, &exists);
 
 	if(exists)
 		return false;
 
-	if(e->str){
-		/* different string, next entry */
+	if(e->p){
+		/* different value, next entry */
 		assert(!e->next);
 		e->next = umalloc(sizeof *e->next);
 		e = e->next;
 	}
 
-	e->str = s;
+	e->p = p;
 
 	return true;
 }
 
-bool hash_exists(struct hash *h, char *s)
+bool hash_exists(struct hash *h, void *p)
 {
 	bool exists;
-	hash_get(h, s, &exists);
+	hash_get(h, p, &exists);
 	return exists;
 }
 
-static void ent_free(struct ent *e)
+static void ent_free(struct ent *e, void fn(void *))
 {
 	if(e){
 		struct ent *n = e->next;
-		free(e->str);
+		fn(e->p);
 		free(e);
 
-		ent_free(n);
+		ent_free(n, fn);
 	}
 }
 
-void hash_free(struct hash *h)
+void hash_free(struct hash *h, void fn(void *))
 {
 	if(!h)
 		return;
 
 	for(int i = 0; i < HASH_CNT; i++){
 		struct ent *e = &h->ents[i];
-		free(e->str);
-		ent_free(e->next);
+		ent_free(e->next, fn);
 	}
 
 	free(h);
 }
 
-char *hash_ent(struct hash *h, unsigned i)
+void *hash_ent(struct hash *h, unsigned i)
 {
 	unsigned hidx = 0;
 	struct ent *e = &h->ents[hidx];
 
 	while(1){
-		if(e->str && i-- == 0)
-			return e->str;
+		if(e->p && i-- == 0)
+			return e->p;
 
 		if(!(e = e->next)){
 			if(++hidx == HASH_CNT)

@@ -3,6 +3,9 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
+
+#include "hash.h"
 
 #include "pos.h"
 #include "ncurses.h"
@@ -14,6 +17,8 @@
 #include "io.h"
 #include "keys.h"
 #include "buffers.h"
+#include "mem.h"
+#include "complete.h"
 
 #define UI_MODE() buffers_cur()->ui_mode
 
@@ -347,4 +352,61 @@ void ui_redraw()
 void ui_clear(void)
 {
 	nc_clearall();
+}
+
+static void ui_complete_line(
+		const point_t *at,
+		const char *s, bool selected)
+{
+	nc_highlight(true);
+	nc_set_yx(at->y, at->x);
+
+	const int xmax = nc_COLS();
+	for(int i = 0; s[i] && i < xmax; i++)
+		nc_addch(s[i]);
+
+	nc_highlight(false);
+}
+
+#define COMPL_MAX 10
+void ui_draw_completion(
+		struct hash *ents, const int sel,
+		point_t const *at,
+		const size_t len,
+		bool is_hidden(void *),
+		char *get_str(void *))
+{
+	point_t nc_orig;
+	nc_get_yx(&nc_orig.y, &nc_orig.x);
+
+	int start = sel - (COMPL_MAX / 2);
+	if(start < 0)
+		start = 0;
+
+	char *p;
+
+	const int lastline = nc_LINES() - 1;
+	int count = 0;
+
+	for(int i = start; (p = hash_ent(ents, i)); i++){
+		const char *ent_str = get_str(p);
+
+		if(is_hidden(p) || strlen(ent_str) <= len)
+			continue;
+
+		point_t where = {
+			.y = at->y + count,
+			.x = at->x
+		};
+
+		if(count == COMPL_MAX || where.y == lastline){
+			ui_complete_line(&where, "...", false);
+		}else{
+			ui_complete_line(&where, ent_str + len, i == sel);
+		}
+
+		count++;
+	}
+
+	nc_set_yx(nc_orig.y, nc_orig.x);
 }
