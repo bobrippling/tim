@@ -6,6 +6,7 @@
 
 #include "complete.h"
 #include "hash.h"
+#include "keymacros.h" /* case_BACKSPACE */
 
 #include "str.h"
 #include "mem.h"
@@ -107,9 +108,22 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 
 void complete_filter(struct complete_ctx *c, int newch)
 {
-	// TODO: handle backspace
-	c->current = urealloc(c->current, ++c->current_len);
-	c->current[c->current_len - 1] = newch;
+	switch(newch){
+		case_BACKSPACE:
+			if(c->current_len){
+				c->current[--c->current_len] = '\0';
+
+				struct hash_str_ent *ent;
+				size_t i = 0;
+				for(; (ent = hash_ent(c->ents, i)); i++)
+					ent->hidden = false;
+			}
+			break;
+
+		default:
+			c->current = urealloc(c->current, ++c->current_len);
+			c->current[c->current_len - 1] = newch;
+	}
 
 	struct hash_str_ent *ent;
 	size_t i = 0;
