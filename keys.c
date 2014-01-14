@@ -31,6 +31,7 @@
 
 #include "retain.h"
 
+#include "keymacros.h"
 #include "config.h"
 
 int keys_filter(

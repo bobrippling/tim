@@ -19,6 +19,7 @@
 #include "buffers.h"
 #include "mem.h"
 #include "complete.h"
+#include "keymacros.h"
 
 #define UI_MODE() buffers_cur()->ui_mode
 

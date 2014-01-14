@@ -1,8 +1,6 @@
 #ifndef NCURSES_H
 #define NCURSES_H
 
-#define CTRL_AND(c)  ((c) & 037)
-
 #include <stdbool.h>
 
 void nc_init(void);

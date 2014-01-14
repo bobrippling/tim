@@ -16,6 +16,7 @@
 #include "ncurses.h"
 #include "str.h"
 #include "retain.h"
+#include "keymacros.h"
 
 #define TODO() fprintf(stderr, "TODO! %s\n", __func__)
 

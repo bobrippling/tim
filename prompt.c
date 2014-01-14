@@ -6,6 +6,7 @@
 #include "ncurses.h"
 #include "io.h"
 #include "mem.h"
+#include "keymacros.h"
 
 char *prompt(char promp)
 {

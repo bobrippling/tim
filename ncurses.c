@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 #include "ncurses.h"
-#include "macros.h"
+#include "keymacros.h"
 
 void nc_init()
 {
