@@ -31,6 +31,8 @@ static struct ent *hash_get(struct hash *h, char *s, bool *exists)
 {
 	struct ent *e = &h->ents[hash_str(s) % HASH_CNT];
 
+	*exists = false;
+
 	for(;;){
 		if(e->str && !strcmp(e->str, s)){
 			*exists = true;
