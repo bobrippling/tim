@@ -395,7 +395,7 @@ void ui_draw_completion(
 			continue;
 
 		point_t where = {
-			.y = at->y + count,
+			.y = at->y + count + 1,
 			.x = at->x
 		};
 
