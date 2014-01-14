@@ -356,14 +356,18 @@ void ui_clear(void)
 
 static void ui_complete_line(
 		const point_t *at,
-		const char *s, bool selected)
+		const char *s, bool selected,
+		size_t padding)
 {
 	nc_highlight(true);
 	nc_set_yx(at->y, at->x);
 
 	const int xmax = nc_COLS();
-	for(int i = 0; s[i] && i < xmax; i++)
+	for(int i = 0; s[i] && i < xmax; i++, padding--)
 		nc_addch(s[i]);
+
+	while(padding --> 0)
+		nc_addch(' ');
 
 	nc_highlight(false);
 }
@@ -383,7 +387,16 @@ void ui_draw_completion(
 	if(start < 0)
 		start = 0;
 
+	size_t longest = 0;
+
 	char *p;
+	for(int i = start; (p = hash_ent(ents, i)); i++){
+		if(!is_hidden(p)){
+			size_t l = strlen(get_str(p));
+			if(l > longest)
+				longest = l;
+		}
+	}
 
 	const int lastline = nc_LINES() - 1;
 	int count = 0;
@@ -400,9 +413,9 @@ void ui_draw_completion(
 		};
 
 		if(count == COMPL_MAX || where.y == lastline){
-			ui_complete_line(&where, "...", false);
+			ui_complete_line(&where, "...", false, longest - len);
 		}else{
-			ui_complete_line(&where, ent_str + len, i == sel);
+			ui_complete_line(&where, ent_str + len, i == sel, longest - len);
 		}
 
 		count++;
