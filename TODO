@@ -8,15 +8,40 @@ operators:
 	undo
 	=
 
+misc:
+	gi - previous insert
+
 motions:
 	i/a: iw, i{, ip
 	operator-pending:
 		v, V, c-v
 	'., '<mark>, etc
+	^O, ^I
+	*, #
 
 cmds:
 	:! / cmd parsing
 	:e - limit cursor to (x, max_lines) when loading a new file
 	:messages - previous ui_status()s
+	:g
+	:v
+	:m[ove] <to-address>
+	:c[opy] <to-address>
+	:j[oin]
+	:d[elete]
+	:r[!]
+	:a
+	:i
+	:s
+
+ranges:
+	., $, %, +[0-9], '<mark>
 
 use-refactor: command mode is editing a height=1 repl-buffer
+
+registers:
+	"[a-z]
+	"[A-Z] - append
+
+	@[a-z] - execute register
+	@. - execute current line?
