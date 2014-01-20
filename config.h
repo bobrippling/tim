@@ -96,6 +96,8 @@ const nkey_t nkeys[] = {
 	{ "g!",           k_filter,     { .filter.type = FILTER_SELF }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "gq",           k_filter,     { .filter = { FILTER_CMD, "fmt" }}, UI_NORMAL | UI_VISUAL_ANY },
 
+	{ "gi", k_go_insert, KEY_ARG_NONE, UI_NORMAL },
+
 	{ "~",            k_case, { CASE_TOGGLE }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "gU",           k_case, { CASE_UPPER  }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "gu",           k_case, { CASE_LOWER  }, UI_NORMAL | UI_VISUAL_ANY },

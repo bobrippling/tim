@@ -67,5 +67,6 @@ key_func k_ins_colcopy;
 
 key_func k_vtoggle;
 key_func k_go_visual;
+key_func k_go_insert;
 
 #endif

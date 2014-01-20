@@ -39,6 +39,7 @@ struct buffer
 		point_t npos, vpos;
 		enum buf_mode mode;
 	} prev_visual;
+	point_t prev_insert;
 
 	point_t ui_start;     /* offset into buffer */
 	rect_t  screen_coord; /* buffer pos in screen */

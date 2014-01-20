@@ -8,9 +8,6 @@ operators:
 	undo
 	=
 
-misc:
-	gi - previous insert
-
 motions:
 	i/a: iw, i{, ip
 	operator-pending:

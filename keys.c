@@ -289,7 +289,12 @@ void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf = buffers_cur();
 
-	if(buf->ui_mode & UI_INSERT_ANY){
+	const bool was_insert = buf->ui_mode & UI_INSERT_ANY;
+
+	/* set normal mode before the move - lets us capture the position */
+	ui_set_bufmode(UI_NORMAL);
+
+	if(was_insert){
 		motion move = {
 			.func = m_move,
 			.arg = { .pos = { -1, 0 } }
@@ -297,8 +302,6 @@ void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 		motion_apply_buf(&move, /*repeat:*/1, buf);
 	}
-
-	ui_set_bufmode(UI_NORMAL);
 }
 
 void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -603,6 +606,16 @@ void k_go_visual(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	*buf->ui_pos = buf->prev_visual.npos;
 	*buffer_uipos_alt(buf) = buf->prev_visual.vpos;
+
+	ui_cur_changed();
+}
+
+void k_go_insert(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	*buf->ui_pos = buf->prev_insert;
+	ui_set_bufmode(UI_INSERT);
 
 	ui_cur_changed();
 }
