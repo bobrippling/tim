@@ -1,17 +1,13 @@
 visual mode:
 	exec-region = :%!$repl
-	r[char], ~, and : over a region
 
 operators:
 	R - multi-char replacement
-	paste/yank
 	undo
 	=
 
 motions:
 	i/a: iw, i{, ip
-	operator-pending:
-		v, V, c-v
 	'., '<mark>, etc
 	^O, ^I
 	*, #
