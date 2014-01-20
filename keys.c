@@ -754,6 +754,8 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 		ui_draw_completion(ctx.ents, sel, b->ui_pos, ctx.current_len,
 				&complete_1_ishidden, &complete_1_getstr);
 
+		/* TODO: need to advance up to longest common subsequence */
+
 		int ch = io_getch(IO_NOMAP, NULL);
 		switch(ch){
 			case K_ESC:
@@ -794,6 +796,7 @@ handle_sel:
 							buffer_inschar(b, *p);
 					}
 				}
+				/* TODO: need to filter */
 				break;
 			}
 			default:
