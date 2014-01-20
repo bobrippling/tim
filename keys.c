@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stddef.h> /* offsetof() */
+#include <assert.h>
 
 #include <ctype.h>
 #include <wordexp.h>
@@ -743,6 +744,8 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 		return;
 	}
 
+	size_t const first_len = ctx.current_len;
+
 	list_iter_region(b->head, &r, LIST_ITER_WHOLE_LINE,
 			complete_gather, &ctx);
 
@@ -756,23 +759,54 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 			case K_ESC:
 				sel = -1;
 				goto cancel;
-			case CTRL_AND('n'):
-			case CTRL_AND('p'):
-				// todo
+			case CTRL_AND('n'): sel++; goto handle_sel;
+			case CTRL_AND('p'): sel--; goto handle_sel;
+handle_sel:
+			{
+				sel %= hash_cnt(ctx.ents);
+
+				/* delete back to start*/
+				for(; ctx.current_len >= first_len; ctx.current_len--)
+					buffer_delchar(b, &b->ui_pos->x, &b->ui_pos->y);
+
+				if(sel > 0){
+					size_t ent_i = sel - 1;
+					void *ent;
+
+					for(;;){
+						ent = hash_ent(ctx.ents, ent_i);
+						if(complete_1_ishidden(ent)){
+							ent_i++;
+							continue;
+						}
+						break;
+					}
+
+					char *str = complete_1_getstr(ent);
+					assert(str);
+
+					size_t entlen = strlen(str);
+					if(ctx.current_len < entlen){
+						free(ctx.current);
+						ctx.current = ustrdup(str);
+
+						for(char *p = str; *p; p++, ctx.current_len++)
+							buffer_inschar(b, *p);
+					}
+				}
 				break;
+			}
 			default:
 				complete_filter(&ctx, ch);
 				buffer_inschar(b, ch);
-				ui_cur_changed();
-				ui_redraw();
 		}
+		ui_cur_changed();
+		ui_redraw();
 	}
 
 cancel:
-	if(sel == -1){
+	if(sel == -1)
 		ui_set_bufmode(UI_NORMAL);
-	}else{
-	}
 
 	complete_teardown(&ctx);
 }
