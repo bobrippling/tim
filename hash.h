@@ -16,4 +16,6 @@ void hash_free(struct hash *, void fn(void *));
 
 void *hash_ent(struct hash *, unsigned);
 
+size_t hash_cnt(struct hash *);
+
 #endif
