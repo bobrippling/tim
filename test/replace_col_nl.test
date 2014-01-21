@@ -1,0 +1,9 @@
+f 2jr
+__IN__
+abc 123
+123 abc
+xyz hello
+__OUT__
+abc123
+123abc
+xyzhello

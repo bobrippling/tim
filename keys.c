@@ -406,27 +406,39 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ch == K_ESC)
 			return;
 
-		/* special case */
-		if(ch == '\r')
-			ch = '\n';
-
 		repeat = DEFAULT_REPEAT(repeat);
 
-		motion m = {
+		motion move_repeat = {
 			.func = m_move,
 			.arg.pos.x = repeat - 1,
 			.how = M_NONE
 		};
 
 		buffer_t *buf = buffers_cur();
+		const motion *mchosen =
+			buf->ui_mode & UI_VISUAL_ANY
+			? motion_read_or_visual(&(unsigned){0}, false)
+			: &move_repeat;
+
 
 		region_t r;
-		if(!motion_to_region(&m, 1, false, buf, &r))
+		if(!motion_to_region(mchosen, 1, false, buf, &r))
 			return;
+
+		/* special case - single _line_ replace
+		 * we differ from vim in that multi-char-single-line
+		 * replace adds N many '\n's
+		 */
+		const bool ins_nl = r.type == REGION_CHAR
+			&& r.begin.y == r.end.y
+			&& ch == '\r';
+
+		if(ins_nl)
+			ch = '\n';
 
 		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
 
-		if(ch == '\n'){
+		if(ins_nl){
 			buf->ui_pos->x = 0;
 			buf->ui_pos->y += repeat;
 		}
