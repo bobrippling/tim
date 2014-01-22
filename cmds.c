@@ -17,43 +17,37 @@
 #include "external.h"
 #include "mem.h"
 
-enum
-{
-	CMD_FAILURE,
-	CMD_SUCCESS,
-};
-
-int c_q(int argc, char **argv, bool force)
+bool c_q(int argc, char **argv, bool force)
 {
 	if(argc != 1){
 		ui_err("usage: %s", *argv);
-		return CMD_FAILURE;
+		return false;
 	}
 
 	if(!force && buffers_cur()->modified){
 		ui_err("buffer modified");
-		return CMD_FAILURE;
+		return false;
 	}
 
 	ui_run = UI_EXIT_0;
 
-	return CMD_SUCCESS;
+	return true;
 }
 
-int c_cq(int argc, char **argv, bool force)
+bool c_cq(int argc, char **argv, bool force)
 {
 	if(argc != 1){
 		ui_err("usage: %s", *argv);
-		return CMD_FAILURE;
+		return false;
 	}
 
 	/* no buffer checks */
 	ui_run = UI_EXIT_1;
 
-	return CMD_SUCCESS;
+	return true;
 }
 
-int c_w(int argc, char **argv, bool force)
+bool c_w(int argc, char **argv, bool force)
 {
 	buffer_t *const buf = buffers_cur();
 
@@ -66,13 +60,13 @@ int c_w(int argc, char **argv, bool force)
 		buffer_set_fname(buf, argv[1]);
 	}else if(argc != 1){
 		ui_err("usage: %s filename", *argv);
-		return CMD_FAILURE;
+		return false;
 	}
 
 	const char *fname = buffer_fname(buf);
 	if(!fname){
 		ui_err("no filename");
-		return CMD_FAILURE;
+		return false;
 	}
 
 	struct stat st;
@@ -80,16 +74,16 @@ int c_w(int argc, char **argv, bool force)
 		if(stat(fname, &st) == 0){
 			if(newfname && access(fname, F_OK) == 0){
 				ui_err("file already exists");
-				return CMD_FAILURE;
+				return false;
 			}
 
 			if(st.st_mtime > buf->mtime){
 				ui_err("file modified externally");
-				return CMD_FAILURE;
+				return false;
 			}
 		}else if(errno != ENOENT){
 			ui_err("stat(%s): %s", buffer_shortfname(fname), strerror(errno));
-			return CMD_FAILURE;
+			return false;
 		}
 	}
 
@@ -100,7 +94,7 @@ got_err:
 		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
 		if(f)
 			fclose(f);
-		return CMD_FAILURE;
+		return false;
 	}
 
 	buffer_write_file(buf, -1, f, buf->eol);
@@ -112,15 +106,15 @@ got_err:
 
 	ui_status("written to \"%s\"", buffer_shortfname(fname));
 
-	return CMD_SUCCESS;
+	return true;
 }
 
-int c_x(int argc, char **argv, bool force)
+bool c_x(int argc, char **argv, bool force)
 {
 	return c_w(argc, argv, false) && c_q(argc, argv, false);
 }
 
-int c_e(int argc, char **argv, bool force)
+bool c_e(int argc, char **argv, bool force)
 {
 	const char *fname;
 
@@ -128,19 +122,19 @@ int c_e(int argc, char **argv, bool force)
 		fname = buffer_fname(buffers_cur());
 		if(!fname){
 			ui_err("no filename");
-			return CMD_FAILURE;
+			return false;
 		}
 	}else if(argc == 2){
 		fname = argv[1];
 	}else{
 		ui_err("usage: %s [filename]", *argv);
-		return CMD_FAILURE;
+		return false;
 	}
 
 	buffer_t *const buf = buffers_cur();
 	if(!force && buf->modified){
 		ui_err("buffer modified");
-		return CMD_FAILURE;
+		return false;
 	}
 
 	if(!buffer_replace_fname(buf, fname)){
@@ -157,17 +151,17 @@ int c_e(int argc, char **argv, bool force)
 	ui_redraw();
 	ui_cur_changed();
 
-	return CMD_SUCCESS;
+	return true;
 }
 
 static
-int c_split(enum buffer_neighbour ne, int argc, char **argv, bool force)
+bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force)
 {
 	buffer_t *b;
 
 	if(argc > 2){
 		ui_err("usage: %s [filename]", *argv);
-		return CMD_FAILURE;
+		return false;
 	}
 
 	if(argc > 1){
@@ -184,20 +178,20 @@ int c_split(enum buffer_neighbour ne, int argc, char **argv, bool force)
 	ui_redraw();
 	ui_cur_changed();
 
-	return CMD_SUCCESS;
+	return true;
 }
 
-int c_vs(int argc, char **argv, bool force)
+bool c_vs(int argc, char **argv, bool force)
 {
 	return c_split(BUF_RIGHT, argc, argv, force);
 }
 
-int c_sp(int argc, char **argv, bool force)
+bool c_sp(int argc, char **argv, bool force)
 {
 	return c_split(BUF_DOWN, argc, argv, force);
 }
 
-int c_run(int argc, char **argv, bool force)
+bool c_run(int argc, char **argv, bool force)
 {
 	if(argc == 1){
 		shellout(NULL);
@@ -219,5 +213,5 @@ int c_run(int argc, char **argv, bool force)
 		free(cmd);
 	}
 
-	return CMD_SUCCESS;
+	return true;
 }

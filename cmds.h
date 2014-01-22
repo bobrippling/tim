@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef int cmd_func(
+typedef bool cmd_func(
 		int argc, char **argv, bool force)
 	__attribute__((nonnull));
 
