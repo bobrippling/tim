@@ -36,6 +36,20 @@ char *parse_arg(const char *arg)
 	return ret;
 }
 
+static void insert_argv(char ***pargv, int *pargc, int idx, char *new)
+{
+#define argv (*pargv)
+#define argc (*pargc)
+	argv = urealloc(argv, (++argc + 1) * sizeof *argv);
+	for(int i = argc - 1; i > idx; i--)
+		argv[i] = argv[i - 1];
+
+	argv[idx] = new;
+#undef argv
+#undef argc
+}
+
+
 bool parse_cmd(
 		char *cmd,
 		int *pargc, char ***pargv,
@@ -53,7 +67,6 @@ bool parse_cmd(
 
 	int argc = *pargc;
 	char **argv = *pargv;
-	char *p;
 	bool had_punct;
 
 	/* special case */
@@ -67,24 +80,32 @@ bool parse_cmd(
 		cmd++;
 	}
 
-	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
+	for(char *p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
 		argv = urealloc(argv, (argc + 2) * sizeof *argv);
 		argv[argc++] = parse_arg(p);
 	}
 	if(argv)
 		argv[argc] = NULL;
 
-	/* special case: check for '!' in the first cmd */
-	if(!had_punct && argc >= 1 && (p = strchr(argv[0], '!'))){
-		*force = true;
-		*p = '\0';
-		if(p[1]){
-			/* split, e.g. "w!hello" -> "w", "hello" */
-			argv = urealloc(argv, (++argc + 1) * sizeof *argv);
-			for(int i = argc - 1; i > 1; i--)
-				argv[i] = argv[i - 1];
+	/* special case: check for non-ascii in the first cmd */
+	if(!had_punct && argc >= 1){
+		for(char *p = argv[0]; *p; p++){
+			if(!isalpha(*p)){
+				if(*p == '!'){
+					*force = true;
+					*p = '\0';
 
-			argv[1] = ustrdup(p + 1);
+					if(p[1]){
+						/* split, e.g. "w!hello" -> "w", "hello" */
+						insert_argv(&argv, &argc, 1, ustrdup(p + 1));
+					}
+				}else{
+					/* split, e.g. "g/hi/" -> "g", "/hi/" */
+					insert_argv(&argv, &argc, 1, ustrdup(p));
+					*p = '\0';
+				}
+				break;
+			}
 		}
 	}
 
