@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "pos.h"
 #include "region.h"
@@ -35,17 +36,21 @@ static bool parse_range_1(
 		/*case '\'': */
 	}
 
-	*end = range;
 	for(;;){
-		switch(**end){
+		switch(*range){
 			case '+':
 			case '-':
 				range++;
-				*out += strtol(range, end, 10);
+				if(isdigit(*range))
+					*out += strtol(range, &range, 10);
+				else
+					*out += (**end == '+' ? 1 : -1);
+
 				handled = true;
 				/* read more +/- */
 				break;
 			default:
+				*end = range;
 				return handled;
 		}
 	}
@@ -66,7 +71,7 @@ bool parse_range(
 		return false;
 
 	if(*cmd == ','){
-		++*cmd;
+		cmd++;
 		if(!parse_range_1(cmd, end, &r->end))
 			return false;
 	}else{
