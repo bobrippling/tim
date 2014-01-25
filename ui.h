@@ -18,6 +18,8 @@ void ui_clear(void); /* full clear, for ^L */
 void ui_status(const char *fmt, ...) tim_printf(1, 2);
 void ui_err(const char *fmt, ...) tim_printf(1, 2);
 
+void ui_print(const char *, size_t);
+
 #ifdef BUFFER_H
 void ui_set_bufmode(enum buf_mode m);
 #endif

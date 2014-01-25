@@ -348,3 +348,11 @@ void ui_clear(void)
 {
 	nc_clearall();
 }
+
+void ui_print(const char *s, size_t n)
+{
+	nc_set_yx(nc_LINES() - 1, 0);
+	while(n --> 0)
+		nc_addch(*s++);
+	nc_addch('\n');
+}
