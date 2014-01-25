@@ -244,3 +244,28 @@ bool c_run(int argc, char **argv, bool force, struct range *range)
 
 	return true;
 }
+
+bool c_p(int argc, char **argv, bool force, struct range *range)
+{
+	if(argc != 1){
+		ui_err("Usage: %s", *argv);
+		return false;
+	}
+
+	buffer_t *const b = buffers_cur();
+
+	struct range rng;
+	if(!range){
+		range = &rng;
+		rng.start = rng.end = b->ui_pos->y;
+	}
+
+	list_t *l = list_seek(b->head, range->start, false);
+	for(int i = range->start; i <= range->end; i++){
+		ui_print(l ? l->line : "", l ? l->len_line : 0);
+		if(l)
+			l = l->next;
+	}
+
+	return true;
+}

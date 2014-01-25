@@ -170,6 +170,8 @@ const cmd_t cmds[] = {
 	{ "vs",  c_vs    },
 	{ "sp",  c_sp    },
 
+	{ "p",   c_p     },
+
 	{ "!",   c_run   },
 
 	{ NULL }
