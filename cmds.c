@@ -268,7 +268,9 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 			l = l->next;
 	}
 
-	io_ungetch(io_getch(IO_NOMAP, NULL));
+	int ch = io_getch(IO_NOMAP, NULL);
+	if(!isnewline(ch))
+		io_ungetch(ch);
 	ui_redraw();
 	ui_cur_changed();
 
