@@ -29,7 +29,7 @@ char *parse_arg(const char *arg)
 
 	char *ret = r
 		? ustrdup(arg)
-		: join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
+		: join(" ", wexp.we_wordv, wexp.we_wordc);
 
 	wordfree(&wexp);
 
@@ -100,7 +100,7 @@ void filter_cmd(int *pargc, char ***pargv)
 	int argc = *pargc;
 	char **argv = *pargv;
 	int i;
-	const char *const fnam = buffer_fname(buffers_cur());
+	char *fnam = (char *)buffer_fname(buffers_cur());
 
 
 	for(i = 0; i < argc; i++){
@@ -119,7 +119,7 @@ void filter_cmd(int *pargc, char ***pargv)
 
 						*p = '\0';
 
-						new = join("", (const char *[]){
+						new = join("", (char *[]){
 								argv[i],
 								fnam,
 								p + 1 }, 3);
