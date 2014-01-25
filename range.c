@@ -21,10 +21,6 @@ static bool parse_range_1(
 			*out = strtol(range, &range, 10);
 			break;
 
-		default:
-			handled = false;
-			/* fall */
-
 		case '.':
 			*out = buffers_cur()->ui_pos->y;
 			range++;
@@ -34,6 +30,12 @@ static bool parse_range_1(
 			range++;
 			break;
 		/*case '\'': */
+
+		default:
+			/* don't touch range */
+			handled = false;
+			*out = buffers_cur()->ui_pos->y;
+			break;
 	}
 
 	for(;;){
@@ -56,7 +58,7 @@ static bool parse_range_1(
 	}
 }
 
-bool parse_range(
+enum range_parse parse_range(
 		char *cmd, char **end,
 		struct range *r)
 {
@@ -64,20 +66,21 @@ bool parse_range(
 		r->start = 0;
 		r->end = buffer_nlines(buffers_cur());
 		*end = cmd + 1;
-		return true;
+		return RANGE_PARSE_PASS;
 	}
 
 	if(!parse_range_1(cmd, end, &r->start))
-		return false;
+		return RANGE_PARSE_NONE; /* no range */
 
+	cmd = *end;
 	if(*cmd == ','){
 		cmd++;
 		if(!parse_range_1(cmd, end, &r->end))
-			return false;
+			return RANGE_PARSE_FAIL;
 	}else{
 		r->end = r->start;
 	}
 
-	return true;
+	return RANGE_PARSE_PASS;
 }
 

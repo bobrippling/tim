@@ -7,8 +7,14 @@ struct range
 {
 	int start, end;
 };
+enum range_parse
+{
+	RANGE_PARSE_NONE,
+	RANGE_PARSE_FAIL,
+	RANGE_PARSE_PASS,
+};
 
-bool parse_range(
+enum range_parse parse_range(
 		char *cmd, char **end,
 		struct range *r);
 

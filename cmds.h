@@ -4,8 +4,7 @@
 #include <stdbool.h>
 
 typedef bool cmd_func(
-		int argc, char **argv, bool force)
-	__attribute__((nonnull));
+		int argc, char **argv, bool force, struct range *);
 
 typedef struct cmd_t
 {

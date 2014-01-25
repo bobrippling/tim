@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "range.h"
 #include "cmds.h"
 #include "pos.h"
 #include "region.h"
@@ -17,8 +18,23 @@
 #include "external.h"
 #include "mem.h"
 
-bool c_q(int argc, char **argv, bool force)
+#define RANGE_NO()                       \
+	if(range){                             \
+		ui_err(":%s doesn't support ranges", \
+				*argv);                          \
+		return false;                        \
+	}
+
+#define RANGE_TODO()                       \
+	if(range){                               \
+		ui_err("TODO: range with :%s", *argv); \
+		return false;                          \
+	}
+
+bool c_q(int argc, char **argv, bool force, struct range *range)
 {
+	RANGE_NO();
+
 	if(argc != 1){
 		ui_err("usage: %s", *argv);
 		return false;
@@ -34,8 +50,10 @@ bool c_q(int argc, char **argv, bool force)
 	return true;
 }
 
-bool c_cq(int argc, char **argv, bool force)
+bool c_cq(int argc, char **argv, bool force, struct range *range)
 {
+	RANGE_NO();
+
 	if(argc != 1){
 		ui_err("usage: %s", *argv);
 		return false;
@@ -47,8 +65,10 @@ bool c_cq(int argc, char **argv, bool force)
 	return true;
 }
 
-bool c_w(int argc, char **argv, bool force)
+bool c_w(int argc, char **argv, bool force, struct range *range)
 {
+	RANGE_TODO();
+
 	buffer_t *const buf = buffers_cur();
 
 	bool newfname = false;
@@ -109,13 +129,18 @@ got_err:
 	return true;
 }
 
-bool c_x(int argc, char **argv, bool force)
+bool c_x(int argc, char **argv, bool force, struct range *range)
 {
-	return c_w(argc, argv, false) && c_q(argc, argv, false);
+	RANGE_NO();
+
+	return c_w(argc, argv, false, range)
+		&& c_q(argc, argv, false, NULL);
 }
 
-bool c_e(int argc, char **argv, bool force)
+bool c_e(int argc, char **argv, bool force, struct range *range)
 {
+	RANGE_NO();
+
 	const char *fname;
 
 	if(argc == 1){
@@ -155,8 +180,10 @@ bool c_e(int argc, char **argv, bool force)
 }
 
 static
-bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force)
+bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force, struct range *range)
 {
+	RANGE_NO();
+
 	buffer_t *b;
 
 	if(argc > 2){
@@ -181,18 +208,20 @@ bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force)
 	return true;
 }
 
-bool c_vs(int argc, char **argv, bool force)
+bool c_vs(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(BUF_RIGHT, argc, argv, force);
+	return c_split(BUF_RIGHT, argc, argv, force, range);
 }
 
-bool c_sp(int argc, char **argv, bool force)
+bool c_sp(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(BUF_DOWN, argc, argv, force);
+	return c_split(BUF_DOWN, argc, argv, force, range);
 }
 
-bool c_run(int argc, char **argv, bool force)
+bool c_run(int argc, char **argv, bool force, struct range *range)
 {
+	RANGE_TODO();
+
 	if(argc == 1){
 		shellout(NULL);
 	}else{

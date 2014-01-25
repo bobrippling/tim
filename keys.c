@@ -1,11 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <stddef.h> /* offsetof() */
-
-#include <ctype.h>
-#include <wordexp.h>
 #include <errno.h>
 
 #include "pos.h"
@@ -13,6 +9,7 @@
 #include "list.h"
 #include "buffer.h"
 #include "yank.h"
+#include "range.h"
 
 #include "ui.h"
 #include "motion.h"
@@ -23,6 +20,7 @@
 #include "cmds.h"
 #include "prompt.h"
 #include "map.h"
+#include "parse_cmd.h"
 
 #include "buffers.h"
 
@@ -140,109 +138,6 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 	return motion_read(repeat, apply_maps);
 }
 
-static
-char *parse_arg(const char *arg)
-{
-	/* TODO: ~ substitution */
-	wordexp_t wexp;
-	memset(&wexp, 0, sizeof wexp);
-
-	int r = wordexp(arg, &wexp, WRDE_NOCMD);
-
-	char *ret = r
-		? ustrdup(arg)
-		: join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
-
-	wordfree(&wexp);
-
-	return ret;
-}
-
-static
-void parse_cmd(char *cmd, int *pargc, char ***pargv, bool *force)
-{
-	int argc = *pargc;
-	char **argv = *pargv;
-	char *p;
-	bool had_punct;
-
-	/* special case */
-	if((had_punct = ispunct(cmd[0]))){
-		argv = urealloc(argv, (argc + 2) * sizeof *argv);
-
-		snprintf(
-				argv[argc++] = umalloc(2),
-				2, "%s", cmd);
-
-		cmd++;
-	}
-
-	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
-		argv = urealloc(argv, (argc + 2) * sizeof *argv);
-		argv[argc++] = parse_arg(p);
-	}
-	if(argv)
-		argv[argc] = NULL;
-
-	/* special case: check for '!' in the first cmd */
-	if(!had_punct && argc >= 1 && (p = strchr(argv[0], '!'))){
-		*force = true;
-		*p = '\0';
-		if(p[1]){
-			/* split, e.g. "w!hello" -> "w", "hello" */
-			argv = urealloc(argv, (++argc + 1) * sizeof *argv);
-			for(int i = argc - 1; i > 1; i--)
-				argv[i] = argv[i - 1];
-
-			argv[1] = ustrdup(p + 1);
-		}
-	}
-
-	*pargv = argv;
-	*pargc = argc;
-}
-
-static
-void filter_cmd(int *pargc, char ***pargv)
-{
-	/* check for '%' */
-	int argc = *pargc;
-	char **argv = *pargv;
-	int i;
-	const char *const fnam = buffer_fname(buffers_cur());
-
-
-	for(i = 0; i < argc; i++){
-		char *p;
-
-		for(p = argv[i]; *p; p++){
-			if(*p == '\\')
-				continue;
-
-			switch(*p){
-				/* TODO: '#' */
-				case '%':
-					if(fnam){
-						const int di = p - argv[i];
-						char *new;
-
-						*p = '\0';
-
-						new = join("", (const char *[]){
-								argv[i],
-								fnam,
-								p + 1 }, 3);
-
-						free(argv[i]);
-						argv[i] = new;
-						p = argv[i] + di;
-					}
-					break;
-			}
-		}
-	}
-}
-
 void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
 	char *cmd = prompt(':');
@@ -253,7 +148,12 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	char **argv = NULL;
 	int argc = 0;
 	bool force = false;
-	parse_cmd(cmd, &argc, &argv, &force);
+	struct range range_store, *range = &range_store;
+
+	if(!parse_cmd(cmd, &argc, &argv, &force, &range)){
+		ui_status("bad command: %s", cmd);
+		goto cancel;
+	}
 
 	if(!argc)
 		goto cancel;
@@ -263,7 +163,7 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	int i;
 	for(i = 0; cmds[i].cmd; i++)
 		if(!strcmp(cmds[i].cmd, argv[0])){
-			cmds[i].func(argc, argv, force);
+			cmds[i].func(argc, argv, force, range);
 			break;
 		}
 
