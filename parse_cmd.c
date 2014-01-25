@@ -41,7 +41,7 @@ static void insert_argv(char ***pargv, int *pargc, int idx, char *new)
 #define argv (*pargv)
 #define argc (*pargc)
 	argv = urealloc(argv, (++argc + 1) * sizeof *argv);
-	for(int i = argc - 1; i > idx; i--)
+	for(int i = argc; i > idx; i--)
 		argv[i] = argv[i - 1];
 
 	argv[idx] = new;
