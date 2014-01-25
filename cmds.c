@@ -17,6 +17,7 @@
 #include "buffers.h"
 #include "external.h"
 #include "mem.h"
+#include "io.h"
 
 #define RANGE_NO()                       \
 	if(range){                             \
@@ -266,6 +267,10 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 		if(l)
 			l = l->next;
 	}
+
+	io_ungetch(io_getch(IO_NOMAP, NULL));
+	ui_redraw();
+	ui_cur_changed();
 
 	return true;
 }
