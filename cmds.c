@@ -18,6 +18,7 @@
 #include "external.h"
 #include "mem.h"
 #include "io.h"
+#include "parse_cmd.h"
 
 #define RANGE_NO()                       \
 	if(range){                             \
@@ -275,4 +276,86 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 	ui_cur_changed();
 
 	return true;
+}
+
+struct g_ctx
+{
+	bool g_inverse;
+
+	cmd_func *cmd;
+	int argc;
+	char **argv;
+	bool force;
+	struct range *range;
+};
+
+static void g_exec(char *line, void *c)
+{
+	struct g_ctx *ctx = c;
+
+	(void)ctx;
+}
+
+bool c_g(int argc, char **argv, bool inverse, struct range *range)
+{
+	buffer_t *const b = buffers_cur();
+	bool ec = false;
+
+	char *const gcmd = join(" ", argv + 1, argc - 1);
+	char *gi = gcmd;
+
+	const char reg_sep = *gi++;
+	for(; *gi; gi++)
+		if(*gi == '\\')
+			gi++;
+		else if(*gi == reg_sep)
+			break;
+
+	if(*gi != reg_sep){
+		ui_err("no terminating character (%c)", reg_sep);
+		goto out;
+	}
+	gi++;
+
+	struct range sub_range;
+	struct g_ctx ctx = {
+		.g_inverse = inverse,
+		.range = &sub_range
+	};
+
+	if(!parse_cmd(gi, &ctx.argc, &ctx.argv, &ctx.force, &ctx.range)){
+		ui_err("bad command: %s", gi);
+		goto out;
+	}
+
+	if(!argc){
+		/* TODO: print */
+		ui_err("TODO: print");
+		goto out;
+	}
+
+	filter_cmd(&argc, &argv);
+
+	struct range rng_all;
+	if(!range){
+		rng_all.start = 0;
+		rng_all.end = buffer_nlines(b);
+		range = &rng_all;
+	}
+
+	list_iter_region(
+			b->head,
+			&(struct region){
+				.type = REGION_LINE,
+				.begin.y = range->start,
+				.end.y = range->end
+			},
+			/*evalnl:*/true,
+			g_exec, &ctx);
+
+	ec = true;
+out:
+	free(gcmd);
+
+	return ec;
 }

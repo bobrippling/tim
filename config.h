@@ -171,6 +171,7 @@ const cmd_t cmds[] = {
 	{ "sp",  c_sp    },
 
 	{ "p",   c_p     },
+	{ "g",   c_g     },
 
 	{ "!",   c_run   },
 

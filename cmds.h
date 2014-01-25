@@ -17,6 +17,7 @@ cmd_func c_w;
 cmd_func c_x;
 cmd_func c_e;
 cmd_func c_p;
+cmd_func c_g;
 
 cmd_func c_vs;
 cmd_func c_sp;
