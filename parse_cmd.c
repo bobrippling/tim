@@ -80,9 +80,24 @@ bool parse_cmd(
 		cmd++;
 	}
 
-	for(char *p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
+	char *anchor = cmd;
+	for(;;){
+		bool done = false;
+		char *p = strchr(anchor, ' ');
+
+		if(!p){
+			p = strchr(anchor, '\0');
+			done = true;
+		}else{
+			*p = '\0';
+		}
+
 		argv = urealloc(argv, (argc + 2) * sizeof *argv);
-		argv[argc++] = parse_arg(p);
+		argv[argc++] = parse_arg(anchor);
+
+		if(done)
+			break;
+		anchor = p + 1;
 	}
 	if(argv)
 		argv[argc] = NULL;
