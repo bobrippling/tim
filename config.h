@@ -159,21 +159,22 @@ const keymap_t maps[] = {
 };
 
 const cmd_t cmds[] = {
-	{ "q",   c_q     },
-	{ "cq",  c_cq    },
-	{ "w",   c_w     },
-	{ "e",   c_e     },
+	{ "q",   .f_argv = c_q   },
+	{ "cq",  .f_argv = c_cq  },
+	{ "w",   .f_argv = c_w   },
+	{ "e",   .f_argv = c_e   },
 
-	{ "x",   c_x     },
-	{ "wq",  c_x     },
+	{ "x",   .f_argv = c_x   },
+	{ "wq",  .f_argv = c_x   },
 
-	{ "vs",  c_vs    },
-	{ "sp",  c_sp    },
+	{ "vs",  .f_argv = c_vs  },
+	{ "sp",  .f_argv = c_sp  },
 
-	{ "p",   c_p     },
-	{ "g",   c_g     },
+	{ "p",   .f_argv = c_p   },
 
-	{ "!",   c_run   },
+	{ "g",   .f_arg1 = c_g, .single_arg = true },
+
+	{ "!",   .f_argv = c_run },
 
 	{ NULL }
 };
