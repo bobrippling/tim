@@ -305,6 +305,7 @@ bool c_g(int argc, char **argv, bool inverse, struct range *range)
 	char *gi = gcmd;
 
 	const char reg_sep = *gi++;
+	char *const regex = gi;
 	for(; *gi; gi++)
 		if(*gi == '\\')
 			gi++;
@@ -315,7 +316,10 @@ bool c_g(int argc, char **argv, bool inverse, struct range *range)
 		ui_err("no terminating character (%c)", reg_sep);
 		goto out;
 	}
-	gi++;
+	*gi++ = '\0';
+	ui_status("g, sep: '%c', regex: '%s', after: '%s'",
+			reg_sep, regex, gi);
+	return false;
 
 	struct range sub_range;
 	struct g_ctx ctx = {
