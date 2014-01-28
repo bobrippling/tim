@@ -312,6 +312,12 @@ int m_find(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 static char *lastsearch;
 static bool lastsearch_forward;
 
+void m_setlastsearch(char *new)
+{
+	free(lastsearch);
+	lastsearch = new;
+}
+
 int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	if(!lastsearch){
@@ -342,8 +348,7 @@ int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	if(!target)
 		return MOTION_FAILURE;
 
-	free(lastsearch);
-	lastsearch = target;
+	m_setlastsearch(target);
 
 	return m_searchnext(m, repeat, buf, to);
 }

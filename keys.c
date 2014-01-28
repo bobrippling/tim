@@ -767,3 +767,17 @@ void k_on_word(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	free(word);
 }
+
+void word_search(const char *word, bool flag)
+{
+	m_setlastsearch(ustrdup(word));
+
+	motion m_search = {
+		.func = m_searchnext,
+		.arg = { flag ? -1 : +1 },
+		.how = M_EXCLUSIVE
+	};
+
+	buffer_t *buf = buffers_cur();
+	motion_apply_buf(&m_search, /*repeat:*/1, buf);
+}

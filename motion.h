@@ -47,6 +47,8 @@ motion_func m_para, m_paren, m_func;
 motion_func m_search, m_searchnext;
 motion_func m_visual;
 
+void m_setlastsearch(char *);
+
 typedef struct motion
 {
 	motion_func *func;
