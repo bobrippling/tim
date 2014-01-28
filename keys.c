@@ -752,3 +752,18 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_redraw();
 	ui_cur_changed();
 }
+
+void k_on_word(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+	char *word = buffer_current_word(buf);
+
+	if(!word){
+		ui_err("no word under cursor");
+		return;
+	}
+
+	a->word_action.fn(word, a->word_action.flag);
+
+	free(word);
+}

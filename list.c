@@ -19,6 +19,7 @@
 #include "str.h"
 #include "mem.h"
 #include "macros.h"
+#include "word.h"
 
 list_t *list_new(list_t *prev)
 {
@@ -805,4 +806,28 @@ list_t *list_last(list_t *l, int *py)
 		return NULL;
 	for(; l->next; l = l->next, ++*py);
 	return l;
+}
+
+char *list_word_at(list_t *l, point_t const *pt)
+{
+	l = list_seek(l, pt->y, false);
+	if(!l)
+		return NULL;
+
+	const bool bigwords = false;
+
+	/* forwards until we hit a word */
+	point_t found = *pt;
+	l = word_seek(l, +1, &found, W_KEYWORD, bigwords);
+	if(!l || found.y != pt->y)
+		return NULL;
+
+	/* back until the start of the word */
+	word_seek_to_end(l, -1, &found, bigwords);
+
+	/* forwards until the end of the word */
+	point_t end = found;
+	word_seek_to_end(l, +1, &end, bigwords);
+
+	return ustrdup_len(l->line + found.x, end.x - found.x + 1);
 }

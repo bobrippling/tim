@@ -98,6 +98,7 @@ int buffer_filter(
 void buffer_insline(buffer_t *, int dir);
 
 list_t *buffer_current_line(const buffer_t *);
+char *buffer_current_word(const buffer_t *);
 
 unsigned buffer_nlines(const buffer_t *);
 
