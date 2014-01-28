@@ -1,11 +1,18 @@
-jgq2jgql
+jgq2jgql}jgqG{ihi
 __IN__
+para1
 abc
 hello
+there
+xyz
+
+para2
 jeffery
 there
 xyz
 __OUT__
-abc
-hello jeffery there
+para1
+abc hello there
 xyz
+hi
+para2 jeffery there xyz
