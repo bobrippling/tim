@@ -12,6 +12,7 @@
 #include "ui.h"
 #include "motion.h"
 #include "io.h"
+#include "word.h"
 #include "keys.h"
 #include "buffers.h"
 

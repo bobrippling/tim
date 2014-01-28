@@ -13,6 +13,7 @@
 #include "io.h"
 #include "str.h"
 #include "prompt.h"
+#include "word.h"
 
 #define UI_TOP(buf) buf->ui_start.y
 
@@ -160,59 +161,6 @@ int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	if(r == MOTION_SUCCESS)
 		to->x = 0;
 	return r;
-}
-
-enum word_state
-{
-	W_NONE = 0,
-	W_SPACE = 1 << 0,
-	W_KEYWORD = 1 << 1,
-	W_NON_KWORD = 1 << 2,
-};
-
-static enum word_state word_state(
-		const list_t *l, int x, bool big_words)
-{
-	if(l && 0 <= x && (unsigned)x < l->len_line){
-		const char ch = l->line[x];
-
-		if(isspace(ch))
-			return W_SPACE;
-		else if(big_words)
-			return W_KEYWORD;
-		else if(isalnum(ch) || ch == '_')
-			return W_KEYWORD;
-		return W_NON_KWORD;
-	}
-
-	return W_NONE;
-}
-
-static list_t *word_seek(
-		list_t *l, int dir, point_t *to,
-		enum word_state target, bool big_words)
-{
-	while((word_state(l, to->x, big_words) & target) == 0){
-		const int y = to->y;
-
-		l = list_advance_x(l, dir, &to->y, &to->x);
-
-		if(!l)
-			break;
-		if(y != to->y)
-			break; /* newlines are a fresh start */
-	}
-	return l;
-}
-
-static void word_seek_to_end(list_t *l, int dir, point_t *to, bool big_words)
-{
-	/* put us on the start/end of the word */
-	const enum word_state st = word_state(l, to->x, big_words);
-
-	if(st != W_NONE)
-		while(word_state(l, to->x + dir, big_words) == st)
-			to->x += dir;
 }
 
 static int m_word1(
