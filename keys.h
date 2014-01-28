@@ -78,5 +78,6 @@ key_func k_go_visual;
 key_func k_go_insert;
 
 word_func word_search;
+word_func word_list;
 
 #endif

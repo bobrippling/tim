@@ -349,3 +349,13 @@ void ui_clear(void)
 {
 	nc_clearall();
 }
+
+void ui_printf(const char *fmt, ...)
+{
+	nc_set_yx(nc_LINES() - 1, 0);
+
+	va_list l;
+	va_start(l, fmt);
+	nc_vprintf(fmt, l);
+	va_end(l);
+}

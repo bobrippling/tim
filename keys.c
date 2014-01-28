@@ -24,6 +24,7 @@
 #include "cmds.h"
 #include "prompt.h"
 #include "map.h"
+#include "str.h"
 
 #include "buffers.h"
 
@@ -780,4 +781,14 @@ void word_search(const char *word, bool flag)
 
 	buffer_t *buf = buffers_cur();
 	motion_apply_buf(&m_search, /*repeat:*/1, buf);
+}
+
+void word_list(const char *word, bool flag)
+{
+	buffer_t *b = buffers_cur();
+
+	int hit = 0, n = 0;
+	for(list_t *i = b->head; i; i = i->next, n++)
+		if(tim_strstr(i->line, i->len_line, word))
+			ui_printf("%d: %d %s", ++hit, n, i->line);
 }
