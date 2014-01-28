@@ -645,7 +645,7 @@ int list_filter(
 		return -1;
 	}
 
-	int pid = fork();
+	pid_t pid = fork();
 	switch(pid){
 		case -1:
 		{
