@@ -360,7 +360,7 @@ static int ctoggle(int c)
 	return islower(c) ? toupper(c) : tolower(c);
 }
 
-static void buffer_case_cb(char *s, void *ctx)
+static void buffer_case_cb(char *s, size_t l, int y, void *ctx)
 {
 	*s = (*(int (**)(int))ctx)(*s);
 }

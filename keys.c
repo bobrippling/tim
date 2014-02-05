@@ -283,7 +283,7 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-static void replace_iter(char *ch, void *ctx)
+static void replace_iter(char *ch, size_t l, int y, void *ctx)
 {
 	*ch = *(int *)ctx;
 }

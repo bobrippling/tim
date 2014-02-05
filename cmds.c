@@ -19,6 +19,7 @@
 #include "mem.h"
 #include "io.h"
 #include "parse_cmd.h"
+#include "str.h"
 
 #define RANGE_NO()                       \
 	if(range){                             \
@@ -281,19 +282,28 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 struct g_ctx
 {
 	bool g_inverse;
+	char *match;
+	buffer_t *buf;
 
-	cmd_t *cmd;
+	const cmd_t *cmd;
 	int argc;
 	char **argv;
 	bool force;
 	struct range *range;
 };
 
-static void g_exec(char *line, void *c)
+static void g_exec(char *line, size_t len, int y, void *c)
 {
 	struct g_ctx *ctx = c;
 
-	(void)ctx;
+	if(!!tim_strstr(line, len, ctx->match) == ctx->g_inverse)
+		return;
+
+	*ctx->buf->ui_pos = (point_t){ .y = y };
+
+	cmd_dispatch(ctx->cmd,
+			ctx->argc, ctx->argv,
+			ctx->force, ctx->range);
 }
 
 bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
@@ -316,30 +326,27 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 	}
 	*regex.end = '\0';
 
-	char *subcmd = regex.end + 1;
-	ui_status("g, sep: '%c', regex: '%s', after: '%s'",
-			reg_sep, regex.start, subcmd);
-	return false;
+	buffer_t *const b = buffers_cur();
 
-#if 0
+	char *subcmd = regex.end + 1;
+
 	struct range sub_range;
 	struct g_ctx ctx = {
 		.g_inverse = inverse,
-		.range = &sub_range
+		.match = regex.start,
+		.range = &sub_range,
+		.buf = b,
 	};
 
-	if(!parse_cmd(gi, &ctx.argc, &ctx.argv, &ctx.force, &ctx.range)){
-		ui_err("bad command: %s", gi);
+
+	if(!parse_ranged_cmd(
+			subcmd, &ctx.cmd,
+			&ctx.argv, &ctx.argc,
+			&ctx.force, &ctx.range))
+	{
+		ui_err("unknown command: %s", subcmd);
 		goto out;
 	}
-
-	if(!argc){
-		/* TODO: print */
-		ui_err("TODO: print");
-		return false;
-	}
-
-	filter_cmd(&argc, &argv);
 
 	struct range rng_all;
 	if(!range){
@@ -347,6 +354,8 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		rng_all.end = buffer_nlines(b);
 		range = &rng_all;
 	}
+
+	const point_t orig_pos = *b->ui_pos;
 
 	list_iter_region(
 			b->head,
@@ -358,10 +367,12 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 			/*evalnl:*/true,
 			g_exec, &ctx);
 
-	ec = true;
+	*b->ui_pos = orig_pos;
 
-	return ec;
-#endif
+out:
+	free_argv(ctx.argv, ctx.argc);
+
+	return true;
 }
 
 bool cmd_dispatch(

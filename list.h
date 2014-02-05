@@ -37,10 +37,12 @@ int list_filter(
 		list_t **pl, const region_t *,
 		const char *cmd);
 
+typedef void list_iter_f(char *, size_t, int y, void *);
+
 void list_iter_region(
 		list_t *, const region_t *,
 		bool evalnl,
-		void fn(char *, void *), void *ctx);
+		list_iter_f fn, void *ctx);
 
 void list_insline(list_t **, int *x, int *y, int dir);
 int list_evalnewlines1(list_t *l);

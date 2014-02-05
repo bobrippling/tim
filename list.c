@@ -715,16 +715,17 @@ int list_filter(
 
 static void line_iter(
 		list_t *l, size_t start, size_t end,
-		void fn(char *, void *), void *ctx)
+		size_t y,
+		list_iter_f fn, void *ctx)
 {
 	for(size_t i = start; i < end && i < l->len_line; i++)
-		fn(l->line + i, ctx);
+		fn(l->line + i, l->len_line - i, y, ctx);
 }
 
 void list_iter_region(
 		list_t *l, const region_t *r,
 		bool evalnl,
-		void fn(char *, void *), void *ctx)
+		list_iter_f fn, void *ctx)
 {
 	size_t i = 0;
 	size_t end = r->end.y - r->begin.y;
@@ -735,18 +736,20 @@ void list_iter_region(
 	for(l = list_seek(l, r->begin.y, false);
 			l && i < end; l = l->next, i++)
 	{
+		const size_t y = i + r->begin.y;
+
 		switch(r->type){
 			case REGION_LINE:
-				line_iter(l, 0, l->len_line, fn, ctx);
+				line_iter(l, 0, l->len_line, y, fn, ctx);
 				break;
 			case REGION_COL:
-				line_iter(l, r->begin.x, r->end.x, fn, ctx);
+				line_iter(l, r->begin.x, r->end.x, y, fn, ctx);
 				break;
 			case REGION_CHAR:
 				line_iter(l,
 						i == 0 ? r->begin.x : 0,
 						i+1 == end ? (unsigned)r->end.x : l->len_line,
-						fn, ctx);
+						y, fn, ctx);
 				break;
 		}
 		if(evalnl)

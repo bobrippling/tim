@@ -8,7 +8,7 @@ keys.o: keys.c pos.h region.h list.h buffer.h bufmode.h yank.h range.h \
  ui.h motion.h io.h keys.h ncurses.h mem.h cmds.h prompt.h map.h \
  parse_cmd.h buffers.h retain.h config.h
 cmds.o: cmds.c range.h cmds.h pos.h region.h list.h buffer.h bufmode.h \
- yank.h ui.h buffers.h external.h mem.h io.h parse_cmd.h
+ yank.h ui.h buffers.h external.h mem.h io.h parse_cmd.h str.h
 buffer.o: buffer.c pos.h region.h list.h buffer.h bufmode.h yank.h mem.h \
  macros.h ncurses.h str.h retain.h
 list.o: list.c pos.h region.h list.h mem.h str.h macros.h
