@@ -27,4 +27,4 @@ retain.o: retain.c retain.h
 range.o: range.c pos.h region.h list.h buffer.h bufmode.h yank.h \
  buffers.h range.h
 parse_cmd.o: parse_cmd.c mem.h pos.h region.h list.h buffer.h bufmode.h \
- yank.h buffers.h range.h parse_cmd.h
+ yank.h buffers.h range.h cmds.h parse_cmd.h config_cmds.h

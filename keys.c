@@ -146,73 +146,28 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	if(!cmd)
 		goto cancel_cmd;
 
-	char *cmd_i = cmd;
-	while(isspace(*cmd_i))
-		cmd_i++;
+	const cmd_t *cmd_f;
+	char **argv;
+	int argc;
+	bool force;
+	struct range rstore, *range = &rstore;
 
-	if(!*cmd_i)
-		goto cancel_cmd;
-
-	struct range range_store, *range = &range_store;
-	switch(parse_range(cmd_i, &cmd_i, range)){
-		case RANGE_PARSE_FAIL:
-			goto cancel_cmd;
-		case RANGE_PARSE_NONE:
-			range = NULL;
-		case RANGE_PARSE_PASS:
-			break;
+	if(parse_ranged_cmd(
+			cmd,
+			&cmd_f,
+			&argv, &argc,
+			&force, &range))
+	{
+		/* the call */
+		cmd_f->single_arg
+			? cmd_f->f_arg1(argv[0], argv[1], force, range)
+			: cmd_f->f_argv(argc, argv, force, range);
 	}
-
-	/* alnum or single non-ascii for command */
-	int argc = 1;
-	char **argv = umalloc((argc + 1) * sizeof *argv);
-
-	if(isalnum(*cmd_i)){
-		char *p;
-		for(p = cmd_i + 1; isalnum(*p); p++);
-		argv[0] = ustrdup_len(cmd_i, p - cmd_i);
-	}else if(*cmd_i){
-		argv[0] = ustrdup_len(cmd_i, 1);
-	}else{
-		goto cancel_argv;
-	}
-	cmd_i++;
-
-	/* look for command */
-	const cmd_t *cmd_f = NULL;
-	for(int i = 0; cmds[i].cmd; i++)
-		if(!strcmp(cmds[i].cmd, argv[0])){
-			cmd_f = &cmds[i];
-			break;
-		}
-
-	if(!cmd_f){
+	else
+	{
 		ui_err("unknown command %s", argv[0]);
-		goto cancel_argv;
 	}
 
-	bool force = false;
-	for(; isspace(*cmd_i); cmd_i++);
-	if(*cmd_i == '!')
-		force = true, cmd_i++;
-
-	if(cmd_f->single_arg){
-		argv = urealloc(argv, (++argc + 1) * sizeof *argv);
-		argv[1] = ustrdup(cmd_i);
-
-	}else{
-		parse_cmd(cmd_i, &argc, &argv);
-	}
-	argv[argc] = NULL;
-
-	filter_cmd(&argc, &argv);
-
-	/* the call */
-	cmd_f->single_arg
-		? cmd_f->f_arg1(argv[0], argv[1], force, range)
-		: cmd_f->f_argv(argc, argv, force, range);
-
-cancel_argv:
 	for(int i = 0; i < argc; i++)
 		free(argv[i]);
 	free(argv);
