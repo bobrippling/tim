@@ -102,6 +102,8 @@ int ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(1){
+		ui_wait_return();
+
 		buffer_t *buf = buffers_cur();
 
 		if(UI_MODE() & UI_VISUAL_ANY){
@@ -355,4 +357,26 @@ void ui_print(const char *s, size_t n)
 	while(n --> 0)
 		nc_addch(*s++);
 	nc_addch('\n');
+}
+
+static bool want_return;
+
+void ui_want_return(void)
+{
+	want_return = true;
+}
+
+void ui_wait_return(void)
+{
+	if(!want_return)
+		return;
+
+	want_return = false;
+
+	int ch = io_getch(IO_NOMAP, NULL);
+	if(!isnewline(ch))
+		io_ungetch(ch);
+
+	ui_redraw();
+	ui_cur_changed();
 }
