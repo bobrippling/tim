@@ -279,6 +279,38 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
+bool c_j(int argc, char **argv, bool force, struct range *range)
+{
+	if(argc != 1){
+		ui_err("Usage: %s", *argv);
+		return false;
+	}
+
+	buffer_t *const b = buffers_cur();
+
+	struct range range_store;
+	if(!range){
+		range_store.start = b->ui_pos->y;
+		range_store.end = range_store.start;
+
+		range = &range_store;
+	}
+
+	buffer_joinregion.fn(
+			b,
+			&(region_t){
+				.begin.y = range->start,
+				.end.y = range->end + 1,
+				.type = REGION_LINE
+			},
+			&(point_t){});
+
+	ui_redraw();
+	ui_cur_changed();
+
+	return true;
+}
+
 struct g_ctx
 {
 	bool g_inverse;

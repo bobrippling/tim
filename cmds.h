@@ -27,6 +27,7 @@ cmd_f_argv c_w;
 cmd_f_argv c_x;
 cmd_f_argv c_e;
 cmd_f_argv c_p;
+cmd_f_argv c_j;
 cmd_f_arg1 c_g;
 
 cmd_f_argv c_vs;
