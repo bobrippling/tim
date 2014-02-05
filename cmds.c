@@ -338,14 +338,28 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		.buf = b,
 	};
 
+	struct cmd_t c_p_fallback = {
+		.cmd = "p",
+		.f_argv = &c_p,
+		.single_arg = false,
+	};
 
 	if(!parse_ranged_cmd(
 			subcmd, &ctx.cmd,
 			&ctx.argv, &ctx.argc,
 			&ctx.force, &ctx.range))
 	{
-		ui_err("unknown command: %s", subcmd);
-		goto out;
+		if(!*subcmd){
+			ctx.argc = 1;
+			ctx.argv = umalloc(2 * sizeof *ctx.argv);
+			ctx.argv[0] = ustrdup("p");
+			ctx.force = false;
+			ctx.range = NULL;
+			ctx.cmd = &c_p_fallback;
+		}else{
+			ui_err("unknown command: %s", subcmd);
+			goto out;
+		}
 	}
 
 	struct range rng_all;
