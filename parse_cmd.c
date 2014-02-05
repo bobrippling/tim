@@ -163,6 +163,7 @@ bool parse_ranged_cmd(
 		char *p;
 		for(p = cmd_i + 1; isalnum(*p); p++);
 		argv[0] = ustrdup_len(cmd_i, p - cmd_i);
+		cmd_i = p - 1;
 	}else if(*cmd_i){
 		argv[0] = ustrdup_len(cmd_i, 1);
 	}else{
