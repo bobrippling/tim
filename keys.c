@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h> /* offsetof() */
+#include <ctype.h>
 #include <errno.h>
 
 #include "pos.h"
@@ -140,40 +141,82 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 
 void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	char *cmd = prompt(':');
+	char *const cmd = prompt(':');
 
 	if(!cmd)
-		goto cancel;
+		goto cancel_cmd;
 
-	char **argv = NULL;
-	int argc = 0;
-	bool force = false;
+	char *cmd_i = cmd;
+	while(isspace(*cmd_i))
+		cmd_i++;
+
+	if(!*cmd_i)
+		goto cancel_cmd;
+
 	struct range range_store, *range = &range_store;
-
-	if(!parse_cmd(cmd, &argc, &argv, &force, &range)){
-		ui_status("bad command: %s", cmd);
-		goto cancel;
+	switch(parse_range(cmd_i, &cmd_i, range)){
+		case RANGE_PARSE_FAIL:
+			goto cancel_cmd;
+		case RANGE_PARSE_NONE:
+			range = NULL;
+		case RANGE_PARSE_PASS:
+			break;
 	}
 
-	if(!argc)
-		goto cancel;
+	/* alnum or single non-ascii for command */
+	int argc = 1;
+	char **argv = umalloc((argc + 1) * sizeof *argv);
 
-	filter_cmd(&argc, &argv);
+	if(isalnum(*cmd_i)){
+		char *p;
+		for(p = cmd_i + 1; isalnum(*p); p++);
+		argv[0] = ustrdup_len(cmd_i, p - cmd_i);
+	}else if(*cmd_i){
+		argv[0] = ustrdup_len(cmd_i, 1);
+	}else{
+		goto cancel_argv;
+	}
+	cmd_i++;
 
-	int i;
-	for(i = 0; cmds[i].cmd; i++)
+	/* look for command */
+	const cmd_t *cmd_f = NULL;
+	for(int i = 0; cmds[i].cmd; i++)
 		if(!strcmp(cmds[i].cmd, argv[0])){
-			cmds[i].func(argc, argv, force, range);
+			cmd_f = &cmds[i];
 			break;
 		}
 
-	if(!cmds[i].cmd)
+	if(!cmd_f){
 		ui_err("unknown command %s", argv[0]);
+		goto cancel_argv;
+	}
 
-	for(i = 0; i < argc; i++)
+	bool force = false;
+	for(; isspace(*cmd_i); cmd_i++);
+	if(*cmd_i == '!')
+		force = true, cmd_i++;
+
+	if(cmd_f->single_arg){
+		argv = urealloc(argv, (++argc + 1) * sizeof *argv);
+		argv[1] = ustrdup(cmd_i);
+
+	}else{
+		parse_cmd(cmd_i, &argc, &argv);
+	}
+	argv[argc] = NULL;
+
+	filter_cmd(&argc, &argv);
+
+	/* the call */
+	cmd_f->single_arg
+		? cmd_f->f_arg1(argv[0], argv[1], force, range)
+		: cmd_f->f_argv(argc, argv, force, range);
+
+cancel_argv:
+	for(int i = 0; i < argc; i++)
 		free(argv[i]);
 	free(argv);
-cancel:
+cancel_cmd:
 	free(cmd);
 }
 

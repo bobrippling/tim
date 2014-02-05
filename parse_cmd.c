@@ -36,98 +36,49 @@ char *parse_arg(const char *arg)
 	return ret;
 }
 
-static void insert_argv(char ***pargv, int *pargc, int idx, char *new)
+static void add_argv(
+		char ***pargv, int *pargc,
+		char **panchor, char *p)
 {
 #define argv (*pargv)
 #define argc (*pargc)
-	argv = urealloc(argv, (++argc + 1) * sizeof *argv);
-	for(int i = argc; i > idx; i--)
-		argv[i] = argv[i - 1];
+#define anchor (*panchor)
+	argv = urealloc(argv, (argc + 2) * sizeof *argv);
+	argv[argc++] = parse_arg(anchor);
 
-	argv[idx] = new;
+	anchor = p;
 #undef argv
 #undef argc
+#undef anchor
 }
 
-
-bool parse_cmd(
-		char *cmd,
-		int *pargc, char ***pargv,
-		bool *force,
-		struct range **range)
+void parse_cmd(char *cmd, int *pargc, char ***pargv)
 {
-	switch(parse_range(cmd, &cmd, *range)){
-		case RANGE_PARSE_FAIL:
-			return false;
-		case RANGE_PARSE_NONE:
-			*range = NULL;
-		case RANGE_PARSE_PASS:
-			break;
-	}
-
 	int argc = *pargc;
 	char **argv = *pargv;
-	bool had_punct;
 
-	/* special case */
-	if((had_punct = ispunct(cmd[0]))){
-		argv = urealloc(argv, (argc + 2) * sizeof *argv);
-
-		snprintf(
-				argv[argc++] = umalloc(2),
-				2, "%s", cmd);
-
-		cmd++;
-	}
-
-	char *anchor = cmd;
-	for(;;){
-		bool done = false;
-		char *p = strchr(anchor, ' ');
-
-		if(!p){
-			p = strchr(anchor, '\0');
-			done = true;
-		}else{
-			*p = '\0';
+	char *anchor, *p;
+	p = anchor = cmd;
+	while(*p){
+		if(*p == '\\'){
+			p++;
+			continue;
+		}
+		if(!isspace(*p)){
+			p++;
+			continue;
 		}
 
-		argv = urealloc(argv, (argc + 2) * sizeof *argv);
-		argv[argc++] = parse_arg(anchor);
+		*p++ = '\0';
 
-		if(done)
-			break;
-		anchor = p + 1;
+		add_argv(&argv, &argc, &anchor, p);
 	}
-	if(argv)
-		argv[argc] = NULL;
 
-	/* special case: check for non-ascii in the first cmd */
-	if(!had_punct && argc >= 1){
-		for(char *p = argv[0]; *p; p++){
-			if(!isalpha(*p)){
-				if(*p == '!'){
-					*force = true;
-					*p = '\0';
-
-					if(p[1]){
-						/* split, e.g. "w!hello" -> "w", "hello" */
-						insert_argv(&argv, &argc, 1, ustrdup(p + 1));
-					}
-				}else{
-					/* split, e.g. "g/hi/" -> "g", "/hi/" */
-					insert_argv(&argv, &argc, 1, ustrdup(p));
-					*p = '\0';
-				}
-				break;
-			}
-		}
-	}
+	if(anchor != p)
+		add_argv(&argv, &argc, &anchor, p);
 
 	*pargv = argv;
 	*pargc = argc;
-
-	return true;
 }
 
 void filter_cmd(int *pargc, char ***pargv)

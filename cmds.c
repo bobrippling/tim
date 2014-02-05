@@ -282,7 +282,7 @@ struct g_ctx
 {
 	bool g_inverse;
 
-	cmd_func *cmd;
+	cmd_t *cmd;
 	int argc;
 	char **argv;
 	bool force;
@@ -296,31 +296,32 @@ static void g_exec(char *line, void *c)
 	(void)ctx;
 }
 
-bool c_g(int argc, char **argv, bool inverse, struct range *range)
+bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 {
-	buffer_t *const b = buffers_cur();
-	bool ec = false;
+	const char reg_sep = *gcmd;
+	struct
+	{
+		char *start, *end;
+	} regex = { .start = gcmd + 1 };
 
-	char *const gcmd = join(" ", argv + 1, argc - 1);
-	char *gi = gcmd;
-
-	const char reg_sep = *gi++;
-	char *const regex = gi;
-	for(; *gi; gi++)
-		if(*gi == '\\')
-			gi++;
-		else if(*gi == reg_sep)
+	for(regex.end = regex.start; *regex.end; regex.end++)
+		if(*regex.end == '\\')
+			regex.end++;
+		else if(*regex.end == reg_sep)
 			break;
 
-	if(*gi != reg_sep){
-		ui_err("no terminating character (%c)", reg_sep);
-		goto out;
+	if(*regex.end != reg_sep){
+		ui_err("g%c: no terminating character (%c)", reg_sep, reg_sep);
+		return false;
 	}
-	*gi++ = '\0';
+	*regex.end = '\0';
+
+	char *subcmd = regex.end + 1;
 	ui_status("g, sep: '%c', regex: '%s', after: '%s'",
-			reg_sep, regex, gi);
+			reg_sep, regex.start, subcmd);
 	return false;
 
+#if 0
 	struct range sub_range;
 	struct g_ctx ctx = {
 		.g_inverse = inverse,
@@ -335,7 +336,7 @@ bool c_g(int argc, char **argv, bool inverse, struct range *range)
 	if(!argc){
 		/* TODO: print */
 		ui_err("TODO: print");
-		goto out;
+		return false;
 	}
 
 	filter_cmd(&argc, &argv);
@@ -358,8 +359,7 @@ bool c_g(int argc, char **argv, bool inverse, struct range *range)
 			g_exec, &ctx);
 
 	ec = true;
-out:
-	free(gcmd);
 
 	return ec;
+#endif
 }
