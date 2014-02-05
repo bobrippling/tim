@@ -205,3 +205,10 @@ bool parse_ranged_cmd(
 #undef force
 #undef range
 }
+
+void free_argv(char **argv, int argc)
+{
+	for(int i = 0; i < argc; i++)
+		free(argv[i]);
+	free(argv);
+}

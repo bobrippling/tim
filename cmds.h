@@ -34,4 +34,9 @@ cmd_f_argv c_sp;
 
 cmd_f_argv c_run;
 
+bool cmd_dispatch(
+		const cmd_t *cmd_f,
+		int argc, char **argv,
+		bool force, struct range *range);
+
 #endif

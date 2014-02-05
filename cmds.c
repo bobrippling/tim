@@ -363,3 +363,13 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 	return ec;
 #endif
 }
+
+bool cmd_dispatch(
+		const cmd_t *cmd_f,
+		int argc, char **argv,
+		bool force, struct range *range)
+{
+		return cmd_f->single_arg
+			? cmd_f->f_arg1(argv[0], argv[1], force, range)
+			: cmd_f->f_argv(argc, argv, force, range);
+}

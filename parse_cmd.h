@@ -12,4 +12,6 @@ bool parse_ranged_cmd(
 		bool *pforce,
 		struct range **prange);
 
+void free_argv(char **argv, int argc);
+
 #endif

@@ -158,19 +158,14 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 			&argv, &argc,
 			&force, &range))
 	{
-		/* the call */
-		cmd_f->single_arg
-			? cmd_f->f_arg1(argv[0], argv[1], force, range)
-			: cmd_f->f_argv(argc, argv, force, range);
+		cmd_dispatch(cmd_f, argc, argv, force, range);
 	}
 	else
 	{
 		ui_err("unknown command %s", argv[0]);
 	}
 
-	for(int i = 0; i < argc; i++)
-		free(argv[i]);
-	free(argv);
+	free_argv(argv, argc);
 cancel_cmd:
 	free(cmd);
 }
