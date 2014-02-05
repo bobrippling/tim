@@ -136,7 +136,7 @@ bool c_x(int argc, char **argv, bool force, struct range *range)
 	RANGE_NO();
 
 	return c_w(argc, argv, false, range)
-		&& c_q(argc, argv, false, NULL);
+		&& c_q(1, (char *[]){ *argv }, false, NULL);
 }
 
 bool c_e(int argc, char **argv, bool force, struct range *range)
