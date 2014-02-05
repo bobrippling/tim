@@ -372,6 +372,8 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		.single_arg = false,
 	};
 
+	/* FIXME: need to parse the range on each invocation,
+	 * since g/a/-1p means current-pos-less-one */
 	if(!parse_ranged_cmd(
 			subcmd, &ctx.cmd,
 			&ctx.argv, &ctx.argc,
