@@ -215,6 +215,7 @@ void buffer_smartindent(buffer_t *buf)
 void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 {
 	bool indent = false;
+	bool inschar = true;
 
 	switch(ch){
 		case CTRL_AND('?'):
@@ -222,16 +223,19 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 		case 127:
 			if(*x > 0)
 				buffer_delchar(buf, x, y);
+			inschar = false;
 			break;
 
 		case '\n':
 			indent = true;
-		default:
-			list_inschar(buf->head, x, y, ch);
-			if(indent)
-				buffer_smartindent(buf);
-			break;
 	}
+
+	if(inschar){
+		list_inschar(buf->head, x, y, ch);
+		if(indent)
+			buffer_smartindent(buf);
+	}
+
 	buf->modified = true;
 }
 
