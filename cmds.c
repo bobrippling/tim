@@ -348,15 +348,14 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		else if(*regex.end == reg_sep)
 			break;
 
-	if(*regex.end != reg_sep){
-		ui_err("g%c: no terminating character (%c)", reg_sep, reg_sep);
-		return false;
+	char *subcmd = "";
+	if(*regex.end == reg_sep){
+		*regex.end = '\0';
+		subcmd = regex.end + 1;
 	}
-	*regex.end = '\0';
+	/* else, no terminating character */
 
 	buffer_t *const b = buffers_cur();
-
-	char *subcmd = regex.end + 1;
 
 	struct range sub_range;
 	struct g_ctx ctx = {
