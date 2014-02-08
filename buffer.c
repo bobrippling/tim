@@ -212,6 +212,22 @@ void buffer_smartindent(buffer_t *buf)
 	buf->ui_pos->x = indent;
 }
 
+static void buffer_unindent_empty(buffer_t *buf, int y)
+{
+	if(y == 0)
+		return;
+
+	list_t *l = buffer_last_indent_line(buf, buf->ui_pos->y);
+	if(!l)
+		return;
+	int indent = list_count_indent(l);
+
+	if(indent == 0)
+		return;
+
+	buf->ui_pos->x = indent - 1;
+}
+
 void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 {
 	bool indent = false;
@@ -224,6 +240,12 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 			if(*x > 0)
 				buffer_delchar(buf, x, y);
 			inschar = false;
+			break;
+
+		case '}':
+			/* if we've just started a new line, this unindents */
+			buffer_unindent_empty(buf, *y);
+			indent = false;
 			break;
 
 		case '\n':
