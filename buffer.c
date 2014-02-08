@@ -333,6 +333,31 @@ void buffer_indent2(
 
 void buffer_smartindent(buffer_t *buf)
 {
+	list_t *l = buffer_current_line(buf);
+
+	if(!l)
+		return;
+
+	/* scan backwards until we hit a non-empty line */
+	bool found = false;
+	while(l->prev){
+		l = l->prev;
+		if(!isallspace(l->line, l->len_line)){
+			found = true;
+			break;
+		}
+	}
+
+	if(!found)
+		return;
+
+	int indent = 0;
+	for(unsigned i = 0; i < l->len_line; i++, indent++)
+		if(!isspace(l->line[i]))
+			break;
+
+	/* don't insert space, just move */
+	buf->ui_pos->x = indent;
 }
 
 int buffer_filter(
