@@ -42,15 +42,20 @@ static bool parse_range_1(
 		switch(*range){
 			case '+':
 			case '-':
+			{
+				const int dir = (*range == '+' ? 1 : -1);
+
 				range++;
-				if(isdigit(*range))
-					*out += strtol(range, &range, 10);
-				else
-					*out += (**end == '+' ? 1 : -1);
+				int amt = isdigit(*range)
+					? strtol(range, &range, 10)
+					: 1;
+
+				*out += dir * amt;
 
 				handled = true;
 				/* read more +/- */
 				break;
+			}
 			default:
 				*end = range;
 				return handled;
