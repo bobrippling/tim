@@ -384,7 +384,11 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_insline(buffers_cur(), a->i);
+	buffer_t *b = buffers_cur();
+
+	buffer_insline(b, a->i);
+	buffer_smartindent(b);
+
 	ui_set_bufmode(UI_INSERT);
 	ui_redraw();
 	ui_cur_changed();
@@ -583,6 +587,14 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 				break;
 			case REGION_CHAR:
 				ui_set_bufmode(UI_INSERT);
+				/* handle S / 0c$ */
+				list_t *curline;
+				if(r.begin.x == 0
+				&& (curline = buffer_current_line(buf))
+				&& (unsigned)r.end.x >= curline->len_line)
+				{
+					buffer_smartindent(buf);
+				}
 				break;
 		}
 	}
