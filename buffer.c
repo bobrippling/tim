@@ -352,9 +352,15 @@ void buffer_smartindent(buffer_t *buf)
 		return;
 
 	int indent = 0;
+
+	/* count indent */
 	for(unsigned i = 0; i < l->len_line; i++, indent++)
 		if(!isspace(l->line[i]))
 			break;
+
+	/* if it ends with a '{', increase indent */
+	if(l->len_line > 0 && l->line[l->len_line - 1] == '{')
+		indent++;
 
 	/* don't insert space, just move */
 	buf->ui_pos->x = indent;

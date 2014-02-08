@@ -1,0 +1,22 @@
+oNO_INDENTjoINDENTjoINDENTjoINDENTjoINDENTjoINDENToINDENT
+__IN__
+main()
+{
+	if(hi){{
+	}}
+	f(hi,
+	);
+__OUT__
+main()
+NO_INDENT
+{
+	INDENT
+	if(hi){{
+		INDENT
+	}}
+	INDENT
+	f(hi,
+	INDENT
+	);
+	INDENT
+	INDENT
