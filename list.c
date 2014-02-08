@@ -20,6 +20,9 @@
 #include "mem.h"
 #include "macros.h"
 
+#define GAP_REPLACE_CHAR '\t'
+#define JOIN_CHAR ' '
+
 list_t *list_new(list_t *prev)
 {
 	list_t *l = umalloc(sizeof *l);
@@ -280,7 +283,7 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 	}
 
 	for(int i = l->len_line; i < *x; i++){
-		l->line[i] = ' ';
+		l->line[i] = GAP_REPLACE_CHAR;
 		l->len_line++;
 	}
 
@@ -566,7 +569,7 @@ void list_joinregion(list_t **pl, const region_t *region)
 
 		str_ltrim(l->line, &l->len_line);
 
-		/* + 1 for \0, +1 for ' ' */
+		/* + 1 for \0, +1 for JOIN_CHAR */
 		const size_t target = start->len_line + l->len_line + 2;
 
 		if(start->len_malloc < target)
@@ -576,7 +579,7 @@ void list_joinregion(list_t **pl, const region_t *region)
 				start->line,
 				start->len_malloc);
 
-		start->line[start->len_line++] = ' ';
+		start->line[start->len_line++] = JOIN_CHAR;
 
 		memcpy(start->line + start->len_line,
 				l->line,
