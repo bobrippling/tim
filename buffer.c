@@ -168,6 +168,50 @@ const char *buffer_fname(const buffer_t *b)
 	return b->fname;
 }
 
+static list_t *buffer_last_indent_line(buffer_t *buf, int y)
+{
+	list_t *l = list_seek(buf->head, y, false);
+
+	if(!l)
+		return NULL;
+
+	/* scan backwards until we hit a non-empty line */
+	while(l->prev){
+		l = l->prev;
+		if(!isallspace(l->line, l->len_line))
+			return l;
+	}
+
+	return NULL;
+}
+
+static int list_count_indent(list_t *l)
+{
+	int indent = 0;
+
+	/* count indent */
+	for(unsigned i = 0; i < l->len_line; i++, indent++)
+		if(!isspace(l->line[i]))
+			break;
+
+	/* if it ends with a '{', increase indent */
+	if(l->len_line > 0 && l->line[l->len_line - 1] == '{')
+		indent++;
+
+	return indent;
+}
+
+void buffer_smartindent(buffer_t *buf)
+{
+	list_t *l = buffer_last_indent_line(buf, buf->ui_pos->y);
+	if(!l)
+		return;
+	int indent = list_count_indent(l);
+
+	/* don't insert space, just move */
+	buf->ui_pos->x = indent;
+}
+
 void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 {
 	bool indent = false;
@@ -329,41 +373,6 @@ void buffer_indent2(
 		}
 	}
 	buf->modified = true;
-}
-
-void buffer_smartindent(buffer_t *buf)
-{
-	list_t *l = buffer_current_line(buf);
-
-	if(!l)
-		return;
-
-	/* scan backwards until we hit a non-empty line */
-	bool found = false;
-	while(l->prev){
-		l = l->prev;
-		if(!isallspace(l->line, l->len_line)){
-			found = true;
-			break;
-		}
-	}
-
-	if(!found)
-		return;
-
-	int indent = 0;
-
-	/* count indent */
-	for(unsigned i = 0; i < l->len_line; i++, indent++)
-		if(!isspace(l->line[i]))
-			break;
-
-	/* if it ends with a '{', increase indent */
-	if(l->len_line > 0 && l->line[l->len_line - 1] == '{')
-		indent++;
-
-	/* don't insert space, just move */
-	buf->ui_pos->x = indent;
 }
 
 int buffer_filter(
