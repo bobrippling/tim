@@ -49,10 +49,12 @@ char *tim_strstr(char *restrict haystack, size_t len, const char *restrict needl
 	return NULL;
 }
 
-bool isallspace(const char *s)
+bool isallspace(const char *s, size_t len)
 {
-	for(; *s && isspace(*s); s++);
-	return !*s;
+	for(size_t i = 0; i < len; i++)
+		if(!isspace(s[i]))
+			return false;
+	return true;
 }
 
 static const struct paren

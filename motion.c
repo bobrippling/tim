@@ -127,11 +127,11 @@ limit:
 static list_t *m_search_para(motion_arg const *a, list_t *l, int *pn)
 {
 	/* while in space, find non-space */
-	for(; l && (!l->line || isallspace(l->line));
+	for(; l && (!l->line || isallspace(l->line, l->len_line));
 			l = list_advance_y(l, a->i, pn, NULL));
 
 	/* while in non-space, find space */
-	for(; l && (l->line && !isallspace(l->line));
+	for(; l && (l->line && !isallspace(l->line, l->len_line));
 			l = list_advance_y(l, a->i, pn, NULL));
 
 	return l;
