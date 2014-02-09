@@ -113,7 +113,7 @@ void io_ungetstrr(const char *s, size_t n)
 
 unsigned io_read_repeat(enum io io_mode)
 {
-	unsigned repeat = 1;
+	unsigned repeat = 0;
 
 	int ch = io_getch(io_mode, NULL);
 	if(isdigit(ch) && ch != '0'){

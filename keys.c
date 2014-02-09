@@ -488,7 +488,7 @@ static bool around_motion(
 		int ch = io_getch(IO_NOMAP, NULL);
 		if(ch == from_ch){
 			/* dd - stay where we are, +the repeat */
-			m_doubletap.arg.pos.y = repeat - 1;
+			m_doubletap.arg.pos.y = DEFAULT_REPEAT(repeat) - 1;
 			repeat = 0;
 			m = &m_doubletap;
 		}else{

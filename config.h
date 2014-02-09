@@ -43,7 +43,7 @@ const motionkey_t motion_keys[] = {
 	{ "^",            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },
 	{ "$",            { m_eol,  MOTION_ARG_NONE,      M_NONE      } },
 
-	{ "gg",           { m_sof,  MOTION_ARG_NONE, M_LINEWISE } }, // FIXME: goto
+	{ "gg",           { m_sof,  MOTION_ARG_NONE, M_LINEWISE } },
 	{ "G",            { m_eof,  MOTION_ARG_NONE, M_LINEWISE } },
 
 	{ "H",            { m_sos,  MOTION_ARG_NONE, M_LINEWISE } },
