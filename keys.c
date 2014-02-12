@@ -245,7 +245,7 @@ void filter_cmd(int *pargc, char ***pargv)
 
 void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	char *cmd = prompt(':');
+	char *cmd = prompt(from_ch);
 
 	if(!cmd)
 		goto cancel;
