@@ -34,6 +34,12 @@
 		return false;                          \
 	}
 
+#define RANGE_DEFAULT(range, store, y) \
+	if(!range){                          \
+		store.start = store.end = y;       \
+		range = &store;                    \
+	}
+
 bool c_q(int argc, char **argv, bool force, struct range *range)
 {
 	RANGE_NO();
@@ -258,10 +264,7 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 	buffer_t *const b = buffers_cur();
 
 	struct range rng;
-	if(!range){
-		range = &rng;
-		rng.start = rng.end = b->ui_pos->y;
-	}
+	RANGE_DEFAULT(range, rng, b->ui_pos->y);
 
 	list_t *l = list_seek(b->head, range->start, false);
 	for(int i = range->start; i <= range->end; i++){
@@ -285,11 +288,7 @@ bool c_j(int argc, char **argv, bool force, struct range *range)
 	buffer_t *const b = buffers_cur();
 
 	struct range range_store;
-	if(!range){
-		range_store.start = b->ui_pos->y;
-		range_store.end = range_store.start;
-
-		range = &range_store;
+	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
 	}
 
 	buffer_joinregion.fn(
