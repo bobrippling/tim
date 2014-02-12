@@ -314,10 +314,10 @@ struct g_ctx
 	buffer_t *buf;
 
 	const cmd_t *cmd;
+	char *str_range;
 	int argc;
 	char **argv;
 	bool force;
-	struct range *range;
 };
 
 static void g_exec(char *line, size_t len, int y, void *c)
@@ -329,9 +329,20 @@ static void g_exec(char *line, size_t len, int y, void *c)
 
 	*ctx->buf->ui_pos = (point_t){ .y = y };
 
+	struct range range, *prange = &range;
+	char *end;
+	switch(parse_range(ctx->str_range, &end, prange)){
+		case RANGE_PARSE_FAIL:
+			return; /* shouldn't hit this, should be caught in g_c() */
+		case RANGE_PARSE_NONE:
+			prange = NULL;
+		case RANGE_PARSE_PASS:
+			break;
+	}
+
 	cmd_dispatch(ctx->cmd,
 			ctx->argc, ctx->argv,
-			ctx->force, ctx->range);
+			ctx->force, prange);
 }
 
 bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
@@ -357,11 +368,9 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 
 	buffer_t *const b = buffers_cur();
 
-	struct range sub_range;
 	struct g_ctx ctx = {
 		.g_inverse = inverse,
 		.match = regex.start,
-		.range = &sub_range,
 		.buf = b,
 	};
 
@@ -371,24 +380,29 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		.single_arg = false,
 	};
 
-	/* FIXME: need to parse the range on each invocation,
+	/* parse the range here to check, and on each invocation,
 	 * since g/a/-1p means current-pos-less-one */
 	if(!parse_ranged_cmd(
 			subcmd, &ctx.cmd,
 			&ctx.argv, &ctx.argc,
-			&ctx.force, &ctx.range))
+			&ctx.force,
+			&(struct range *){
+				&(struct range){ 0 }
+			}))
 	{
 		if(!*subcmd){
 			ctx.argc = 1;
 			ctx.argv = umalloc(2 * sizeof *ctx.argv);
 			ctx.argv[0] = ustrdup("p");
 			ctx.force = false;
-			ctx.range = NULL;
+			ctx.str_range = NULL;
 			ctx.cmd = &c_p_fallback;
 		}else{
 			ui_err("unknown command: %s", subcmd);
 			goto out;
 		}
+	}else{
+		ctx.str_range = subcmd;
 	}
 
 	struct range rng_all;
