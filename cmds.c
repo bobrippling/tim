@@ -295,6 +295,8 @@ static void command_bufaction(
 			},
 			&(point_t){});
 
+	*b->ui_pos = (point_t){ .y = range->end };
+
 	ui_redraw();
 	ui_cur_changed();
 }
