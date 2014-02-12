@@ -436,8 +436,6 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		range = &rng_all;
 	}
 
-	const point_t orig_pos = *b->ui_pos;
-
 	list_iter_region(
 			b->head,
 			&(struct region){
@@ -447,8 +445,6 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 			},
 			LIST_ITER_WHOLE_LINE | LIST_ITER_EVAL_NL,
 			g_exec, &ctx);
-
-	*b->ui_pos = orig_pos;
 
 out:
 	free_argv(ctx.argv, ctx.argc);
