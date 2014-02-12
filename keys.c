@@ -283,9 +283,10 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-static void replace_iter(char *ch, size_t len, int y, void *ctx)
+static bool replace_iter(char *ch, list_t *l, int y, void *ctx)
 {
 	*ch = *(int *)ctx;
+	return true;
 }
 
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)

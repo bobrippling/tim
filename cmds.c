@@ -338,12 +338,12 @@ struct g_ctx
 	bool force;
 };
 
-static void g_exec(char *line, size_t len, int y, void *c)
+static bool g_exec(char *line, list_t *l, int y, void *c)
 {
 	struct g_ctx *ctx = c;
 
-	if(!!tim_strstr(line, len, ctx->match) == ctx->g_inverse)
-		return;
+	if(!!tim_strstr(line, l->len_line, ctx->match) == ctx->g_inverse)
+		return true;
 
 	*ctx->buf->ui_pos = (point_t){ .y = y };
 
@@ -351,7 +351,7 @@ static void g_exec(char *line, size_t len, int y, void *c)
 	char *end;
 	switch(parse_range(ctx->str_range, &end, prange)){
 		case RANGE_PARSE_FAIL:
-			return; /* shouldn't hit this, should be caught in g_c() */
+			return true; /* shouldn't hit this, should be caught in g_c() */
 		case RANGE_PARSE_NONE:
 			prange = NULL;
 		case RANGE_PARSE_PASS:
@@ -361,6 +361,8 @@ static void g_exec(char *line, size_t len, int y, void *c)
 	cmd_dispatch(ctx->cmd,
 			ctx->argc, ctx->argv,
 			ctx->force, prange);
+
+	return true;
 }
 
 bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)

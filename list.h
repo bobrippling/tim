@@ -37,7 +37,8 @@ int list_filter(
 		list_t **pl, const region_t *,
 		const char *cmd);
 
-typedef void list_iter_f(char *, size_t, int y, void *);
+/* return false to stop */
+typedef bool list_iter_f(char *, list_t *, int y, void *);
 
 enum list_iter_flags
 {
