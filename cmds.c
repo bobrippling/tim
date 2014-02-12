@@ -366,6 +366,12 @@ static void g_exec(char *line, size_t len, int y, void *c)
 bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 {
 	const char reg_sep = *gcmd;
+
+	if(reg_sep == '\\'){
+		ui_err("can't use '\\' as a separator");
+		return false;
+	}
+
 	struct
 	{
 		char *start, *end;
