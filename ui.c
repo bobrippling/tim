@@ -15,8 +15,6 @@
 #include "keys.h"
 #include "buffers.h"
 
-#define UI_MODE() buffers_cur()->ui_mode
-
 enum ui_ec ui_run = UI_RUNNING;
 
 static const char *ui_bufmode_str(enum buf_mode m)
@@ -209,7 +207,7 @@ int ui_main()
 
 		buffer_t *buf = buffers_cur();
 
-		if(UI_MODE() & UI_VISUAL_ANY){
+		if(buf->ui_mode & UI_VISUAL_ANY){
 			point_t *alt = buffer_uipos_alt(buf);
 
 			ui_rstatus("%d,%d - %d,%d",
@@ -217,7 +215,7 @@ int ui_main()
 					alt->y, alt->x);
 		}
 
-		const bool ins = UI_MODE() & UI_INSERT_ANY;
+		const bool ins = buf->ui_mode & UI_INSERT_ANY;
 
 		const enum io io_mode = bufmode_to_iomap(buf->ui_mode);
 		int ch;
@@ -240,7 +238,7 @@ int ui_main()
 		if(ch == -1) /* eof */
 			ui_run = UI_EXIT_1;
 
-		if(/*no map found:*/ch) switch(UI_MODE()){
+		if(/*no map found:*/ch) switch(buf->ui_mode){
 			case UI_INSERT:
 				ui_inschar(ch);
 				break;
