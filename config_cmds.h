@@ -15,6 +15,7 @@ const cmd_t cmds[] = {
 
 	{ "p",   .f_argv = c_p   },
 	{ "j",   .f_argv = c_j   },
+	{ "d",   .f_argv = c_d   },
 
 	{ "g",   .f_arg1 = c_g, .single_arg = true },
 

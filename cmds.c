@@ -278,20 +278,15 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
-bool c_j(int argc, char **argv, bool force, struct range *range)
+static void command_bufaction(
+		struct range *range, buffer_action_f *buf_fn)
 {
-	if(argc != 1){
-		ui_err("Usage: %s", *argv);
-		return false;
-	}
-
 	buffer_t *const b = buffers_cur();
 
 	struct range range_store;
 	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
-	}
 
-	buffer_joinregion.fn(
+	buf_fn(
 			b,
 			&(region_t){
 				.begin.y = range->start,
@@ -302,6 +297,28 @@ bool c_j(int argc, char **argv, bool force, struct range *range)
 
 	ui_redraw();
 	ui_cur_changed();
+}
+
+bool c_d(int argc, char **argv, bool force, struct range *range)
+{
+	if(argc != 1){
+		ui_err("Usage: %s", *argv);
+		return false;
+	}
+
+	command_bufaction(range, buffer_delregion.fn);
+
+	return true;
+}
+
+bool c_j(int argc, char **argv, bool force, struct range *range)
+{
+	if(argc != 1){
+		ui_err("Usage: %s", *argv);
+		return false;
+	}
+
+	command_bufaction(range, buffer_joinregion.fn);
 
 	return true;
 }
