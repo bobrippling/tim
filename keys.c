@@ -13,6 +13,7 @@
 #include "list.h"
 #include "buffer.h"
 
+#include "io.h"
 #include "ui.h"
 #include "motion.h"
 #include "io.h"
@@ -663,5 +664,12 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	ui_status("normal1");
+	buffer_t *buf = buffers_cur();
+
+	const enum buf_mode save = buf->ui_mode;
+	buf->ui_mode = UI_NORMAL;
+
+	ui_normal_1(&repeat, IO_MAPRAW | bufmode_to_iomap( buf->ui_mode));
+
+	buf->ui_mode = save;
 }
