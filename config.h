@@ -109,6 +109,8 @@ const nkey_t nkeys[] = {
 
 	{ K_STR(CTRL_AND('y')), k_ins_colcopy, { -1 }, UI_INSERT },
 	{ K_STR(CTRL_AND('e')), k_ins_colcopy, { +1 }, UI_INSERT },
+
+	{ K_STR(CTRL_AND('o')), k_normal1, KEY_ARG_NONE, UI_INSERT /* !INSERT_ANY */ },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 
@@ -134,9 +136,9 @@ const keymap_t maps[] = {
 	{ IO_MAPV, 's', "c" },
 
 	/* insert mode keys - ^U, ^K and ^W */
-	{ IO_MAPI, CTRL_AND('U'), (char[]){ K_ESC, 'l', 'd', '0', 'i', 0 } },
-	{ IO_MAPI, CTRL_AND('K'), (char[]){ K_ESC, 'l', 'd', '$', 'i', 0 } },
-	{ IO_MAPI, CTRL_AND('W'), (char[]){ K_ESC, 'l', 'd', 'b', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('U'), (char[]){ CTRL_AND('o'), 'd', '0', 0 } },
+	{ IO_MAPI, CTRL_AND('K'), (char[]){ CTRL_AND('o'), 'd', '$', 0 } },
+	{ IO_MAPI, CTRL_AND('W'), (char[]){ CTRL_AND('o'), 'd', 'b', 0 } },
 
 	{ 0 }
 };
