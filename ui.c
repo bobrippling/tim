@@ -226,6 +226,8 @@ int ui_main()
 			bool wasraw;
 			ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
 
+			ui_handle_ch(&ch, wasraw, io_mode, /*repeat:*/0);
+
 		}else{
 			unsigned repeat = 0;
 
