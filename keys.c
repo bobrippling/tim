@@ -660,3 +660,8 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_redraw();
 	ui_cur_changed();
 }
+
+void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	ui_status("normal1");
+}

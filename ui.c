@@ -9,9 +9,9 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "io.h"
 #include "ui.h"
 #include "motion.h"
-#include "io.h"
 #include "keys.h"
 #include "buffers.h"
 
@@ -149,11 +149,54 @@ void ui_inscolchar(char ch)
 	ui_redraw();
 }
 
-int ui_main()
+static void ui_handle_ch(
+		int *pch, bool wasraw, enum io io_mode, unsigned repeat)
 {
+	if(wasraw)
+		return;
+
 	extern nkey_t nkeys[];
 	extern const size_t nkeys_cnt;
 
+	int ch = *pch;
+	io_ungetch(ch);
+
+	int i = keys_filter(
+			io_mode, (char *)nkeys, nkeys_cnt,
+			offsetof(nkey_t, str), sizeof(nkey_t),
+			offsetof(nkey_t, mode));
+
+	if(i != -1){
+		nkeys[i].func(&nkeys[i].arg, repeat, nkeys[i].str[0]);
+		ch = 0; /* found and handled */
+	}else{
+		/* not found/handled */
+		ch = io_getch(0, NULL); /* pop it back */
+	}
+
+	*pch = ch;
+}
+
+int ui_normal_1(unsigned *repeat, enum io io_mode)
+{
+	const motion *m = motion_read(repeat, /*map:*/true);
+	buffer_t *buf = buffers_cur();
+
+	if(m){
+		motion_apply_buf(m, *repeat, buf);
+		return 0;
+	}
+
+	bool wasraw;
+	int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
+
+	ui_handle_ch(&ch, wasraw, io_mode, *repeat);
+
+	return ch;
+}
+
+int ui_main()
+{
 	ui_redraw(); /* this first, to frame buf_sel */
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
@@ -169,42 +212,27 @@ int ui_main()
 		}
 
 		const bool ins = UI_MODE() & UI_INSERT_ANY;
-		unsigned repeat = 0;
-
-		if(!ins){
-			const motion *m = motion_read(&repeat, /*map:*/true);
-
-			if(m){
-				motion_apply_buf(m, repeat, buf);
-				continue;
-			}
-		}
 
 		const enum io io_mode = bufmode_to_iomap(buf->ui_mode);
-		bool wasraw;
-		int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
+		int ch;
+
+		if(ins){
+			bool wasraw;
+			ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
+
+		}else{
+			unsigned repeat = 0;
+
+			ch = ui_normal_1(&repeat, io_mode | IO_MAPRAW);
+
+			if(!ch)
+				continue;
+		}
 
 		if(ch == -1) /* eof */
 			ui_run = UI_EXIT_1;
 
-		bool found = false;
-		if(!wasraw){
-			io_ungetch(ch);
-
-			int i = keys_filter(
-					io_mode, (char *)nkeys, nkeys_cnt,
-					offsetof(nkey_t, str), sizeof(nkey_t),
-					offsetof(nkey_t, mode));
-
-			if(i != -1){
-				nkeys[i].func(&nkeys[i].arg, repeat, nkeys[i].str[0]);
-				found = true;
-			}else{
-				ch = io_getch(0, NULL); /* pop it back */
-			}
-		}
-
-		if(!found) switch(UI_MODE()){
+		if(/*no map found:*/ch) switch(UI_MODE()){
 			case UI_INSERT:
 				ui_inschar(ch);
 				break;
