@@ -342,6 +342,9 @@ static bool g_exec(char *line, list_t *l, int y, void *c)
 {
 	struct g_ctx *ctx = c;
 
+	if(!l->flag)
+		return true;
+
 	if(!!tim_strstr(line, l->len_line, ctx->match) == ctx->g_inverse)
 		return true;
 
@@ -438,10 +441,10 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		range = &rng_all;
 	}
 
-	/* FIXME: what if we delete a line?
-	 * FIXME: what about :1,2g/yo/-1j
-	 *        - we shouldn't join then apply -1j to line 3
-	 */
+	list_clear_flag(b->head);
+
+	list_flag_range(b->head, range, 1);
+
 	list_iter_region(
 			b->head,
 			&(struct region){

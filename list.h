@@ -11,6 +11,8 @@ struct list_
 	size_t len_line, len_malloc;
 
 	list_t *next, *prev;
+
+	int flag;
 };
 
 list_t *list_new(list_t *prev);
@@ -70,5 +72,9 @@ list_t *list_advance_x(
 	__attribute__((nonnull));
 
 list_t *list_last(list_t *, int *py);
+
+void list_clear_flag(list_t *);
+struct range;
+void list_flag_range(list_t *, const struct range *, int);
 
 #endif

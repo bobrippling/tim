@@ -817,3 +817,19 @@ list_t *list_last(list_t *l, int *py)
 	for(; l->next; l = l->next, ++*py);
 	return l;
 }
+
+void list_clear_flag(list_t *l)
+{
+	for(; l; l = l->next)
+		l->flag = 0;
+}
+
+void list_flag_range(list_t *l, const struct range *r, int v)
+{
+	for(l = list_seek(l, r->start, false);
+	    l;
+	    l = l->next)
+	{
+		l->flag = v;
+	}
+}
