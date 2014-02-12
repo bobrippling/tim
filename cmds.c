@@ -338,14 +338,9 @@ struct g_ctx
 	bool force;
 };
 
-static bool g_exec(char *line, list_t *l, int y, void *c)
+static bool g_exec(list_t *l, int y, struct g_ctx *ctx)
 {
-	struct g_ctx *ctx = c;
-
-	if(!l->flag)
-		return true;
-
-	if(!!tim_strstr(line, l->len_line, ctx->match) == ctx->g_inverse)
+	if(!!tim_strstr(l->line, l->len_line, ctx->match) == ctx->g_inverse)
 		return true;
 
 	*ctx->buf->ui_pos = (point_t){ .y = y };
@@ -445,15 +440,18 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 
 	list_flag_range(b->head, range, 1);
 
-	list_iter_region(
-			b->head,
-			&(struct region){
-				.type = REGION_LINE,
-				.begin.y = range->start,
-				.end.y = range->end
-			},
-			LIST_ITER_WHOLE_LINE | LIST_ITER_EVAL_NL,
-			g_exec, &ctx);
+	/* need to start at the beginning each time,
+	 * in case we've deleted any lines.
+	 * Room for optimisation here */
+	while(1){
+		int y;
+		list_t *l = list_flagfind(b->head, 1, &y);
+		if(!l)
+			break;
+
+		l->flag = 0;
+		g_exec(l, y, &ctx);
+	}
 
 out:
 	free_argv(ctx.argv, ctx.argc);

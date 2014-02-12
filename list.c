@@ -833,3 +833,12 @@ void list_flag_range(list_t *l, const struct range *r, int v)
 		l->flag = v;
 	}
 }
+
+list_t *list_flagfind(list_t *l, int v, int *py)
+{
+	*py = 0;
+	for(; l; l = l->next, ++*py)
+		if(l->flag == v)
+			return l;
+	return NULL;
+}
