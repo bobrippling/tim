@@ -201,6 +201,12 @@ int ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(1){
+		switch(ui_run){
+			case UI_RUNNING: break;
+			case UI_EXIT_0: return 0;
+			case UI_EXIT_1: return 1;
+		}
+
 		buffer_t *buf = buffers_cur();
 
 		if(UI_MODE() & UI_VISUAL_ANY){
@@ -242,12 +248,6 @@ int ui_main()
 			default:
 				if(ch != K_ESC)
 					ui_err("unknown key %c", ch);
-		}
-
-		switch(ui_run){
-			case UI_RUNNING: continue;
-			case UI_EXIT_0: return 0;
-			case UI_EXIT_1: return 1;
 		}
 	}
 }
