@@ -436,6 +436,10 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		range = &rng_all;
 	}
 
+	/* FIXME: what if we delete a line?
+	 * FIXME: what about :1,2g/yo/-1j
+	 *        - we shouldn't join then apply -1j to line 3
+	 */
 	list_iter_region(
 			b->head,
 			&(struct region){
