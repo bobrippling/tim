@@ -499,7 +499,14 @@ static bool around_motion(
 	}
 
 	if(m){
-		repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
+		if(!repeat && !repeat_motion){
+			/* leave repeat as zero
+			 * e.g. dG will not set any repeats, telling 'G' / m_eof
+			 * to go to the default, end of file.
+			 */
+		}else{
+			repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
+		}
 
 		buffer_t *b = buffers_cur();
 
