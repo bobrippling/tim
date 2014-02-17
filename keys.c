@@ -711,7 +711,7 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	if(around_motion(repeat, from_ch, /*always_linewise:*/true, &around, &r)){
 		size_t n = r.end.y - r.begin.y;
-		ui_status("filtered %lu line%s", n, n > 0 ? "s" : "");
+		ui_status("filtered %lu line%s", n, n == 1 ? "" : "s");
 	}
 }
 
