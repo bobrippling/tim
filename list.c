@@ -826,9 +826,10 @@ void list_clear_flag(list_t *l)
 
 void list_flag_range(list_t *l, const struct range *r, int v)
 {
+	size_t n = r->end - r->start;
 	for(l = list_seek(l, r->start, false);
-	    l;
-	    l = l->next)
+	    l && n > 0;
+	    l = l->next, n--)
 	{
 		l->flag = v;
 	}
