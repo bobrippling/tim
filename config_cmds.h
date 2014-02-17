@@ -21,6 +21,8 @@ const cmd_t cmds[] = {
 
 	{ "!",   .f_argv = c_run },
 
+	{ "norm", .f_arg1 = c_norm, .single_arg = true },
+
 	{ NULL }
 };
 

@@ -461,6 +461,34 @@ out:
 	return true;
 }
 
+bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
+{
+	enum io mode = IO_MAP; /* normal mode mappings */
+	if(force)
+		mode = IO_NOMAP;
+
+	// TODO: mode
+
+	buffer_t *b = buffers_cur();
+
+	struct range rng;
+	RANGE_DEFAULT(range, rng, b->ui_pos->y);
+
+	for(int n = range->start;
+			n <= range->end;
+			n++)
+	{
+		*b->ui_pos = (point_t){ .y = n };
+
+		io_ungetstrr((char []){ K_ESC }, 1);
+		io_ungetstrr(normcmd, strlen(normcmd));
+
+		/* TODO: run the commands while we're on this line */
+	}
+
+	return true;
+}
+
 bool cmd_dispatch(
 		const cmd_t *cmd_f,
 		int argc, char **argv,
