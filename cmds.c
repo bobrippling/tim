@@ -279,12 +279,14 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 }
 
 static void command_bufaction(
-		struct range *range, buffer_action_f *buf_fn)
+		struct range *range, buffer_action_f *buf_fn, int end_add)
 {
 	buffer_t *const b = buffers_cur();
 
 	struct range range_store;
 	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
+
+	range->end += end_add;
 
 	buf_fn(
 			b,
@@ -295,7 +297,7 @@ static void command_bufaction(
 			},
 			&(point_t){});
 
-	*b->ui_pos = (point_t){ .y = range->end };
+	*b->ui_pos = (point_t){ .y = range->end - end_add };
 
 	ui_redraw();
 	ui_cur_changed();
@@ -308,7 +310,7 @@ bool c_d(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	command_bufaction(range, buffer_delregion.fn);
+	command_bufaction(range, buffer_delregion.fn, 0);
 
 	return true;
 }
@@ -320,7 +322,7 @@ bool c_j(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	command_bufaction(range, buffer_joinregion.fn);
+	command_bufaction(range, buffer_joinregion.fn, 1);
 
 	return true;
 }
