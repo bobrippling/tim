@@ -646,7 +646,7 @@ int list_filter(
 		return -1;
 	}
 
-	int pid = fork();
+	pid_t pid = fork();
 	switch(pid){
 		case -1:
 		{
@@ -696,6 +696,9 @@ int list_filter(
 	list_t *const gone = *pl;
 
 	*pl = l_read;
+	l_read->prev = gone->prev;
+	if(gone->prev)
+		gone->prev->next = l_read;
 	for(; l_read->next; l_read = l_read->next);
 	l_read->next = tail;
 	if(tail)
@@ -709,7 +712,7 @@ int list_filter(
 	if(gone_tail){
 		gone_tail->next = NULL;
 		list_free(gone);
-	}/* else we've lost `gone'?? */
+	}/* else `gone' was at the end already */
 
 	return 0;
 }

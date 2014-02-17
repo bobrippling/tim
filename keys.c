@@ -12,6 +12,7 @@
 #include "yank.h"
 #include "range.h"
 
+#include "io.h"
 #include "ui.h"
 #include "motion.h"
 #include "io.h"
@@ -141,7 +142,7 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 
 void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	char *const cmd = prompt(':');
+	char *const cmd = prompt(from_ch);
 
 	if(!cmd)
 		goto cancel_cmd;
@@ -601,8 +602,12 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 		.fn = filter,
 		.filter = &a->filter
 	};
+	region_t r;
 
-	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);
+	if(around_motion(repeat, from_ch, /*always_linewise:*/true, &around, &r)){
+		size_t n = r.end.y - r.begin.y;
+		ui_status("filtered %lu line%s", n, n > 0 ? "s" : "");
+	}
 }
 
 static void case_cb(
@@ -644,4 +649,16 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	ui_redraw();
 	ui_cur_changed();
+}
+
+void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	const enum buf_mode save = buf->ui_mode;
+	buf->ui_mode = UI_NORMAL;
+
+	ui_normal_1(&repeat, IO_MAPRAW | bufmode_to_iomap( buf->ui_mode));
+
+	buf->ui_mode = save;
 }

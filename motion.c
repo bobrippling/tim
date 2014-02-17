@@ -362,6 +362,8 @@ int m_find(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 }
 
 static char *lastsearch;
+static bool lastsearch_forward;
+
 int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	if(!lastsearch){
@@ -369,10 +371,12 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 		return MOTION_FAILURE;
 	}
 
+	const int dir = ((m->i > 0) == lastsearch_forward) ? 1 : -1;
+
 	repeat = DEFAULT_REPEAT(repeat);
 	*to = *buf->ui_pos;
 	while(repeat --> 0){
-		if(!buffer_findat(buf, lastsearch, to, m->i)){
+		if(!buffer_findat(buf, lastsearch, to, dir)){
 			ui_err("search pattern not found");
 			return MOTION_FAILURE;
 		}
@@ -384,6 +388,8 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 
 int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
+	lastsearch_forward = m->i > 0;
+
 	char *target = prompt(m->i > 0 ? '/' : '?');
 	if(!target)
 		return MOTION_FAILURE;

@@ -17,8 +17,6 @@
 #include "str.h"
 #include "retain.h"
 
-#define TODO() fprintf(stderr, "TODO! %s\n", __func__)
-
 static
 int buffer_replace_file(buffer_t *b, FILE *f);
 

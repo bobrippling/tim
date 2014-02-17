@@ -11,6 +11,11 @@ void ui_init(void);
 int ui_main(void);
 void ui_term(void);
 
+#ifdef IO_H
+/* returns char if not handled, otherwise 0 */
+int ui_normal_1(unsigned *repeat, enum io io_mode);
+#endif
+
 void ui_redraw(void);
 void ui_cur_changed(void);
 void ui_clear(void); /* full clear, for ^L */
