@@ -1,0 +1,19 @@
+cat >$tmp <<!
+yo
+2
+!
+
+$tim $tmp.2 <<!
+:r!echo hi
+:r $tmp
+:wq
+!
+
+cat >$tmp.expected <<!
+
+hi
+yo
+2
+!
+
+diff -u $tmp.expected $tmp >&2
