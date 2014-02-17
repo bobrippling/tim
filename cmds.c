@@ -424,7 +424,7 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 			ctx.str_range = NULL;
 			ctx.cmd = &c_p_fallback;
 		}else{
-			ui_err("unknown command: %s", subcmd);
+			ui_err("g: unknown command: %s", subcmd);
 			goto out;
 		}
 	}else{

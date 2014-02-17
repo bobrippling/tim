@@ -162,7 +162,7 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	}
 	else
 	{
-		ui_err("unknown command %s", argv[0]);
+		ui_err("unknown command %s", cmd);
 	}
 
 	free_argv(argv, argc);
