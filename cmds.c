@@ -188,6 +188,57 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
+bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
+{
+	buffer_t *const b = buffers_cur();
+
+	struct range rng;
+	RANGE_DEFAULT(range, rng, b->ui_pos->y);
+
+	*b->ui_pos = (point_t){ range->start };
+
+	int streamerr;
+	FILE *stream;
+	int (*stream_close)(FILE *);
+
+	if(!via_shell){
+		int argc = 0;
+		char **argv = NULL;
+		parse_cmd(rest, &argc, &argv);
+
+		if(argc != 1)
+			goto usage;
+
+		stream = fopen(argv[0], "r");
+		streamerr = errno;
+		stream_close = &fclose;
+
+		free_argv(argv, argc);
+	}else{
+		stream = popen(rest, "r");
+		streamerr = errno;
+		stream_close = &pclose;
+	}
+
+	if(!stream){
+		ui_err("%s: %s", rest, strerror(streamerr));
+		return false;
+	}
+
+	list_t *lines = list_new_file(stream, /*eol:*/&(bool){ false });
+	(*stream_close)(stream);
+
+	b->head = list_append(b->head, buffer_current_line(b), lines);
+
+	ui_redraw();
+	ui_cur_changed();
+
+	return true;
+usage:
+	ui_err("usage: %s filename | %s!cmd...", argv0, argv0);
+	return false;
+}
+
 static
 bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force, struct range *range)
 {
