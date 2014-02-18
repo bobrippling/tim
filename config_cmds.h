@@ -19,7 +19,7 @@ const cmd_t cmds[] = {
 
 	{ "g",   .f_arg1 = c_g, .single_arg = true },
 
-	{ "!",   .f_argv = c_run },
+	{ "!",   .f_arg1 = c_run, .single_arg = true },
 
 	{ "norm", .f_arg1 = c_norm, .single_arg = true },
 

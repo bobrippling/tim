@@ -36,7 +36,7 @@ cmd_f_arg1 c_norm;
 cmd_f_argv c_vs;
 cmd_f_argv c_sp;
 
-cmd_f_argv c_run;
+cmd_f_arg1 c_run;
 
 bool cmd_dispatch(
 		const cmd_t *cmd_f,

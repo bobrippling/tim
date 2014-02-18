@@ -28,9 +28,9 @@
 		return false;                        \
 	}
 
-#define RANGE_TODO()                       \
+#define RANGE_TODO(cmd)                    \
 	if(range){                               \
-		ui_err("TODO: range with :%s", *argv); \
+		ui_err("TODO: range with :%s", cmd);   \
 		return false;                          \
 	}
 
@@ -76,7 +76,7 @@ bool c_cq(int argc, char **argv, bool force, struct range *range)
 
 bool c_w(int argc, char **argv, bool force, struct range *range)
 {
-	RANGE_TODO();
+	RANGE_TODO(*argv);
 
 	buffer_t *const buf = buffers_cur();
 
@@ -227,28 +227,15 @@ bool c_sp(int argc, char **argv, bool force, struct range *range)
 	return c_split(BUF_DOWN, argc, argv, force, range);
 }
 
-bool c_run(int argc, char **argv, bool force, struct range *range)
+bool c_run(char *cmd, char *rest, bool force, struct range *range)
 {
-	RANGE_TODO();
+	RANGE_TODO(cmd);
 
-	if(argc == 1){
-		shellout(NULL);
-	}else{
-		char *cmd, *p;
-		int len, i;
+	int r = shellout(rest);
 
-		for(len = 0, i = 1; i < argc; i++)
-			len += strlen(argv[i]) + 1;
-
-		p = cmd = umalloc(len + 1);
-		*cmd = '\0';
-
-		for(len = 0, i = 1; i < argc; i++)
-			p += sprintf(p, "%s ", argv[i]);
-
-		shellout(cmd);
-
-		free(cmd);
+	if(r){
+		ui_err("command returned %d", r);
+		return false;
 	}
 
 	return true;
