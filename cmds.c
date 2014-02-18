@@ -195,7 +195,7 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	struct range rng;
 	RANGE_DEFAULT(range, rng, b->ui_pos->y);
 
-	*b->ui_pos = (point_t){ range->start };
+	*b->ui_pos = (point_t){ .y = range->start };
 
 	int streamerr;
 	FILE *stream;
@@ -229,6 +229,9 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	(*stream_close)(stream);
 
 	b->head = list_append(b->head, buffer_current_line(b), lines);
+
+	if(lines)
+		b->ui_pos->y++;
 
 	ui_redraw();
 	ui_cur_changed();
