@@ -16,4 +16,6 @@ yo
 2
 !
 
-diff -u $tmp.expected $tmp >&2
+diff -u $tmp.expected $tmp.2 >&2
+
+rm -f $tmp.2
