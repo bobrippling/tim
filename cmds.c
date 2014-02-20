@@ -521,8 +521,10 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 
 		size_t const io_empty = io_bufsz();
 
-		io_ungetstrr((char []){ K_ESC }, 1);
-		io_ungetstrr(normcmd, strlen(normcmd));
+		io_ungetstrr((char []){ K_ESC }, 1, false);
+
+		/* need to run through the io-maps here */
+		io_ungetstrr(normcmd, strlen(normcmd), true);
 
 		do{
 			/* run the commands while the buffer is on this line */

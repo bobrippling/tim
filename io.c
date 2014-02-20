@@ -55,11 +55,14 @@ static int io_fifo_pop(void)
 	return ret;
 }
 
-static void io_map(int ch, enum io mode_mask)
+static bool io_map(int ch, enum io mode_mask)
 {
+	bool mapped = 0;
 	for(const keymap_t *m = maps; m->to; m++)
 		if(m->mode & mode_mask && m->from == ch)
-			io_fifo_push(m->to);
+			io_fifo_push(m->to), mapped = true;
+
+	return mapped;
 }
 
 size_t io_bufsz(void)
@@ -90,8 +93,7 @@ int io_getch(enum io ty, bool *wasraw)
 
 	/* don't run maps for raw keys */
 	if(!wasraw || !*wasraw){
-		io_map(ch, ty & ~IO_MAPRAW);
-		if(io_fifoused)
+		if(io_map(ch, ty & ~IO_MAPRAW))
 			return io_fifo_pop();
 	}
 
@@ -103,7 +105,7 @@ void io_ungetch(int ch)
 	io_fifo_ins(ch);
 }
 
-void io_ungetstrr(const char *s, size_t n)
+void io_ungetstrr(const char *s, size_t n, bool map)
 {
 	if(!*s)
 		return;
@@ -112,7 +114,11 @@ void io_ungetstrr(const char *s, size_t n)
 			i < n;
 			i--)
 	{
-		io_ungetch(s[i]);
+		int ch = s[i];
+		if(map && io_map(ch, IO_MAP))
+			; /* mapped in, fine */
+		else
+			io_ungetch(ch);
 	}
 }
 

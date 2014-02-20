@@ -17,7 +17,7 @@ enum io bufmode_to_iomap(enum buf_mode);
 
 int io_getch(enum io, bool *wasraw);
 void io_ungetch(int);
-void io_ungetstrr(const char *s, size_t n);
+void io_ungetstrr(const char *s, size_t n, bool map);
 unsigned io_read_repeat(enum io);
 
 size_t io_bufsz(void);
