@@ -599,6 +599,17 @@ bool motion_to_region(
 	if(!motion_apply_buf_dry(m, repeat, buf, &r.end))
 		return false;
 
+	/* if we're a forward motion, xchg = 1, otherwise 0 */
+	int xchg = 1;
+
+	if(!(buf->ui_mode & UI_VISUAL_ANY)
+	&& r.begin.y == r.end.y
+	&& r.begin.x > r.end.x)
+	{
+		/* reverse motions don't include our current character */
+		xchg = 0;
+	}
+
 	/* reverse if negative range */
 	point_sort_yx(&r.begin, &r.end);
 
@@ -622,7 +633,7 @@ bool motion_to_region(
 			r.end.y++;
 
 	}else if(!(m->how & M_EXCLUSIVE)){
-		m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
+		m->how & M_LINEWISE ? ++r.end.y : (r.end.x += xchg);
 	}
 
 	*out = r;
