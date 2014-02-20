@@ -22,10 +22,19 @@ enum
 	MOTION_SUCCESS = 1
 };
 
+static int m_line_goto(int *y, unsigned repeat, bool end, buffer_t *buf)
+{
+	if(repeat == 0) /* default */
+		*y = end ? list_count(buf->head) : 0;
+	else
+		*y = repeat - 1;
+
+	return MOTION_SUCCESS;
+}
+
 int m_eof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	to->y = list_count(buf->head);
-	return MOTION_SUCCESS;
+	return m_line_goto(&to->y, repeat, true, buf);
 }
 
 int m_eol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
@@ -76,8 +85,7 @@ int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 int m_sof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	to->y = 0;
-	return MOTION_SUCCESS;
+	return m_line_goto(&to->y, repeat, false, buf);
 }
 
 int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)

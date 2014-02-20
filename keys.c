@@ -489,7 +489,7 @@ static bool around_motion(
 		int ch = io_getch(IO_NOMAP, NULL);
 		if(ch == from_ch){
 			/* dd - stay where we are, +the repeat */
-			m_doubletap.arg.pos.y = repeat - 1;
+			m_doubletap.arg.pos.y = DEFAULT_REPEAT(repeat) - 1;
 			repeat = 0;
 			m = &m_doubletap;
 		}else{
@@ -500,7 +500,14 @@ static bool around_motion(
 	}
 
 	if(m){
-		repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
+		if(!repeat && !repeat_motion){
+			/* leave repeat as zero
+			 * e.g. dG will not set any repeats, telling 'G' / m_eof
+			 * to go to the default, end of file.
+			 */
+		}else{
+			repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
+		}
 
 		buffer_t *b = buffers_cur();
 
@@ -712,7 +719,7 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	if(around_motion(repeat, from_ch, /*always_linewise:*/true, &around, &r)){
 		size_t n = r.end.y - r.begin.y;
-		ui_status("filtered %lu line%s", n, n > 0 ? "s" : "");
+		ui_status("filtered %lu line%s", n, n == 1 ? "" : "s");
 	}
 }
 
