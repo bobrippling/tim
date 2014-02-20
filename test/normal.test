@@ -1,0 +1,27 @@
+g/X/norm Ahello
+__IN__
+a
+bX
+c
+dX
+e
+f
+gX
+h
+iX
+jX
+kX
+l
+__OUT__
+a
+bXhello
+c
+dXhello
+e
+f
+gXhello
+h
+iXhello
+jXhello
+kXhello
+l
