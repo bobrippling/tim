@@ -62,6 +62,11 @@ static void io_map(int ch, enum io mode_mask)
 			io_fifo_push(m->to);
 }
 
+size_t io_bufsz(void)
+{
+	return io_fifoused;
+}
+
 enum io bufmode_to_iomap(enum buf_mode bufmode)
 {
 	if(bufmode & UI_INSERT_ANY)

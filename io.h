@@ -20,6 +20,8 @@ void io_ungetch(int);
 void io_ungetstrr(const char *s, size_t n);
 unsigned io_read_repeat(enum io);
 
+size_t io_bufsz(void);
+
 #define K_ESC '\033'
 
 #endif

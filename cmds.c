@@ -519,11 +519,15 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 	{
 		*b->ui_pos = (point_t){ .y = n };
 
+		size_t const io_empty = io_bufsz();
+
 		io_ungetstrr((char []){ K_ESC }, 1);
 		io_ungetstrr(normcmd, strlen(normcmd));
 
-		/* run the commands while the buffer is on this line */
-		ui_normal_1(/*repeat:*/&(unsigned){ 0 }, mode);
+		do{
+			/* run the commands while the buffer is on this line */
+			ui_normal_1(/*repeat:*/&(unsigned){ 0 }, mode);
+		}while(io_bufsz() > io_empty);
 	}
 
 	return true;
