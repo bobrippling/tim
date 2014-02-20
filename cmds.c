@@ -344,6 +344,25 @@ static void command_bufaction(
 	ui_cur_changed();
 }
 
+bool c_m(int argc, char **argv, bool force, struct range *range)
+{
+	if(argc != 2){
+		ui_err("Usage: %s line-number", *argv);
+		return false;
+	}
+
+	char *end;
+	int lno = strtol(argv[1], &end, 0);
+	if(*end){
+		ui_err("not a number: \"%s\"", argv[1]);
+		return false;
+	}
+
+	/* TODO: move lines over *range to lno */
+
+	return true;
+}
+
 bool c_d(int argc, char **argv, bool force, struct range *range)
 {
 	if(argc != 1){
