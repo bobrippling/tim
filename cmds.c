@@ -13,11 +13,11 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "io.h"
 #include "ui.h"
 #include "buffers.h"
 #include "external.h"
 #include "mem.h"
-#include "io.h"
 #include "parse_cmd.h"
 #include "str.h"
 
@@ -508,8 +508,6 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 	if(force)
 		mode = IO_NOMAP;
 
-	// TODO: mode
-
 	buffer_t *b = buffers_cur();
 
 	struct range rng;
@@ -524,7 +522,8 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 		io_ungetstrr((char []){ K_ESC }, 1);
 		io_ungetstrr(normcmd, strlen(normcmd));
 
-		/* TODO: run the commands while we're on this line */
+		/* run the commands while the buffer is on this line */
+		ui_normal_1(/*repeat:*/&(unsigned){ 0 }, mode);
 	}
 
 	return true;
