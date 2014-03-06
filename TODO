@@ -31,6 +31,9 @@ cmds:
 	:>
 	:yank
 
+	:bufdo, :argdo, :args
+		:argdo v/Test/s/hi/ge | up
+
 ranges:
 	., $, %, +[0-9], '<mark>
 
