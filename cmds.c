@@ -563,7 +563,9 @@ bool cmd_dispatch(
 		int argc, char **argv,
 		bool force, struct range *range)
 {
-		return cmd_f->single_arg
-			? cmd_f->f_arg1(argv[0], argv[1], force, range)
-			: cmd_f->f_argv(argc, argv, force, range);
+	force ^= cmd_f->inverse;
+
+	return cmd_f->single_arg
+		? cmd_f->f_arg1(argv[0], argv[1], force, range)
+		: cmd_f->f_argv(argc, argv, force, range);
 }

@@ -20,6 +20,7 @@ typedef struct cmd_t
 		cmd_f_arg1 *f_arg1;
 	};
 	bool single_arg;
+	bool inverse; /* e.g. :v */
 } cmd_t;
 
 cmd_f_argv c_q, c_cq;
