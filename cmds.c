@@ -408,14 +408,18 @@ static bool g_exec(list_t *l, int y, struct g_ctx *ctx)
 	*ctx->buf->ui_pos = (point_t){ .y = y };
 
 	struct range range, *prange = &range;
-	char *end;
-	switch(parse_range(ctx->str_range, &end, prange)){
-		case RANGE_PARSE_FAIL:
-			return true; /* shouldn't hit this, should be caught in g_c() */
-		case RANGE_PARSE_NONE:
-			prange = NULL;
-		case RANGE_PARSE_PASS:
-			break;
+	if(ctx->str_range){
+		char *end;
+		switch(parse_range(ctx->str_range, &end, prange)){
+			case RANGE_PARSE_FAIL:
+				return true; /* shouldn't hit this, should be caught in g_c() */
+			case RANGE_PARSE_NONE:
+				prange = NULL;
+			case RANGE_PARSE_PASS:
+				break;
+		}
+	}else{
+		prange = NULL;
 	}
 
 	cmd_dispatch(ctx->cmd,
