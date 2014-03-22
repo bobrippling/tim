@@ -127,7 +127,8 @@ restart:
 			ctrl_v = true;
 			goto restart;
 		}
-		*wasraw = false;
+		if(wasraw)
+			*wasraw = false;
 	}
 	return ch;
 }
