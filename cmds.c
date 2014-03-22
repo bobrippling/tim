@@ -389,7 +389,8 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 	/* break the bottom link */
 	list_t *after = end->next;
 	end->next = NULL;
-	after->prev = NULL;
+	if(after)
+		after->prev = NULL;
 
 	/* break the top link and reattach */
 	list_t *before = start->prev;
@@ -397,17 +398,32 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 		start->prev = NULL;
 
 		before->next = after;
-		after->prev = before;
+		if(after)
+			after->prev = before;
 	}else{
 		b->head = after;
 	}
 
-	if(landing->next){
-		end->next = landing->next;
-		landing->next->prev = end;
+	if(lno == -1){
+		/* replace head */
+
+		/* move current head to the end tail */
+		end->next = b->head;
+		b->head->prev = end;
+
+		/* replace */
+		b->head = start;
+
+	}else{
+		/* replace landing ->next,
+		 * linking up end->next to what was there */
+		if(landing->next){
+			end->next = landing->next;
+			landing->next->prev = end;
+		}
+		landing->next = start;
+		start->prev = landing;
 	}
-	landing->next = start;
-	start->prev = landing;
 
 	ui_redraw();
 	ui_cur_changed();
