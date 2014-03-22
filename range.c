@@ -18,7 +18,8 @@ static bool parse_range_1(
 
 	switch(*range){
 		case '0' ... '9':
-			*out = strtol(range, &range, 10);
+			/* go into 0-based */
+			*out = strtol(range, &range, 10) - 1;
 			break;
 
 		case '.':
