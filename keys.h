@@ -23,6 +23,12 @@ union keyarg_u
 		char *s;
 	} filter;
 	point_t pos;
+	struct
+	{
+		cmd_func *fn;
+		const char *arg;
+		bool force;
+	} cmd;
 };
 
 typedef struct nkey_t
@@ -48,7 +54,7 @@ int keys_filter(
 		unsigned st_off, unsigned st_sz,
 		int mode_off);
 
-key_func k_cmd, k_set_mode;
+key_func k_prompt_cmd, k_docmd, k_set_mode;
 key_func k_escape;
 key_func k_redraw;
 key_func k_scroll;

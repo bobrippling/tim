@@ -90,7 +90,7 @@ const nkey_t nkeys[] = {
 	{ "r",            k_replace,    { 0 },         UI_NORMAL | UI_VISUAL_ANY },
 	{ "R", /* TODO */ k_replace,    { 1 },         UI_NORMAL },
 
-	{ ":",            k_cmd,        KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
+	{ ":", k_prompt_cmd, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
 
 	{ "!",            k_filter,     { .filter = { FILTER_CMD, NULL }}, UI_NORMAL | UI_VISUAL_ANY },
 	{ "g!",           k_filter,     { .filter.type = FILTER_SELF }, UI_NORMAL | UI_VISUAL_ANY },
@@ -123,6 +123,9 @@ const nkey_t nkeys[] = {
 	{ "I", k_set_mode, { UI_INSERT_COL }, UI_VISUAL_COL },
 
 	{ K_STR(CTRL_AND('o')), k_normal1, KEY_ARG_NONE, UI_INSERT /* !INSERT_ANY */ },
+
+	{ "ZZ", k_docmd, { .cmd = { c_x, .arg = "ZZ" } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "ZQ", k_docmd, { .cmd = { c_q, .arg = "ZQ", .force = true } }, UI_NORMAL | UI_VISUAL_ANY },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 

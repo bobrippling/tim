@@ -18,10 +18,10 @@
 #include "ui.h"
 #include "motion.h"
 #include "io.h"
+#include "cmds.h"
 #include "keys.h"
 #include "ncurses.h"
 #include "mem.h"
-#include "cmds.h"
 #include "prompt.h"
 #include "map.h"
 
@@ -244,7 +244,7 @@ void filter_cmd(int *pargc, char ***pargv)
 	}
 }
 
-void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
+void k_prompt_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
 	char *cmd = prompt(from_ch);
 
@@ -276,6 +276,13 @@ void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	free(argv);
 cancel:
 	free(cmd);
+}
+
+void k_docmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
+{
+	char *arg_dup = ustrdup(arg->cmd.arg);
+	arg->cmd.fn(1, (char *[]){ arg_dup, NULL }, arg->cmd.force);
+	free(arg_dup);
 }
 
 void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
