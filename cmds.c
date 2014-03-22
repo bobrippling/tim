@@ -38,7 +38,8 @@
 	if(!range){                          \
 		store.start = store.end = y;       \
 		range = &store;                    \
-	}
+	}                                    \
+	range_sort(range)
 
 bool c_q(int argc, char **argv, bool force, struct range *range)
 {
@@ -500,6 +501,8 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 		rng_all.start = 0;
 		rng_all.end = buffer_nlines(b);
 		range = &rng_all;
+	}else{
+		range_sort(range);
 	}
 
 	list_clear_flag(b->head);

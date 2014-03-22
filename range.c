@@ -89,3 +89,12 @@ enum range_parse parse_range(
 	return RANGE_PARSE_PASS;
 }
 
+
+void range_sort(struct range *r)
+{
+	if(r->start > r->end){
+		int tmp = r->start;
+		r->start = r->end;
+		r->end = tmp;
+	}
+}

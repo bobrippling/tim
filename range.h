@@ -18,4 +18,6 @@ enum range_parse parse_range(
 		char *cmd, char **end,
 		struct range *r);
 
+void range_sort(struct range *);
+
 #endif
