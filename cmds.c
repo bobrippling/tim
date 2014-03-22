@@ -111,6 +111,13 @@ got_err:
 
 bool c_x(int argc, char **argv, bool force)
 {
+	buffer_t *buf = buffers_cur();
+
+	/* if no modifications, don't try to write
+	 * this is done in vi and helps ZZ */
+	if(!buf->modified)
+		return c_q(argc, argv, false);
+
 	return c_w(argc, argv, false) && c_q(argc, argv, false);
 }
 
