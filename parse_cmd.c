@@ -155,13 +155,13 @@ bool parse_ranged_cmd(
 			break;
 	}
 
-	/* alnum or single non-ascii for command */
+	/* alpha or single non-ascii for command */
 	argc = 1;
 	argv = umalloc((argc + 1) * sizeof *argv);
 
-	if(isalnum(*cmd_i)){
+	if(isalpha(*cmd_i)){
 		char *p;
-		for(p = cmd_i + 1; isalnum(*p); p++);
+		for(p = cmd_i + 1; isalpha(*p); p++);
 		argv[0] = ustrdup_len(cmd_i, p - cmd_i);
 		cmd_i = p - 1;
 	}else if(*cmd_i){
