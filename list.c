@@ -20,7 +20,6 @@
 #include "mem.h"
 #include "macros.h"
 
-#define GAP_REPLACE_CHAR '\t'
 #define JOIN_CHAR ' '
 
 list_t *list_new(list_t *prev)
@@ -84,14 +83,14 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 	int r;
 	while((r = read(fd, &ch, 1)) == 1){
 		if(nl){
-			list_inschar(l, &x, &y, '\n');
+			list_inschar(l, &x, &y, '\n', /*gap*/' ');
 			nl = false;
 		}
 
 		if(ch == '\n')
 			nl = true;
 		else
-			list_inschar(l, &x, &y, ch);
+			list_inschar(l, &x, &y, ch, /*gap*/' ');
 
 		empty = false;
 	}
@@ -265,7 +264,9 @@ int list_evalnewlines1(list_t *l)
 	return r;
 }
 
-void list_inschar(list_t *l, int *x, int *y, char ch)
+void list_inschar(
+		list_t *l, int *x, int *y,
+		char ch, char gapchar)
 {
 	l = list_seek(l, *y, true);
 
@@ -282,8 +283,23 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 		memmove(l->line + *x + 1, l->line + *x, l->len_malloc - *x - 1);
 	}
 
+	if(!gapchar){
+		/* autogap */
+		for(int i = 0; i < *x && i < l->len_line; i++){
+			if(!isspace(l->line[i])){
+				gapchar = ' ';
+				break;
+			}
+		}
+
+		if(!gapchar){
+			/* all space, go with a tab */
+			gapchar = '\t';
+		}
+	}
+
 	for(int i = l->len_line; i < *x; i++){
-		l->line[i] = GAP_REPLACE_CHAR;
+		l->line[i] = gapchar;
 		l->len_line++;
 	}
 

@@ -60,7 +60,7 @@ static void charwise_put(
 		list_inschar(head,
 				px,
 				&(int){ 0 },
-				ins_iter->line[i]);
+				ins_iter->line[i], /*autogap*/0);
 
 	int final_x = *px - 1;
 
@@ -155,7 +155,7 @@ void yank_put_in_list(
 					list_inschar(head,
 							&(int){ *px + !prepend + i },
 							&(int){ y },
-							l->line[i]);
+							l->line[i], /* force spaces to fill in for now */' ');
 			}
 
 			if(!prepend)

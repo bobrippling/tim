@@ -253,7 +253,7 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 	}
 
 	if(inschar){
-		list_inschar(buf->head, x, y, ch);
+		list_inschar(buf->head, x, y, ch, /*autogap*/0);
 		if(indent)
 			buffer_smartindent(buf);
 	}
