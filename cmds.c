@@ -347,19 +347,71 @@ static void command_bufaction(
 
 bool c_m(int argc, char **argv, bool force, struct range *range)
 {
+#define NO_LINE(ln) do{             \
+		ui_err("no such line %d", ln);  \
+		return false;                   \
+	}while(0)
+
 	if(argc != 2){
 		ui_err("Usage: %s line-number", *argv);
 		return false;
 	}
 
-	char *end;
-	int lno = strtol(argv[1], &end, 0);
-	if(*end){
+	char *addr_end;
+	/* FIXME: $, ^, etc - :he {address} */
+	int lno = strtol(argv[1], &addr_end, 0);
+	if(*addr_end){
 		ui_err("not a number: \"%s\"", argv[1]);
 		return false;
 	}
 
-	/* TODO: move lines over *range to lno */
+	if(range->start <= lno && lno <= range->end){
+		ui_err("can't move lines into themselves");
+		return false;
+	}
+
+	buffer_t *b = buffers_cur();
+	list_t *landing = list_seek(b->head, lno, false);
+	if(!landing)
+		NO_LINE(lno);
+
+	struct range range_store;
+	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
+
+	/* move lines over *range to lno */
+	list_t *start = list_seek(b->head, range->start, false);
+	if(!start)
+		NO_LINE(range->start);
+
+	list_t *end = list_seek(b->head, range->end, false);
+	if(!end)
+		NO_LINE(range->end);
+
+	/* break the bottom link */
+	list_t *after = end->next;
+	end->next = NULL;
+	after->prev = NULL;
+
+	/* break the top link and reattach */
+	list_t *before = start->prev;
+	if(start->prev){
+		start->prev = NULL;
+
+		before->next = after;
+		after->prev = before;
+	}else{
+		b->head = after;
+	}
+
+	if(landing->next){
+		end->next = landing->next;
+		landing->next->prev = end;
+	}
+	landing->next = start;
+	start->prev = landing;
+
+	ui_redraw();
+	ui_cur_changed();
 
 	return true;
 }
