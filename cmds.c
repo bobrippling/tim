@@ -353,15 +353,14 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 	}while(0)
 
 	if(argc != 2){
-		ui_err("Usage: %s line-number", *argv);
+		ui_err("Usage: %s address", *argv);
 		return false;
 	}
 
+	int lno;
 	char *addr_end;
-	/* FIXME: $, ^, etc - :he {address} */
-	int lno = strtol(argv[1], &addr_end, 0);
-	if(*addr_end){
-		ui_err("not a number: \"%s\"", argv[1]);
+	if(!parse_range_1(argv[1], &addr_end, &lno) || *addr_end){
+		ui_err("bad address: \"%s\"", argv[1]);
 		return false;
 	}
 

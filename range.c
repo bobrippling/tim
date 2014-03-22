@@ -10,7 +10,7 @@
 
 #include "range.h"
 
-static bool parse_range_1(
+bool parse_range_1(
 		char *range, char **end,
 		int *out)
 {

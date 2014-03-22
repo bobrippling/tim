@@ -14,6 +14,10 @@ enum range_parse
 	RANGE_PARSE_PASS,
 };
 
+bool parse_range_1(
+		char *range, char **end,
+		int *out);
+
 enum range_parse parse_range(
 		char *cmd, char **end,
 		struct range *r);
