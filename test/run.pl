@@ -49,7 +49,7 @@ sub runtest
 		}
 	}
 
-	die "invalid test $test" unless $valid == 2;
+	die "invalid test $test (too few/many __IN/OUT__)" unless $valid == 2;
 
 	to_file ">$file", @f_begin;
 
