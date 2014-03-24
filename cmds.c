@@ -364,18 +364,19 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
+	buffer_t *b = buffers_cur();
+
+	struct range range_store;
+	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
+
 	if(range->start <= lno && lno <= range->end){
 		ui_err("can't move lines into themselves");
 		return false;
 	}
 
-	buffer_t *b = buffers_cur();
 	list_t *landing = list_seek(b->head, lno, false);
 	if(!landing)
 		NO_LINE(lno);
-
-	struct range range_store;
-	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
 
 	/* move lines over *range to lno */
 	list_t *start = list_seek(b->head, range->start, false);
