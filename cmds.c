@@ -470,8 +470,11 @@ struct g_ctx
 
 static bool g_exec(list_t *l, int y, struct g_ctx *ctx)
 {
-	if(!!tim_strstr(l->line, l->len_line, ctx->match) == ctx->g_inverse)
+	if(*ctx->match /* "" match every line */
+	&& !!tim_strstr(l->line, l->len_line, ctx->match) == ctx->g_inverse)
+	{
 		return true;
+	}
 
 	*ctx->buf->ui_pos = (point_t){ .y = y };
 
