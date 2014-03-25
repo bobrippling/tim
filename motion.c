@@ -105,7 +105,8 @@ int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 static int m_linesearch(
 		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
-		list_t *sfn(motion_arg const *, list_t *, int *))
+		list_t *sfn(motion_arg const *, list_t *, int *, const void *),
+		const void *ctx)
 {
 	list_t *l = buffer_current_line(buf); /* fine - repeat handled */
 	int n = 0;
@@ -119,7 +120,7 @@ static int m_linesearch(
 			repeat > 0;
 			repeat--)
 	{
-		l = sfn(arg, l, &n);
+		l = sfn(arg, l, &n, ctx);
 		if(!l)
 			goto limit;
 	}
@@ -128,43 +129,49 @@ static int m_linesearch(
 
 	return MOTION_SUCCESS;
 limit:
-	to->y = arg->i > 0 ? buffer_nlines(buf) : 0;
+	to->y = arg->dir > 0 ? buffer_nlines(buf) : 0;
 	return MOTION_SUCCESS;
 }
 
-static list_t *m_search_para(motion_arg const *a, list_t *l, int *pn)
+static list_t *m_search_para(
+		motion_arg const *a, list_t *l,
+		int *pn, const void *ctx)
 {
 	/* while in space, find non-space */
 	for(; l && (!l->line || isallspace(l->line));
-			l = list_advance_y(l, a->i, pn, NULL));
+			l = list_advance_y(l, a->dir, pn, NULL));
 
 	/* while in non-space, find space */
 	for(; l && (l->line && !isallspace(l->line));
-			l = list_advance_y(l, a->i, pn, NULL));
+			l = list_advance_y(l, a->dir, pn, NULL));
 
 	return l;
 }
 
 int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	return m_linesearch(m, repeat, buf, to, m_search_para);
+	return m_linesearch(m, repeat, buf, to, m_search_para, NULL);
 }
 
-static list_t *m_search_func(motion_arg const *a, list_t *l, int *pn)
+static list_t *m_search_func(
+		motion_arg const *a, list_t *l,
+		int *pn, const void *ctx)
 {
-	if(l && l->len_line && *l->line == '{')
-		l = list_advance_y(l, a->i, pn, NULL);
+	int ch = *(int *)ctx;
+
+	if(l && l->len_line && *l->line == ch)
+		l = list_advance_y(l, a->dir, pn, NULL);
 
 	for(;
-	    l && (l->len_line == 0 || *l->line != '{');
-	    l = list_advance_y(l, a->i, pn, NULL));
+	    l && (l->len_line == 0 || *l->line != ch);
+	    l = list_advance_y(l, a->dir, pn, NULL));
 
 	return l;
 }
 
 int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	int r = m_linesearch(m, repeat, buf, to, m_search_func);
+	int r = m_linesearch(m, repeat, buf, to, m_search_func, &m->scan_ch);
 	if(r == MOTION_SUCCESS)
 		to->x = 0;
 	return r;

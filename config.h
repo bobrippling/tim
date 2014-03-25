@@ -20,12 +20,15 @@ const motionkey_t motion_keys[] = {
 	{ "h",            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },
 	{ "l",            { m_move, { .pos = {  1,  0 } }, M_EXCLUSIVE } },
 
-	{ "{",            { m_para,     { -1 }, M_LINEWISE } },
-	{ "}",            { m_para,     { +1 }, M_LINEWISE } },
+	{ "{", { m_para, { .dir = -1 }, M_LINEWISE } },
+	{ "}", { m_para, { .dir = +1 }, M_LINEWISE } },
 	{ "%",            { m_paren,    { '%' }, M_NONE } },
 
-	{ "[[", { m_func, { -1 }, M_LINEWISE } },
-	{ "]]", { m_func, { +1 }, M_LINEWISE } },
+	{ "[[", { m_func, { .dir = -1, .scan_ch = '{' }, M_LINEWISE } },
+	{ "]]", { m_func, { .dir = +1, .scan_ch = '{' }, M_LINEWISE } },
+
+	{ "[#", { m_func, { .dir = -1, .scan_ch = '#' }, M_LINEWISE } },
+	{ "]#", { m_func, { .dir = +1, .scan_ch = '#' }, M_LINEWISE } },
 
 	{ "[{", { m_paren, { '{' }, M_LINEWISE } },
 	{ "[(", { m_paren, { '(' }, M_LINEWISE } },

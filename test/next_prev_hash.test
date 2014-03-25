@@ -1,0 +1,21 @@
+]#A first]#A second]#A third2[#A first_again
+__IN__
+abc
+#if 0
+f()
+{
+}
+#endif
+
+#include yo
+
+__OUT__
+abc
+#if 0 first first_again
+f()
+{
+}
+#endif second
+
+#include yo third
+
