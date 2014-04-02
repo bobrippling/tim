@@ -1,0 +1,35 @@
+:g/{/norm {o#if 0:g/}/norm o#endif
+__IN__
+int x;
+
+void f()
+{
+	hi;
+}
+
+char *args(
+	int a, int b,
+	int c)
+{
+	if(a + b > c)
+		f();
+}
+__OUT__
+int x;
+
+#if 0
+void f()
+{
+	hi;
+}
+#endif
+
+#if 0
+char *args(
+	int a, int b,
+	int c)
+{
+	if(a + b > c)
+		f();
+}
+#endif
