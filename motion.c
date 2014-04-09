@@ -502,7 +502,7 @@ int m_paren(
 
 	switch(arg->i){
 		default:
-			ui_err("bad m_paren arg");
+			ui_err("bad m_paren arg %c (%d)", arg->i, arg->i);
 			break;
 
 		case '%':
