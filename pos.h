@@ -23,4 +23,6 @@ void point_sort_full(point_t *a, point_t *b);
 /* order points and x, if a.y==b.y */
 void point_sort_yx(point_t *a, point_t *b);
 
+#define point_eq(a, b) !memcmp((a), (b), sizeof(point_t))
+
 #endif
