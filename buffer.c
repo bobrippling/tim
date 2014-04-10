@@ -33,6 +33,7 @@ buffer_t *buffer_new()
 	b->head = list_new(NULL);
 	b->ui_pos = &b->ui_npos;
 	b->ui_mode = UI_NORMAL;
+	b->ui_paren = (point_t){ -1, -1 };
 	return b;
 }
 
