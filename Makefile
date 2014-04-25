@@ -26,3 +26,4 @@ deps:
 	cc -MM ${OBJ:.o=.c} > Makefile.dep
 
 include Makefile.dep
+.PHONY: check checkmem clean deps
