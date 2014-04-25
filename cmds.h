@@ -36,6 +36,8 @@ cmd_f_arg1 c_g;
 cmd_f_arg1 c_norm;
 cmd_f_arg1 c_r;
 
+cmd_f_argv c_indent, c_unindent;
+
 cmd_f_argv c_vs;
 cmd_f_argv c_sp;
 

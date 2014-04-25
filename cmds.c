@@ -282,6 +282,25 @@ bool c_sp(int argc, char **argv, bool force, struct range *range)
 	return c_split(BUF_DOWN, argc, argv, force, range);
 }
 
+static bool c_xdent(
+		int argc, char **argv,
+		bool force, struct range *range,
+		bool indent)
+{
+	ui_err("TODO");
+	return false;
+}
+
+bool c_indent(int argc, char **argv, bool force, struct range *range)
+{
+	return c_xdent(argc, argv, force, range, true);
+}
+
+bool c_unindent(int argc, char **argv, bool force, struct range *range)
+{
+	return c_xdent(argc, argv, force, range, true);
+}
+
 bool c_run(char *cmd, char *rest, bool force, struct range *range)
 {
 	RANGE_TODO(cmd);
