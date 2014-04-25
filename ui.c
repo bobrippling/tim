@@ -108,6 +108,9 @@ static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 		/* not found/handled */
 		int ch = io_getch(0, NULL); /* pop it back */
 
+		if(ch == 0 || (char)ch == -1) /* eof */
+			ui_run = UI_EXIT_1;
+
 		buffer_t *const buf = buffers_cur();
 
 		if(buf->ui_mode & UI_INSERT_ANY){
