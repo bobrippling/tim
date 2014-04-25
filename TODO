@@ -38,3 +38,10 @@ registers:
 
 	@[a-z] - execute register
 	@. - execute current line?
+
+macros:
+	let @a = jjc$yo@a
+	macro playback needs to fail on motion fail, e.g. the above
+	qa...q records into a
+	qA...q records and appends into a
+	@@
