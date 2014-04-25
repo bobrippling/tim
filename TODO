@@ -45,3 +45,4 @@ registers:
 
 	@[a-z] - execute register
 	@. - execute current line?
+	c_CTRL-R_CTRL-W
