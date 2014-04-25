@@ -19,7 +19,7 @@ motion.o: motion.c pos.h region.h list.h buffer.h bufmode.h yank.h \
 external.o: external.c mem.h ui.h external.h
 str.o: str.c str.h
 prompt.o: prompt.c prompt.h ncurses.h io.h bufmode.h mem.h
-io.o: io.c ncurses.h mem.h io.h bufmode.h map.h
+io.o: io.c ncurses.h mem.h io.h bufmode.h map.h str.h
 yank.o: yank.c pos.h region.h list.h yank.h mem.h retain.h
 pos.o: pos.c pos.h
 region.o: region.c pos.h region.h

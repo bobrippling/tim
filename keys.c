@@ -92,9 +92,8 @@ int keys_filter(
 				break;
 			}
 			case 0:
-				/* this is currently fine
-				 * motions don't clash with other maps in config.h */
-				io_ungetstrr(sofar, nsofar, /*map:*/false);
+				for(size_t i = nsofar; i > 0; i--)
+					io_ungetch(sofar[i - 1], false);
 				goto out;
 		}
 	}
