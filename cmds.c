@@ -610,6 +610,8 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 	struct range rng;
 	RANGE_DEFAULT(range, rng, b->ui_pos->y);
 
+	size_t normcmdlen = strlen(normcmd);
+
 	for(int n = range->start;
 			n <= range->end;
 			n++)
@@ -618,10 +620,13 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 
 		size_t const io_empty = io_bufsz();
 
-		io_ungetstrr((char []){ K_ESC }, 1, false);
+		/* end with an escape */
+		io_ungetch(K_ESC, false);
 
-		/* need to run through the io-maps here */
-		io_ungetstrr(normcmd, strlen(normcmd), true);
+		/* don't io_map() here - may be in insert mode
+		 * when we actually execute */
+		for(size_t i = normcmdlen; i > 0; i--)
+			io_ungetch(normcmd[i - 1], false);
 
 		do{
 			/* run the commands while the buffer is on this line */
