@@ -1,0 +1,61 @@
+: assumes register A is clear
+:g/MARK/norm ?commit:y AggdG"ap
+__IN__
+commit 6549aa022dd05164ce5e3b0068550d13441e5d92
+Author yo
+
+	abc
+
+commit 492af2d1e0f6dc1e34f7564bc0d0c71dd1f6caff
+Author yo
+
+	abcdef
+
+	MARK
+	hello
+
+
+commit 13c001de9ea34c872ff7699d430526f0aef6a73e
+Author yo
+
+	more stuff here
+
+
+commit 755a58a70cd63a5c6a06c98a66a20e7c9787ce9f
+Author yo
+
+
+	xyz 123 hello
+
+
+commit ec516d238b9a3e24ec8e562c2f572f882d21592a
+Author yo
+
+
+	changes,MARK no changes?
+
+
+commit 59782f17f7118c6f1efea75e840f5413bcdc7f6a
+Author yo
+
+
+	tweaking yo MARK
+
+
+commit 949eacf4040013d7c367f917c4c079c50bdf32ed
+Author yo
+
+	test abc
+	MARK
+
+
+commit 12aeb6d9362f36f2cd7b5b3f5f73cc90206eb1db
+Author yo
+
+	this one
+__OUT__
+
+commit 492af2d1e0f6dc1e34f7564bc0d0c71dd1f6caff
+commit ec516d238b9a3e24ec8e562c2f572f882d21592a
+commit 59782f17f7118c6f1efea75e840f5413bcdc7f6a
+commit 949eacf4040013d7c367f917c4c079c50bdf32ed
