@@ -54,7 +54,7 @@ sub runtest
 	to_file ">$file", @f_begin;
 
 	my $errf = "$tdir/err";
-	my $rc = run_tim($file, $errf, join('', @cmds) . ":wq");
+	my $rc = run_tim($file, $errf, join('', @cmds) . "\033:wq");
 
 	if($opts{valgrind}){
 		open VG, '<', $errf or die;
