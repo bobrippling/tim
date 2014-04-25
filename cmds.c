@@ -634,6 +634,9 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 		}while(io_bufsz() > io_empty);
 	}
 
+	ui_redraw();
+	ui_cur_changed();
+
 	return true;
 }
 
