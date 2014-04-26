@@ -6,7 +6,7 @@ ui.o: ui.c pos.h ncurses.h region.h list.h buffer.h bufmode.h yank.h ui.h \
 mem.o: mem.c mem.h
 keys.o: keys.c pos.h region.h list.h buffer.h bufmode.h yank.h ui.h \
  motion.h io.h word.h keys.h ncurses.h mem.h cmds.h prompt.h map.h str.h \
- buffers.h retain.h config.h
+ ctags.h buffers.h retain.h config.h
 cmds.o: cmds.c cmds.h pos.h region.h list.h buffer.h bufmode.h yank.h \
  ui.h buffers.h external.h mem.h
 buffer.o: buffer.c pos.h region.h list.h buffer.h bufmode.h yank.h mem.h \
@@ -25,3 +25,4 @@ pos.o: pos.c pos.h
 region.o: region.c pos.h region.h
 retain.o: retain.c retain.h
 word.o: word.c pos.h region.h list.h word.h
+ctags.o: ctags.c mem.h ctags.h

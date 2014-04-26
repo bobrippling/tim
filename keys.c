@@ -25,6 +25,7 @@
 #include "prompt.h"
 #include "map.h"
 #include "str.h"
+#include "ctags.h"
 
 #include "buffers.h"
 
@@ -791,4 +792,50 @@ void word_list(const char *word, bool flag)
 	for(list_t *i = b->head; i; i = i->next, n++)
 		if(tim_strstr(i->line, i->len_line, word))
 			ui_printf("%d: %d %s", ++hit, n, i->line);
+}
+
+void word_tag(const char *word, bool flag)
+{
+	struct ctag_result tag;
+
+	if(buffers_cur()->modified){
+		ui_err("buffer modified");
+		return;
+	}
+
+	if(!ctag_search(word, &tag)){
+		ui_err("couldn't find tag \"%s\"", word);
+		return;
+	}
+
+	char *search = tag.line;
+
+	{
+		if(strncmp(search, "/^", 2))
+			goto out_badtag;
+		char *end = strchr(search, '\0');
+		if(end - search < 5)
+			goto out_badtag;
+		if(!strcmp(end - 2, "$/"))
+			end[-2] = '\0';
+		search += 2;
+	}
+
+	if(!ui_replace_curbuf(tag.fname))
+		goto out;
+
+	{
+		*buffers_cur()->ui_pos = (point_t){ 0 };
+		word_search(search, false);
+	}
+
+	ui_redraw();
+	ui_cur_changed();
+
+out:
+	ctag_free(&tag);
+	return;
+out_badtag:
+	ui_err("bad tag '%s'", tag.line);
+	goto out;
 }

@@ -110,6 +110,8 @@ const nkey_t nkeys[] = {
 	{ "[i", k_on_word, { .word_action = { word_list, false } }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "[I", k_on_word, { .word_action = { word_list, true  } }, UI_NORMAL | UI_VISUAL_ANY },
 
+	{ K_STR(CTRL_AND(']')), k_on_word, { .word_action = { word_tag } }, UI_NORMAL },
+
 	{ K_STR(CTRL_AND('l')),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('e')),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL | UI_VISUAL_ANY },
