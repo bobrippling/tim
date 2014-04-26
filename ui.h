@@ -23,6 +23,7 @@ void ui_printf(const char *, ...);
 #ifdef BUFFER_H
 void ui_set_bufmode(enum buf_mode m);
 #endif
+bool ui_replace_curbuf(const char *fname);
 
 extern enum ui_ec
 {

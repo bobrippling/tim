@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
+#include <errno.h>
 
 #include "pos.h"
 #include "ncurses.h"
@@ -46,6 +48,26 @@ void ui_set_bufmode(enum buf_mode m)
 		ui_status("%s", ui_bufmode_str(buf->ui_mode));
 		nc_style(0);
 	}
+}
+
+bool ui_replace_curbuf(const char *fname)
+{
+	bool ret = false;
+	buffer_t *buf = buffers_cur();
+
+	if(!buffer_replace_fname(buf, fname)){
+		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
+		buffers_set_cur(b);
+		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
+	}else{
+		ui_status("%s: loaded", buffer_shortfname(fname));
+		buffers_cur()->modified = false;
+		ret = true;
+	}
+
+	buffer_set_fname(buffers_cur(), fname);
+
+	return ret;
 }
 
 void ui_init()

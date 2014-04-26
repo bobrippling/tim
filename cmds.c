@@ -137,16 +137,7 @@ bool c_e(int argc, char **argv, bool force)
 		return false;
 	}
 
-	if(!buffer_replace_fname(buf, fname)){
-		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
-		buffers_set_cur(b);
-		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
-	}else{
-		ui_status("%s: loaded", buffer_shortfname(fname));
-		buffers_cur()->modified = false;
-	}
-
-	buffer_set_fname(buffers_cur(), fname);
+	ui_replace_curbuf(fname);
 
 	ui_redraw();
 	ui_cur_changed();
