@@ -583,11 +583,26 @@ void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
+	buffer_t *buf = buffers_cur();
+
+	if(!(buf->ui_mode & UI_VISUAL_ANY)){
+		/* peek at the motion char */
+		int ch = io_getch(IO_NOMAP, NULL);
+
+		/* check change remaps */
+		for(size_t i = 0; i < change_remaps_cnt; i++){
+			if(ch == change_remaps[i].from){
+				/* cw -> ce */
+				ch = change_remaps[i].to;
+				break;
+			}
+		}
+
+		io_ungetch(ch);
+	}
+
 	region_t r;
-
 	if(around_motion_bufaction(repeat, from_ch, &buffer_delregion, &r)){
-		buffer_t *buf = buffers_cur();
-
 		switch(r.type){
 			case REGION_COL:
 				buf->col_insert_height = r.end.y - r.begin.y + 1;

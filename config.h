@@ -4,6 +4,14 @@
 #define KEY_ARG_NONE        { 0 }
 #define MOTION_ARG_NONE     { 0 }
 
+const struct
+{
+	char from, to;
+} change_remaps[] = {
+	{ 'w', 'e' }, /* remap cw -> ce */
+};
+const size_t change_remaps_cnt = sizeof change_remaps / sizeof *change_remaps;
+
 const motionkey_t motion_keys[] = {
 	{ "w",  { m_word, { .word_type = WORD_NONE                }, M_EXCLUSIVE } },
 	{ "b",  { m_word, { .word_type = WORD_BACKWARD            }, M_EXCLUSIVE } },
