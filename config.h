@@ -180,6 +180,8 @@ const cmd_t cmds[] = {
 	{ "vs",  c_vs    },
 	{ "sp",  c_sp    },
 
+	{ "y", c_y },
+
 	{ "!",   c_run   },
 
 	{ NULL }
