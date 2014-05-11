@@ -11,6 +11,9 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	yank.o pos.o region.o retain.o
 
 .PHONY: deps clean check checkmem
+.PHONY: deps clean all check checkmem
+
+all: tim gq
 
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
