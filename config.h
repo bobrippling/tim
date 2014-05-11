@@ -137,6 +137,8 @@ const keymap_t maps[] = {
 	{ IO_MAP, 'a', "li" },
 	{ IO_MAP, 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
 
+	{ IO_MAP, '\r', "j^" },
+
 	{ IO_MAP, 'C', "c$" },
 	{ IO_MAP, 'D', "d$" },
 	{ IO_MAPV, 'C', "c" },
