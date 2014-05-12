@@ -58,7 +58,12 @@ int keys_filter(
 	char *sofar = NULL;
 	size_t nsofar = 0;
 	for(;; ch_idx++){
-		int ch = io_getch(io_m, NULL);
+		bool raw;
+		int ch = io_getch(io_m, &raw);
+		if(raw){
+			/* raw char, doesn't match any, get out */
+			memset(potential, 0, sizeof potential);
+		}
 
 		sofar = urealloc(sofar, ++nsofar);
 		sofar[nsofar-1] = ch;
@@ -239,7 +244,9 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 	(void)a;
 
 	buf = buffers_cur();
-	dir = io_getch(IO_NOMAP, NULL);
+	bool raw;
+	dir = io_getch(IO_NOMAP, &raw);
+	(void)raw;
 
 	switch(dir){
 #define DIRECT(c, n) case c: buf = buf->neighbours[n]; break
@@ -295,9 +302,10 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		// TODO: repeated
 	}else{
 		/* single char */
-		int ch = io_getch(IO_NOMAP, NULL);
+		bool raw;
+		int ch = io_getch(IO_NOMAP, &raw);
 
-		if(ch == K_ESC)
+		if(!raw && ch == K_ESC)
 			return;
 
 		repeat = DEFAULT_REPEAT(repeat);
@@ -325,7 +333,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		 */
 		const bool ins_nl = r.type == REGION_CHAR
 			&& r.begin.y == r.end.y
-			&& ch == '\r';
+			&& (!raw && ch == '\r');
 
 		if(ins_nl)
 			ch = '\n';
@@ -379,7 +387,10 @@ static bool around_motion(
 
 	if(!m){
 		/* check for dd, etc */
-		int ch = io_getch(IO_NOMAP, NULL);
+		bool raw;
+		int ch = io_getch(IO_NOMAP, &raw);
+		(void)raw;
+
 		if(ch == from_ch){
 			/* dd - stay where we are, +the repeat */
 			m_doubletap.arg.pos.y = repeat - 1;

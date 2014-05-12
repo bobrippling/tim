@@ -120,12 +120,15 @@ unsigned io_read_repeat(enum io io_mode)
 {
 	unsigned repeat = 1;
 
-	int ch = io_getch(io_mode, NULL);
+	bool raw;
+	int ch = io_getch(io_mode, &raw);
+	(void)raw;
+
 	if(isdigit(ch) && ch != '0'){
 		repeat = ch - '0';
 		/* more repeats */
 		for(;;){
-			ch = io_getch(io_mode, NULL);
+			ch = io_getch(io_mode, &raw);
 			if('0' <= ch && ch <= '9')
 				repeat = repeat * 10 + ch - '0';
 			else
