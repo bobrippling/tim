@@ -16,6 +16,10 @@ yo
 2
 !
 
+# $tmp.2 doesn't exist if :wq above failed
 diff -u $tmp.expected $tmp.2 >&2
+ec=$?
 
 rm -f $tmp.2
+
+exit $ec
