@@ -98,6 +98,7 @@ void buffer_new_fname(buffer_t **pb, const char *fname, int *err)
 got_err:
 		*err = 1;
 		b = buffer_new();
+		b->modified = true; /* editing a non-existant file, etc */
 		goto fin;
 	}
 
