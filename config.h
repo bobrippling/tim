@@ -168,22 +168,5 @@ const keymap_t maps[] = {
 	{ 0 }
 };
 
-const cmd_t cmds[] = {
-	{ "q",   c_q     },
-	{ "cq",  c_cq    },
-	{ "w",   c_w     },
-	{ "e",   c_e     },
-
-	{ "x",   c_x     },
-	{ "wq",  c_x     },
-
-	{ "vs",  c_vs    },
-	{ "sp",  c_sp    },
-
-	{ "!",   c_run   },
-
-	{ NULL }
-};
-
 #endif
 

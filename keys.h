@@ -25,7 +25,7 @@ union keyarg_u
 	point_t pos;
 	struct
 	{
-		cmd_func *fn;
+		cmd_f_argv *fn; /* may become cmd_t if necessary */
 		const char *arg;
 		bool force;
 	} cmd;

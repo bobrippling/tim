@@ -33,6 +33,7 @@ buffer_t *buffer_new()
 	b->head = list_new(NULL);
 	b->ui_pos = &b->ui_npos;
 	b->ui_mode = UI_NORMAL;
+	b->eol = true; /* default to nice eol */
 	return b;
 }
 
@@ -358,9 +359,11 @@ static int ctoggle(int c)
 	return islower(c) ? toupper(c) : tolower(c);
 }
 
-static void buffer_case_cb(char *s, void *ctx)
+static bool buffer_case_cb(char *s, list_t *l, int y, void *ctx)
 {
 	*s = (*(int (**)(int))ctx)(*s);
+
+	return true;
 }
 
 void buffer_caseregion(
@@ -377,7 +380,7 @@ void buffer_caseregion(
 	}
 	assert(f);
 
-	list_iter_region(buf->head, r, false, buffer_case_cb, &f);
+	list_iter_region(buf->head, r, 0, buffer_case_cb, &f);
 	buf->modified = true;
 }
 

@@ -2,16 +2,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
+
+#include <stdio.h>
 
 #include "ncurses.h"
 #include "mem.h"
 #include "io.h"
 #include "bufmode.h"
 #include "map.h"
+#include "str.h"
 
-extern const keymap_t maps[];
+#ifndef CHAR_BIT
+#  define CHAR_BIT 8
+#endif
 
-static char *io_fifo;
+static struct fifo_ent
+{
+	unsigned ch : CHAR_BIT * sizeof(char);
+	unsigned needs_map : 1;
+} *io_fifo;
+
 static size_t io_fifoused, io_fifosz;
 
 static void io_fifo_realloc(size_t len)
@@ -23,30 +34,19 @@ static void io_fifo_realloc(size_t len)
 	io_fifoused += len;
 }
 
-static void io_fifo_push(const char *s)
-{
-	if(!s)
-		return;
-
-	size_t newlen = strlen(s);
-	size_t start = io_fifoused;
-
-	io_fifo_realloc(newlen);
-
-	memcpy(io_fifo + start, s, newlen);
-}
-
-static void io_fifo_ins(char c)
+static void io_fifo_ins(char c, bool need_map)
 {
 	io_fifo_realloc(1);
-	memmove(io_fifo + 1, io_fifo, io_fifoused - 1);
-	*io_fifo = c;
+	memmove(io_fifo + 1, io_fifo, (io_fifoused - 1) * sizeof(*io_fifo));
+	io_fifo->ch = c;
+	io_fifo->needs_map = need_map;
 }
 
-static int io_fifo_pop(void)
+static int io_fifo_pop(bool *need_map)
 {
 	/* pull a char from the fifo */
-	int ret = *io_fifo;
+	int ret = io_fifo->ch;
+	*need_map = io_fifo->needs_map;
 
 	io_fifoused--;
 	if(io_fifoused)
@@ -55,11 +55,20 @@ static int io_fifo_pop(void)
 	return ret;
 }
 
-static void io_map(int ch, enum io mode_mask)
+static const keymap_t *io_findmap(int ch, enum io mode_mask)
 {
+	extern const keymap_t maps[];
+
 	for(const keymap_t *m = maps; m->to; m++)
 		if(m->mode & mode_mask && m->from == ch)
-			io_fifo_push(m->to);
+			return m;
+
+	return NULL;
+}
+
+size_t io_bufsz(void)
+{
+	return io_fifoused;
 }
 
 enum io bufmode_to_iomap(enum buf_mode bufmode)
@@ -78,49 +87,48 @@ int io_getch(enum io ty, bool *wasraw)
 	if(wasraw)
 		*wasraw = false;
 
+	int ch;
+	bool need_map = false;
 	if(io_fifoused)
-		return io_fifo_pop();
-
-	int ch = nc_getch(ty & IO_MAPRAW, wasraw);
+		ch = io_fifo_pop(&need_map);
+	else
+		ch = nc_getch(ty & IO_MAPRAW, wasraw);
 
 	/* don't run maps for raw keys */
-	if(!wasraw || !*wasraw){
-		io_map(ch, ty & ~IO_MAPRAW);
-		if(io_fifoused)
-			return io_fifo_pop();
+	if(!wasraw || !*wasraw || need_map){
+		const keymap_t *map = io_findmap(ch, ty & ~IO_MAPRAW);
+
+		if(map){
+			for(size_t i = strlen(map->to); i > 0; i--)
+				io_ungetch(map->to[i-1], false);
+
+			ch = io_fifo_pop(&need_map);
+			assert(!need_map); /* corresponds to the false above */
+			return ch;
+		}
 	}
 
 	return ch;
 }
 
-void io_ungetch(int ch)
+void io_ungetch(int ch, bool needmap)
 {
-	io_fifo_ins(ch);
-}
-
-void io_ungetstrr(const char *s, size_t n)
-{
-	if(!*s)
-		return;
-
-	for(size_t i = n - 1;
-			i < n;
-			i--)
-	{
-		io_ungetch(s[i]);
-	}
+	io_fifo_ins(ch, needmap);
 }
 
 unsigned io_read_repeat(enum io io_mode)
 {
 	unsigned repeat = 0;
 
-	int ch = io_getch(io_mode, NULL);
+	bool raw;
+	int ch = io_getch(io_mode, &raw);
+	(void)raw;
+
 	if(isdigit(ch) && ch != '0'){
 		repeat = ch - '0';
 		/* more repeats */
 		for(;;){
-			ch = io_getch(io_mode, NULL);
+			ch = io_getch(io_mode, &raw);
 			if('0' <= ch && ch <= '9')
 				repeat = repeat * 10 + ch - '0';
 			else
@@ -128,6 +136,6 @@ unsigned io_read_repeat(enum io io_mode)
 		}
 	}
 
-	io_ungetch(ch);
+	io_ungetch(ch, false);
 	return repeat;
 }

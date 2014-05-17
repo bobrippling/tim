@@ -49,12 +49,12 @@ sub runtest
 		}
 	}
 
-	die "invalid test $test" unless $valid == 2;
+	die "invalid test $test (too few/many __IN/OUT__)" unless $valid == 2;
 
 	to_file ">$file", @f_begin;
 
 	my $errf = "$tdir/err";
-	my $rc = run_tim($file, $errf, join('', @cmds) . ":wq");
+	my $rc = run_tim($file, $errf, join('', @cmds) . "\033:wq");
 
 	if($opts{valgrind}){
 		open VG, '<', $errf or die;
@@ -89,7 +89,7 @@ sub runtest
 sub runshtest
 {
 	my $f = shift;
-	my $r = system("sh $f >/dev/null 2>&1");
+	my $r = system("sh $f >/dev/null");
 	printf "%s: %s\n", $r ? "failure" : "success", $f;
 	return $r;
 }

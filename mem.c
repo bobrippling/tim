@@ -36,22 +36,20 @@ char *ustrdup_len(const char *s, size_t len)
 	return r;
 }
 
-char *join(const char *sep, const char **vec, int n)
+char *join(const char *sep, char **vec, int n)
 {
 	const int len_sep = strlen(sep);
-	const char *sep_actual = "";
-	char *r = NULL, *p;
-	int i, len = 1;
+	int len = 1;
 
-	for(i = 0; i < n; i++)
+	for(int i = 0; i < n; i++)
 		len += len_sep + strlen(vec[i]);
 
-	p = r = umalloc(len);
+	char *p, *r = p = umalloc(len);
 
-	for(i = 0; i < n; i++){
-		p += sprintf(p, "%s%s", vec[i], sep_actual);
-		sep_actual = sep;
-	}
+	for(int i = 0; i < n; i++)
+		p += sprintf(p, "%s%s", vec[i], sep);
+	if(n > 0)
+		p[-len_sep] = '\0';
 
 	return r;
 }

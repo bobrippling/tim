@@ -123,7 +123,8 @@ restart:
 		if(ch == '\r'){
 			ch = '\n';
 		}else if(ch == CTRL_AND('v')){
-			*wasraw = true;
+			if(wasraw)
+				*wasraw = true;
 			ctrl_v = true;
 			goto restart;
 		}

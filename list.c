@@ -14,6 +14,7 @@
 
 #include "pos.h"
 #include "region.h"
+#include "range.h"
 #include "list.h"
 #include "mem.h"
 #include "str.h"
@@ -716,18 +717,23 @@ int list_filter(
 	return 0;
 }
 
-static void line_iter(
+static bool line_iter(
 		list_t *l, size_t start, size_t end,
-		void fn(char *, void *), void *ctx)
+		size_t y,
+		list_iter_f fn, void *ctx)
 {
-	for(size_t i = start; i < end && i < l->len_line; i++)
-		fn(l->line + i, ctx);
+	for(size_t i = start; i < end && i < l->len_line; i++){
+		bool r = fn(l->line + i, l, y, ctx);
+		if(!r)
+			return false;
+	}
+	return true;
 }
 
 void list_iter_region(
 		list_t *l, const region_t *r,
-		bool evalnl,
-		void fn(char *, void *), void *ctx)
+		enum list_iter_flags flags,
+		list_iter_f fn, void *ctx)
 {
 	size_t i = 0;
 	size_t end = r->end.y - r->begin.y;
@@ -738,22 +744,30 @@ void list_iter_region(
 	for(l = list_seek(l, r->begin.y, false);
 			l && i < end; l = l->next, i++)
 	{
+		const size_t y = i + r->begin.y;
+		bool next = true;
+
 		switch(r->type){
 			case REGION_LINE:
-				line_iter(l, 0, l->len_line, fn, ctx);
+				if(flags & LIST_ITER_WHOLE_LINE)
+					next = fn(l->line, l, y, ctx);
+				else
+					next = line_iter(l, 0, l->len_line, y, fn, ctx);
 				break;
 			case REGION_COL:
-				line_iter(l, r->begin.x, r->end.x, fn, ctx);
+				next = line_iter(l, r->begin.x, r->end.x, y, fn, ctx);
 				break;
 			case REGION_CHAR:
-				line_iter(l,
+				next = line_iter(l,
 						i == 0 ? r->begin.x : 0,
 						i+1 == end ? (unsigned)r->end.x : l->len_line,
-						fn, ctx);
+						y, fn, ctx);
 				break;
 		}
-		if(evalnl)
+		if(flags & LIST_ITER_EVAL_NL)
 			list_evalnewlines1(l);
+		if(!next)
+			break;
 	}
 }
 
@@ -805,4 +819,30 @@ list_t *list_last(list_t *l, int *py)
 		return NULL;
 	for(; l->next; l = l->next, ++*py);
 	return l;
+}
+
+void list_clear_flag(list_t *l)
+{
+	for(; l; l = l->next)
+		l->flag = 0;
+}
+
+void list_flag_range(list_t *l, const struct range *r, int v)
+{
+	size_t n = r->end - r->start + 1;
+	for(l = list_seek(l, r->start, false);
+	    l && n > 0;
+	    l = l->next, n--)
+	{
+		l->flag = v;
+	}
+}
+
+list_t *list_flagfind(list_t *l, int v, int *py)
+{
+	*py = 0;
+	for(; l; l = l->next, ++*py)
+		if(l->flag == v)
+			return l;
+	return NULL;
 }
