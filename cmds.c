@@ -147,7 +147,7 @@ bool c_x(int argc, char **argv, bool force, struct range *range)
 
 	/* if no modifications, don't try to write
 	 * this is done in vi and helps ZZ */
-	if(!buf->modified)
+	if(buf->fname && !buf->modified)
 		return c_q(argc, argv, false, range);
 
 	return c_w(argc, argv, false, range)
