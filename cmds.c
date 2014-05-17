@@ -433,6 +433,8 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 		start->prev = landing;
 	}
 
+	b->modified = true;
+
 	ui_redraw();
 	ui_cur_changed();
 
