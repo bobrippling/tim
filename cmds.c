@@ -451,7 +451,13 @@ bool c_j(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	command_bufaction(range, buffer_joinregion.fn, 1);
+	if(range && range->start != range->end){
+		/* :2j means :2,3j
+		 * otherwise, we have :5,6j, in which case we want to say :5,5j */
+		range->end--;
+	}
+
+	command_bufaction(range, buffer_joinregion.fn, true);
 
 	return true;
 }
