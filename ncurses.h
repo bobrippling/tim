@@ -34,7 +34,7 @@ enum nc_style
 	ATTR_BOLD = 1 << 0,
 	COL_BLUE = 1 << 1,
 	COL_BROWN = 1 << 2,
-	COL_RED = 1 << 3,
+	COL_BG_RED = 1 << 3,
 };
 void nc_style(enum nc_style);
 

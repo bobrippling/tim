@@ -59,7 +59,7 @@ void ui_vstatus(bool err, const char *fmt, va_list l, int right)
 	nc_get_yx(&y, &x);
 
 	if(err)
-		nc_style(COL_RED);
+		nc_style(COL_BG_RED);
 	nc_vstatus(fmt, l, right);
 	if(err)
 		nc_style(0);
