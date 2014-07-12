@@ -6,9 +6,11 @@ CFLAGS_DEF = -D_XOPEN_SOURCE
 CFLAGS = -Wall -Wextra -g -std=c11 -fms-extensions -fno-common \
          ${CFLAGS_WARN} ${CFLAGS_DEF}
 
-OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
+OBJ_MOST = main.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o buffers.o motion.o external.o str.o prompt.o io.o \
-	yank.o pos.o region.o retain.o range.o parse_cmd.o
+	yank.o pos.o region.o retain.o range.o parse_cmd.o ncurses_shared.o
+
+OBJ = ${OBJ_MOST} ncurses.o
 
 .PHONY: deps clean check checkmem
 .PHONY: deps clean all check checkmem
