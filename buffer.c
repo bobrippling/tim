@@ -5,6 +5,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <regex.h>
+#include <math.h>
 
 #include "pos.h"
 #include "region.h"
@@ -497,18 +499,32 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 {
-	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
+	list_t *visible = list_seek(buf->head, buf->ui_start.y, false);
+	list_t *cursorl = list_seek(buf->head, pt->y, false);
+
+	/* count the number of lines between ui_start and pt */
+	const unsigned cols = buf->screen_coord.w;
+	unsigned n_wrapped_lines = 0;
+	for(; visible != cursorl; visible = list_seek(visible, 1, 0)){
+		int to_add = visible->len_line / cols;
+
+		if(to_add > 0)
+			n_wrapped_lines += to_add;
+	}
+
 	int xoff = 0;
 
-	if(l && l->len_line > 0)
-		for(int x = MIN((unsigned)buf->ui_pos->x, l->len_line - 1);
-				x >= 0;
-				x--)
-			xoff += nc_charlen(l->line[x]) - 1;
+	if(cursorl && cursorl->len_line > 0){
+		for(int x = MIN((unsigned)pt->x, cursorl->len_line - 1);
+				x >= 0; x--)
+		{
+			xoff += nc_charlen(cursorl->line[x]) - 1;
+		}
+	}
 
 	return (point_t){
 		buf->screen_coord.x + pt->x - buf->ui_start.x + xoff,
-		buf->screen_coord.y + pt->y - buf->ui_start.y
+		buf->screen_coord.y + pt->y - buf->ui_start.y + n_wrapped_lines
 	};
 }
 
