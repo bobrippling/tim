@@ -6,6 +6,7 @@ my %opts = (
 );
 
 $tim = '../tim';
+$plain = '../plain';
 $tdir = '/tmp/tim.test';
 mkdir $tdir;
 
@@ -94,6 +95,27 @@ sub runshtest
 	return $r;
 }
 
+sub rundisp
+{
+	my $f = shift;
+	my $output = "$tdir/output";
+	my $expected = "$f.expected";
+	my $r = system("echo :wq | $plain '$f' > '$output'");
+
+	if($r){
+		printf "run failure $r\n";
+		return $r;
+	}
+
+	my @diff = `diff -u '$output' '$expected'`;
+	if(@diff == 0){
+		return 0;
+	}
+
+	print for @diff;
+	return 1;
+}
+
 sub run_tim
 {
 	my $pid = fork();
@@ -135,6 +157,7 @@ my($n, $pass) = (0,0);
 
 # for shtests
 $ENV{tim} = $tim;
+$ENV{plain} = $plain;
 $ENV{tmp} = "$tdir/tmp";
 
 my @failures;
@@ -143,6 +166,8 @@ for my $f (@tests){
 	my $r;
 	if($f =~ /\.test$/){
 		$r = runtest $f;
+	}elsif($f =~ /\.disp$/){
+		$r = rundisp $f;
 	}else{
 		$r = runshtest $f;
 	}
