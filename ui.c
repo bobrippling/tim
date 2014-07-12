@@ -92,17 +92,10 @@ void ui_rstatus(const char *fmt, ...)
 	va_end(l);
 }
 
-static void ui_handle_ch(
-		int *pch, bool wasraw, enum io io_mode, unsigned repeat)
+static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 {
-	if(wasraw)
-		return;
-
 	extern nkey_t nkeys[];
 	extern const size_t nkeys_cnt;
-
-	int ch = *pch;
-	io_ungetch(ch);
 
 	int i = keys_filter(
 			io_mode, (char *)nkeys, nkeys_cnt,
@@ -111,31 +104,42 @@ static void ui_handle_ch(
 
 	if(i != -1){
 		nkeys[i].func(&nkeys[i].arg, repeat, nkeys[i].str[0]);
-		ch = 0; /* found and handled */
+		/* found and handled */
 	}else{
 		/* not found/handled */
-		ch = io_getch(0, NULL); /* pop it back */
-	}
+		bool raw;
+		int ch = io_getch(0, &raw); /* pop it back */
+		(void)raw; /* straight out inserted */
 
-	*pch = ch;
+		if(ch == 0 || (char)ch == -1) /* eof */
+			ui_run = UI_EXIT_1;
+
+		buffer_t *const buf = buffers_cur();
+
+		if(buf->ui_mode & UI_INSERT_ANY){
+			buffer_inschar(buf, ch);
+			ui_redraw(); // TODO: queue these
+			ui_cur_changed();
+		}else if(ch != K_ESC){
+			ui_err("unknown key %c", ch); // TODO: queue?
+		}
+	}
 }
 
-int ui_normal_1(unsigned *repeat, enum io io_mode)
+void ui_normal_1(unsigned *repeat, enum io io_mode)
 {
-	const motion *m = motion_read(repeat, /*map:*/true);
 	buffer_t *buf = buffers_cur();
+	const bool ins = buf->ui_mode & UI_INSERT_ANY;
 
-	if(m){
-		motion_apply_buf(m, *repeat, buf);
-		return 0;
-	}
+	if(!ins){
+		const motion *m = motion_read(repeat, /*map:*/true);
+		if(m){
+			motion_apply_buf(m, *repeat, buf);
+			return;
+		} /* else no motion */
+	} /* else insert */
 
-	bool wasraw;
-	int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
-
-	ui_handle_ch(&ch, wasraw, io_mode, *repeat);
-
-	return ch;
+	ui_handle_next_ch(io_mode, *repeat);
 }
 
 int ui_main()
@@ -144,6 +148,8 @@ int ui_main()
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(1){
+		ui_wait_return();
+
 		switch(ui_run){
 			case UI_RUNNING: break;
 			case UI_EXIT_0: return 0;
@@ -160,38 +166,10 @@ int ui_main()
 					alt->y, alt->x);
 		}
 
-		const bool ins = buf->ui_mode & UI_INSERT_ANY;
-
 		const enum io io_mode = bufmode_to_iomap(buf->ui_mode);
-		int ch;
 
-		if(ins){
-			bool wasraw;
-			ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
-
-			ui_handle_ch(&ch, wasraw, io_mode, /*repeat:*/0);
-
-		}else{
-			unsigned repeat = 0;
-
-			ch = ui_normal_1(&repeat, io_mode | IO_MAPRAW);
-
-			if(!ch)
-				continue;
-		}
-
-		if(ch == -1) /* eof */
-			ui_run = UI_EXIT_1;
-
-		if(/*no map found:*/ch){
-			if(buf->ui_mode & UI_INSERT_ANY){
-				buffer_inschar(buf, ch);
-				ui_redraw();
-				ui_cur_changed();
-			}else if(ch != K_ESC){
-				ui_err("unknown key %c", ch);
-			}
-		}
+		unsigned repeat = 0;
+		ui_normal_1(&repeat, io_mode | IO_MAPRAW);
 	}
 }
 
@@ -379,4 +357,36 @@ void ui_redraw()
 void ui_clear(void)
 {
 	nc_clearall();
+}
+
+void ui_print(const char *s, size_t n)
+{
+	nc_set_yx(nc_LINES() - 1, 0);
+	while(n --> 0)
+		nc_addch(*s++);
+	nc_addch('\n');
+}
+
+static bool want_return;
+
+void ui_want_return(void)
+{
+	want_return = true;
+}
+
+void ui_wait_return(void)
+{
+	if(!want_return)
+		return;
+
+	want_return = false;
+
+	bool raw;
+	int ch = io_getch(IO_NOMAP, &raw);
+	(void)raw; /* pushed straight back */
+	if(!isnewline(ch))
+		io_ungetch(ch, false);
+
+	ui_redraw();
+	ui_cur_changed();
 }

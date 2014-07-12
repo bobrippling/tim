@@ -1,6 +1,8 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <stdbool.h>
+
 typedef struct list_ list_t;
 
 struct list_
@@ -9,6 +11,8 @@ struct list_
 	size_t len_line, len_malloc;
 
 	list_t *next, *prev;
+
+	int flag;
 };
 
 list_t *list_new(list_t *prev);
@@ -35,10 +39,19 @@ int list_filter(
 		list_t **pl, const region_t *,
 		const char *cmd);
 
+/* return false to stop */
+typedef bool list_iter_f(char *, list_t *, int y, void *);
+
+enum list_iter_flags
+{
+	LIST_ITER_EVAL_NL = 1 << 0,
+	LIST_ITER_WHOLE_LINE = 1 << 1,
+};
+
 void list_iter_region(
 		list_t *, const region_t *,
-		bool evalnl,
-		void fn(char *, void *), void *ctx);
+		enum list_iter_flags,
+		list_iter_f fn, void *ctx);
 
 void list_insline(list_t **, int *x, int *y, int dir);
 int list_evalnewlines1(list_t *l);
@@ -59,5 +72,10 @@ list_t *list_advance_x(
 	__attribute__((nonnull));
 
 list_t *list_last(list_t *, int *py);
+
+void list_clear_flag(list_t *);
+struct range;
+void list_flag_range(list_t *, const struct range *, int);
+list_t *list_flagfind(list_t *, int flag, int *py);
 
 #endif

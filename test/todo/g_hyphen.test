@@ -1,0 +1,26 @@
+:g/^[^-]/norm yyp:.s/./-/g
+__IN__
+Why?
+
+- a
+- b
+- c
+
+Pros
+
+
+Cons
+__OUT__
+Why?
+----
+
+- a
+- b
+- c
+
+Pros
+----
+
+
+Cons
+----

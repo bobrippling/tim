@@ -14,6 +14,7 @@ motions:
 
 cmds:
 	:! / cmd parsing
+	:!!
 	:e - limit cursor to (x, max_lines) when loading a new file
 	:messages - previous ui_status()s
 	:g
@@ -26,6 +27,12 @@ cmds:
 	:a
 	:i
 	:s
+	:<
+	:>
+	:yank
+
+	:bufdo, :argdo, :args
+		:argdo v/Test/s/hi/ge | up
 
 ranges:
 	., $, %, +[0-9], '<mark>
@@ -38,6 +45,7 @@ registers:
 
 	@[a-z] - execute register
 	@. - execute current line?
+	c_CTRL-R_CTRL-W
 
 macros:
 	let @a = jjc$yo@a

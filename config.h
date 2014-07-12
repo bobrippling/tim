@@ -137,6 +137,8 @@ const keymap_t maps[] = {
 	{ IO_MAP, 'a', "li" },
 	{ IO_MAP, 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
 
+	{ IO_MAP, '\r', "j^" },
+
 	{ IO_MAP, 'C', "c$" },
 	{ IO_MAP, 'D', "d$" },
 	{ IO_MAPV, 'C', "c" },
@@ -164,23 +166,6 @@ const keymap_t maps[] = {
 	{ IO_MAPV, 'R', "c" },
 
 	{ 0 }
-};
-
-const cmd_t cmds[] = {
-	{ "q",   c_q     },
-	{ "cq",  c_cq    },
-	{ "w",   c_w     },
-	{ "e",   c_e     },
-
-	{ "x",   c_x     },
-	{ "wq",  c_x     },
-
-	{ "vs",  c_vs    },
-	{ "sp",  c_sp    },
-
-	{ "!",   c_run   },
-
-	{ NULL }
 };
 
 #endif
