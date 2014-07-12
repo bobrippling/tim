@@ -256,22 +256,24 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 			l && y < r->h;
 			l = l->next, y++)
 	{
-		const int lim = l->len_line;
-
 		nc_set_yx(r->y + y, r->x);
 		nc_clrtoeol();
 
-		for(int x = 0; x < lim; x++){
+		const unsigned xlim = r->w;
+		unsigned x = 0, i = 0;
+		for(; i < l->len_line; i++, x++){
 			if(buf->ui_mode & UI_VISUAL_ANY)
 				nc_highlight(region_contains(
-							&hlregion, x, buf->ui_start.y + y));
+							&hlregion, i, buf->ui_start.y + y));
 
-			if(x >= r->w){
-				nc_addch('\n');
-				nc_addch('>');
+			nc_addch(l->line[i]);
+
+			if(x == xlim && i + 1 < l->len_line){
+				nc_addch('\\');
+				x = -1; /* ready for ++ */
+				y++;
+				nc_set_yx(r->y + y, r->x);
 			}
-
-			nc_addch(l->line[x]);
 		}
 
 		nc_highlight(0);
