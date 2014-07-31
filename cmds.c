@@ -241,6 +241,8 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	if(lines)
 		b->ui_pos->y++;
 
+	b->modified = true;
+
 	ui_redraw();
 	ui_cur_changed();
 
