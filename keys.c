@@ -657,7 +657,7 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *const buf = buffers_cur();
 
-	list_t *line = buffer_current_line(buf);
+	list_t *line = buffer_current_line(buf, false);
 	if(!line)
 		return;
 	line = a->i > 0 ? line->next : line->prev;

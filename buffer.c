@@ -423,9 +423,9 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new
 	new->neighbours[rloc] = to;
 }
 
-list_t *buffer_current_line(const buffer_t *b)
+list_t *buffer_current_line(const buffer_t *b, bool create)
 {
-	return list_seek(b->head, b->ui_pos->y, 0);
+	return list_seek(b->head, b->ui_pos->y, create);
 }
 
 unsigned buffer_nlines(const buffer_t *b)

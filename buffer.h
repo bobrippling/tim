@@ -97,7 +97,7 @@ int buffer_filter(
 
 void buffer_insline(buffer_t *, int dir);
 
-list_t *buffer_current_line(const buffer_t *);
+list_t *buffer_current_line(const buffer_t *, bool create);
 
 unsigned buffer_nlines(const buffer_t *);
 

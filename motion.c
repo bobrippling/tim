@@ -39,7 +39,7 @@ int m_eof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 int m_eol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf, false);
 
 	to->x = l && l->len_line > 0 ? l->len_line - 1 : 0;
 	return MOTION_SUCCESS;
@@ -90,7 +90,7 @@ int m_sof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf, false);
 	unsigned int i;
 
 	if(l){
@@ -108,7 +108,7 @@ static int m_linesearch(
 		list_t *sfn(motion_arg const *, list_t *, int *, const void *),
 		const void *ctx)
 {
-	list_t *l = buffer_current_line(buf); /* fine - repeat handled */
+	list_t *l = buffer_current_line(buf, false); /* fine - repeat handled */
 	int n = 0;
 
 	*to = *buf->ui_pos;
@@ -304,7 +304,7 @@ static char *strchrdir(char *p, char ch, bool forward, char *start, size_t len)
 
 static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	list_t *l = buffer_current_line(buf); /* fine - repeat handled */
+	list_t *l = buffer_current_line(buf, false); /* fine - repeat handled */
 
 	if(!l)
 		return MOTION_FAILURE;
@@ -497,7 +497,7 @@ int m_paren(
 		motion_arg const *arg, unsigned repeat,
 		buffer_t *buf, point_t *to)
 {
-	list_t *l = buffer_current_line(buf);
+	list_t *l = buffer_current_line(buf, false);
 	if(!l)
 		return MOTION_FAILURE;
 

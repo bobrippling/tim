@@ -236,7 +236,7 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	list_t *lines = list_new_file(stream, /*eol:*/&(bool){ false });
 	(*stream_close)(stream);
 
-	b->head = list_append(b->head, buffer_current_line(b), lines);
+	b->head = list_append(b->head, buffer_current_line(b, false), lines);
 
 	if(lines)
 		b->ui_pos->y++;
