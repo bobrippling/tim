@@ -84,12 +84,6 @@ void nc_get_yx(int *y, int *x)
 
 void nc_set_yx(int y, int x)
 {
-	const int lim = nc_COLS() - 1;
-
-	while(x >= lim){
-		y++;
-		x -= lim;
-	}
 	move(y, x);
 }
 

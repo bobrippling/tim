@@ -522,10 +522,36 @@ point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 		}
 	}
 
-	return (point_t){
+	const point_t naive_coord = {
 		buf->screen_coord.x + pt->x - buf->ui_start.x + xoff,
 		buf->screen_coord.y + pt->y - buf->ui_start.y + n_wrapped_lines
 	};
+
+	const point_t coord = {
+		naive_coord.x % (buf->screen_coord.w + 1),
+		naive_coord.y + naive_coord.x / (buf->screen_coord.w + 1),
+	};
+
+	/* if the cursor is past the end of the line, but there's no
+	 * physical line actually there (i.e. virtual edit space), then
+	 * we limit the cursor on-screen to the rightmost edge */
+	if(cursorl && (unsigned)pt->x >= cursorl->len_line){
+		int wrapped_y = naive_coord.y
+			+ cursorl->len_line / (buf->screen_coord.w + 1);
+
+		if(coord.y > wrapped_y){
+			point_t clamped = {
+				/* add one to x - this puts it in the '\\' zone, making it more
+				 * obvious that it's not actually on the screen */
+				.x = buf->screen_coord.w + 1,
+				.y = wrapped_y,
+			};
+
+			return clamped;
+		}
+	}
+
+	return coord;
 }
 
 point_t *buffer_uipos_alt(buffer_t *buf)
