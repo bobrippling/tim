@@ -505,7 +505,7 @@ unsigned buffer_linewrap(
 	const unsigned cols = buf->screen_coord.w;
 	unsigned n_wrapped_lines = 0;
 
-	for(; begin != end; begin = list_seek(begin, 1, 0)){
+	for(; begin && begin != end; begin = list_seek(begin, 1, 0)){
 		int to_add = begin->len_line / cols;
 
 		if(to_add > 0)
