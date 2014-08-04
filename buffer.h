@@ -117,6 +117,8 @@ unsigned buffer_linewrap(
 		const buffer_t *buf,
 		list_t *begin, list_t *end);
 
+unsigned buffer_visible_linewrap(const buffer_t *buf);
+
 point_t buffer_toscreen(const buffer_t *, point_t const *);
 point_t *buffer_uipos_alt(buffer_t *buf);
 

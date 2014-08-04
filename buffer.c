@@ -515,6 +515,14 @@ unsigned buffer_linewrap(
 	return n_wrapped_lines;
 }
 
+unsigned buffer_visible_linewrap(const buffer_t *buf)
+{
+	list_t *begin = list_seek(buf->head, buf->ui_start.y, false);
+	list_t *end = list_seek(buf->head, buf->screen_coord.h, false);
+
+	return buffer_linewrap(buf, begin, end);
+}
+
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 {
 	list_t *visible = list_seek(buf->head, buf->ui_start.y, false);

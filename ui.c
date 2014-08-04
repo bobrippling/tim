@@ -182,7 +182,7 @@ void ui_cur_changed()
 {
 	int need_redraw = 0;
 	buffer_t *buf = buffers_cur();
-	const int nl = buf->screen_coord.h;
+	const int nl = buf->screen_coord.h - buffer_visible_linewrap(buf);
 
 	if(buf->ui_pos->x < 0)
 		buf->ui_pos->x = 0;
