@@ -297,9 +297,25 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-static bool replace_iter(char *ch, list_t *l, int y, void *ctx)
+struct replace_ctx
 {
-	*ch = *(int *)ctx;
+	char with;
+	unsigned x;
+};
+
+static bool replace_iter(char *ch, list_t *l, int y, void *vctx)
+{
+	const struct replace_ctx *ctx = vctx;
+
+	if(l->len_malloc <= ctx->x){
+		l->len_malloc = l->len_line = ctx->x + 2;
+		l->line = urealloc(l->line, l->len_malloc);
+	}
+
+	l->line[ctx->x] = ctx->with;
+	//for(unsigned i = 0; i <= ctx->x; i++)
+		//l->line[i] = ctx->with;
+
 	return true;
 }
 
@@ -345,7 +361,20 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ins_nl)
 			ch = '\n';
 
-		list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, replace_iter, &ch);
+		/* need to ensure we're called in line-mode, so we
+		 * can generate lines */
+		if(r.type == REGION_CHAR){
+			r.type = REGION_LINE;
+			r.end.y++;
+		}
+
+		list_iter_region(
+				buf->head, &r, LIST_ITER_EVAL_NL,
+				/*create:*/true, replace_iter,
+				&(struct replace_ctx){
+					.with = ch,
+					.x = buf->ui_pos->x
+				});
 
 		if(ins_nl){
 			buf->ui_pos->x = 0;

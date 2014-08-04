@@ -51,6 +51,7 @@ enum list_iter_flags
 void list_iter_region(
 		list_t *, const region_t *,
 		enum list_iter_flags,
+		const bool create,
 		list_iter_f fn, void *ctx);
 
 void list_insline(list_t **, int *x, int *y, int dir);

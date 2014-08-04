@@ -733,6 +733,7 @@ static bool line_iter(
 void list_iter_region(
 		list_t *l, const region_t *r,
 		enum list_iter_flags flags,
+		const bool create,
 		list_iter_f fn, void *ctx)
 {
 	size_t i = 0;
@@ -741,8 +742,11 @@ void list_iter_region(
 	if(r->type != REGION_LINE)
 		end++;
 
-	for(l = list_seek(l, r->begin.y, false);
-			l && i < end; l = l->next, i++)
+	for(l = list_seek(l, r->begin.y, create);
+			l && i < end;
+			/* prevent creating bonus space: */
+			l = i < end-1 ? list_seek(l, 1, create) : NULL,
+			i++)
 	{
 		const size_t y = i + r->begin.y;
 		bool next = true;

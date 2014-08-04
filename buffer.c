@@ -381,7 +381,7 @@ void buffer_caseregion(
 	}
 	assert(f);
 
-	list_iter_region(buf->head, r, 0, buffer_case_cb, &f);
+	list_iter_region(buf->head, r, 0, /*create:*/false, buffer_case_cb, &f);
 	buf->modified = true;
 }
 
