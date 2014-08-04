@@ -113,6 +113,10 @@ const char *buffer_shortfname(const char *); /* internal fname buffer */
 
 bool buffer_findat(const buffer_t *, const char *, point_t *, int dir);
 
+unsigned buffer_linewrap(
+		const buffer_t *buf,
+		list_t *begin, list_t *end);
+
 point_t buffer_toscreen(const buffer_t *, point_t const *);
 point_t *buffer_uipos_alt(buffer_t *buf);
 

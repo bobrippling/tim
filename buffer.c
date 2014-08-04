@@ -497,20 +497,31 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 	return false;
 }
 
+unsigned buffer_linewrap(
+		const buffer_t *buf,
+		list_t *begin, list_t *end)
+{
+	/* count the number of lines between ui_start and pt */
+	const unsigned cols = buf->screen_coord.w;
+	unsigned n_wrapped_lines = 0;
+
+	for(; begin != end; begin = list_seek(begin, 1, 0)){
+		int to_add = begin->len_line / cols;
+
+		if(to_add > 0)
+			n_wrapped_lines += to_add;
+	}
+
+	return n_wrapped_lines;
+}
+
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 {
 	list_t *visible = list_seek(buf->head, buf->ui_start.y, false);
 	list_t *cursorl = list_seek(buf->head, pt->y, false);
 
-	/* count the number of lines between ui_start and pt */
-	const unsigned cols = buf->screen_coord.w;
-	unsigned n_wrapped_lines = 0;
-	for(; visible != cursorl; visible = list_seek(visible, 1, 0)){
-		int to_add = visible->len_line / cols;
-
-		if(to_add > 0)
-			n_wrapped_lines += to_add;
-	}
+	const unsigned n_wrapped_lines
+		= buffer_linewrap(buf, visible, cursorl);
 
 	int xoff = 0;
 
