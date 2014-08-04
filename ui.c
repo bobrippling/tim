@@ -261,6 +261,7 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 
 		const unsigned xlim = r->w;
 		unsigned x = 0, i = 0;
+		bool wrapped = false;
 		for(; i < l->len_line; i++, x++){
 			if(buf->ui_mode & UI_VISUAL_ANY)
 				nc_highlight(region_contains(
@@ -273,8 +274,11 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 				x = -1; /* ready for ++ */
 				y++;
 				nc_set_yx(r->y + y, r->x);
+				wrapped = true;
 			}
 		}
+		if(wrapped)
+			nc_clrtoeol();
 
 		nc_highlight(0);
 	}
