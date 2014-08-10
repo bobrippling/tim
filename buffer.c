@@ -499,17 +499,27 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 
 unsigned buffer_linewrap(
 		const buffer_t *buf,
-		list_t *begin, list_t *end)
+		list_t *begin, list_t *end,
+		unsigned line_limit)
 {
 	/* count the number of lines between ui_start and pt */
 	const unsigned cols = buf->screen_coord.w;
 	unsigned n_wrapped_lines = 0;
+	unsigned n_total_lines = 0;
 
 	for(; begin && begin != end; begin = list_seek(begin, 1, 0)){
 		int to_add = begin->len_line / cols;
 
-		if(to_add > 0)
-			n_wrapped_lines += to_add;
+		if(to_add > 0){
+			n_wrapped_lines += to_add; /* we're on this line, count it */
+			if(n_total_lines + 1 + to_add >= line_limit)
+				break;
+			n_total_lines += 1 + to_add;
+		}else{
+			if(n_total_lines + 1 == line_limit)
+				break;
+			n_total_lines++;
+		}
 	}
 
 	return n_wrapped_lines;
@@ -518,9 +528,8 @@ unsigned buffer_linewrap(
 unsigned buffer_visible_linewrap(const buffer_t *buf)
 {
 	list_t *begin = list_seek(buf->head, buf->ui_start.y, false);
-	list_t *end = list_seek(buf->head, buf->screen_coord.h, false);
 
-	return buffer_linewrap(buf, begin, end);
+	return buffer_linewrap(buf, begin, NULL, buf->screen_coord.h);
 }
 
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
@@ -529,7 +538,7 @@ point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 	list_t *cursorl = list_seek(buf->head, pt->y, false);
 
 	const unsigned n_wrapped_lines
-		= buffer_linewrap(buf, visible, cursorl);
+		= buffer_linewrap(buf, visible, cursorl, -1u);
 
 	int xoff = 0;
 

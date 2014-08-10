@@ -115,7 +115,8 @@ bool buffer_findat(const buffer_t *, const char *, point_t *, int dir);
 
 unsigned buffer_linewrap(
 		const buffer_t *buf,
-		list_t *begin, list_t *end);
+		list_t *begin, list_t *end,
+		unsigned line_limit);
 
 unsigned buffer_visible_linewrap(const buffer_t *buf);
 
