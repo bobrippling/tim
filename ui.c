@@ -108,7 +108,7 @@ static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 	}else{
 		/* not found/handled */
 		bool raw;
-		int ch = io_getch(0, &raw); /* pop it back */
+		int ch = io_getch(0, &raw, true); /* pop it back */
 		(void)raw; /* straight out inserted */
 
 		if(ch == 0 || (char)ch == -1) /* eof */
@@ -379,7 +379,7 @@ void ui_wait_return(void)
 	want_return = false;
 
 	bool raw;
-	int ch = io_getch(IO_NOMAP, &raw);
+	int ch = io_getch(IO_NOMAP, &raw, true);
 	(void)raw; /* pushed straight back */
 	if(!isnewline(ch))
 		io_ungetch(ch, false);

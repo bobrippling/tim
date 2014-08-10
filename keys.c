@@ -59,7 +59,7 @@ int keys_filter(
 	size_t nsofar = 0;
 	for(;; ch_idx++){
 		bool raw;
-		int ch = io_getch(io_m, &raw);
+		int ch = io_getch(io_m, &raw, /*map:*/ch_idx == 0); /* dl shouldn't map l */
 		if(raw){
 			/* raw char, doesn't match any, get out */
 			memset(potential, 0, sizeof potential);
@@ -266,7 +266,7 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	buf = buffers_cur();
 	bool raw;
-	dir = io_getch(IO_NOMAP, &raw);
+	dir = io_getch(IO_NOMAP, &raw, true);
 	(void)raw;
 
 	switch(dir){
@@ -324,7 +324,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 	}else{
 		/* single char */
 		bool raw;
-		int ch = io_getch(IO_NOMAP, &raw);
+		int ch = io_getch(IO_NOMAP, &raw, true);
 
 		if(!raw && ch == K_ESC)
 			return;
@@ -409,7 +409,7 @@ static bool around_motion(
 	if(!m){
 		/* check for dd, etc */
 		bool raw;
-		int ch = io_getch(IO_NOMAP, &raw);
+		int ch = io_getch(IO_NOMAP, &raw, true);
 		(void)raw;
 
 		if(ch == from_ch){

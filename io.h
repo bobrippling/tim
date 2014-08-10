@@ -15,7 +15,7 @@ enum io
 
 enum io bufmode_to_iomap(enum buf_mode);
 
-int io_getch(enum io, bool *wasraw)
+int io_getch(enum io, bool *wasraw, bool domaps)
 	__attribute__((nonnull));
 
 unsigned io_read_repeat(enum io);
