@@ -252,20 +252,22 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 
 	list_t *l;
 	int y;
-	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0);
+	int buf_y;
+	for(y = 0, buf_y = buf->ui_start.y, l = list_seek(buf->head, buf_y, 0);
 			l && y < r->h;
-			l = l->next, y++)
+			l = l->next, y++, buf_y++)
 	{
 		nc_set_yx(r->y + y, r->x);
 		nc_clrtoeol();
 
 		const unsigned xlim = r->w;
 		unsigned x = 0, i = 0;
-		bool wrapped = false;
+		unsigned nwrapped = 0;
 		for(; i < l->len_line; i++, x++){
-			if(buf->ui_mode & UI_VISUAL_ANY)
-				nc_highlight(region_contains(
-							&hlregion, i, buf->ui_start.y + y));
+			if(buf->ui_mode & UI_VISUAL_ANY){
+				bool hl = region_contains(&hlregion, i, buf_y);
+				nc_highlight(hl);
+			}
 
 			nc_addch(l->line[i]);
 
@@ -273,13 +275,13 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 				nc_addch('\\');
 				x = -1; /* ready for ++ */
 				y++;
-				wrapped = true;
+				nwrapped++;
 				if(y == r->h)
 					break;
 				nc_set_yx(r->y + y, r->x);
 			}
 		}
-		if(wrapped)
+		if(nwrapped)
 			nc_clrtoeol();
 
 		nc_highlight(0);
