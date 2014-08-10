@@ -119,6 +119,7 @@ unsigned buffer_linewrap(
 		unsigned line_limit);
 
 unsigned buffer_visible_linewrap(const buffer_t *buf);
+unsigned buffer_nscreenlines(const buffer_t *buf);
 
 point_t buffer_toscreen(const buffer_t *, point_t const *);
 point_t *buffer_uipos_alt(buffer_t *buf);

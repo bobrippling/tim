@@ -53,13 +53,13 @@ int m_sos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 
 int m_eos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	to->y = UI_TOP(buf) + buf->screen_coord.h - 1;
+	to->y = UI_TOP(buf) + buffer_nscreenlines(buf) - 1;
 	return MOTION_SUCCESS;
 }
 
 int m_mos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	to->y = UI_TOP(buf) + buf->screen_coord.h / 2 - 1;
+	to->y = UI_TOP(buf) + buffer_nscreenlines(buf) / 2 - 1;
 	return MOTION_SUCCESS;
 }
 
