@@ -273,8 +273,10 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 				nc_addch('\\');
 				x = -1; /* ready for ++ */
 				y++;
-				nc_set_yx(r->y + y, r->x);
 				wrapped = true;
+				if(y == r->h)
+					break;
+				nc_set_yx(r->y + y, r->x);
 			}
 		}
 		if(wrapped)
