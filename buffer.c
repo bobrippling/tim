@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <regex.h>
 
 #include "pos.h"
 #include "region.h"
@@ -456,23 +457,63 @@ const char *buffer_shortfname(const char *s)
 
 static char *buffer_find2(
 		char *haystack, size_t haystack_sz,
-		const char *needle,
+		regex_t *regex,
 		unsigned off, int dir)
 {
-	return dir < 0
-		? tim_strrevstr(haystack, off, needle)
-		: tim_strstr(haystack + off, haystack_sz - off, needle);
+	if(dir > 0){
+		if(off >= haystack_sz)
+			return NULL;
+
+		/* try to match after `off' */
+		regmatch_t match;
+		int execret = regexec(regex, haystack + off, 1, &match, /*eflags:*/0);
+
+		if(execret)
+			return NULL;
+
+		return match.rm_so > off ? haystack + off + match.rm_so : NULL;
+
+	}else{
+		regmatch_t match;
+		int execret = regexec(regex, haystack, 1, &match, /*eflags:*/0);
+
+		if(execret)
+			return NULL;
+
+		if(match.rm_so >= off)
+			return NULL; /* nothing before `off' */
+
+		return haystack + match.rm_so;
+	}
 }
 
-bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir)
+bool buffer_findat(
+		const buffer_t *buf, const char *search, point_t *at, int dir)
 {
+	bool ret = false;
 	list_t *l = list_seek(buf->head, at->y, 0);
+
+	regex_t search_reg;
+	int comperr = regcomp(&search_reg, search,
+			REG_EXTENDED | (str_mixedcase(search) ? 0 : REG_ICASE));
+
+
+	if(comperr){
+		/*
+		char errbuf[256];
+		size_t errlen = regerror(
+				comperr, &search_reg,
+				errbuf, sizeof errbuf);
+		*/
+
+		goto out;
+	}
 
 	if(!l){
 		if(dir < 0){
 			l = list_last(buf->head, &at->y);
 		}else{
-			return false;
+			goto out;
 		}
 	}
 
@@ -480,19 +521,29 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 	l = list_advance_x(l, dir, &at->y, &at->x);
 
 	while(l){
+		char *line0 = ustrdup_len(l->line, l->len_line + 1);
+
+		line0[l->len_line] = '\0';
+
 		char *p;
 		if((unsigned)at->x < l->len_line
-		&& (p = buffer_find2(l->line, l->len_line, search, at->x, dir)))
+		&& (p = buffer_find2(line0, l->len_line, &search_reg, at->x, dir)))
 		{
-			at->x = p - l->line;
+			at->x = p - line0;
 			at->y = at->y;
-			return true;
+
+			ret = true;
+			free(line0);
+			goto out;
 		}
+		free(line0);
 
 		l = list_advance_y(l, dir, &at->y, &at->x);
 	}
 
-	return false;
+out:
+	regfree(&search_reg);
+	return ret;
 }
 
 point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)

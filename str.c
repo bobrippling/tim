@@ -49,6 +49,19 @@ char *tim_strstr(char *restrict haystack, size_t len, const char *restrict needl
 	return NULL;
 }
 
+bool str_mixedcase(const char *s)
+{
+	if(!*s)
+		return false;
+
+	bool up = isupper(*s);
+	for(s++; *s; s++)
+		if(isupper(*s) != up)
+			return true;
+
+	return false;
+}
+
 bool isallspace(const char *s)
 {
 	for(; *s && isspace(*s); s++);

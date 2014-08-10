@@ -9,6 +9,8 @@ bool paren_match(char c, char *other);
 bool paren_left(char);
 char paren_opposite(char);
 
+bool str_mixedcase(const char *);
+
 void str_ltrim(char *, size_t *);
 void str_rtrim(char *, size_t *);
 

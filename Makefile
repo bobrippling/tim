@@ -10,13 +10,18 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o buffers.o motion.o external.o str.o prompt.o io.o \
 	yank.o pos.o region.o retain.o range.o parse_cmd.o
 
-.PHONY: deps clean check checkmem
+.PHONY: deps clean check checkmem checkut
 
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
 
-check: tim
+check: tim checkut
 	cd test && ./run.pl
+
+checkut: ut
+	./ut
+
+ut: ut.o str.o
 
 checkmem: tim
 	cd test && ./run.pl -v
@@ -28,4 +33,3 @@ deps:
 	cc -MM ${OBJ:.o=.c} > Makefile.dep
 
 include Makefile.dep
-.PHONY: check checkmem clean deps
