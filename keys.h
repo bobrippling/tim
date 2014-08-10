@@ -71,6 +71,7 @@ key_func k_case;
 key_func k_filter;
 key_func k_ins_colcopy;
 key_func k_normal1;
+key_func k_mark;
 
 key_func k_vtoggle;
 key_func k_go_visual;

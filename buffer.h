@@ -33,6 +33,8 @@ struct buffer
 	point_t ui_vpos;  /* when in visual mode - other point */
 	point_t *ui_pos; /* which one is in use? */
 
+	mark *marks;
+
 	/* used for `gv' */
 	struct
 	{

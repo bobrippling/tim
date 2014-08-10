@@ -700,3 +700,10 @@ void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	buf->ui_mode = save;
 }
+
+void k_mark(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	/* TODO */
+}

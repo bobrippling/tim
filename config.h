@@ -107,6 +107,8 @@ const nkey_t nkeys[] = {
 
 	{ "gv", k_go_visual, KEY_ARG_NONE, UI_NORMAL },
 
+	{ "m", k_mark, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ K_STR(CTRL_AND('l')),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('e')),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL | UI_VISUAL_ANY },
