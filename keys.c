@@ -177,9 +177,23 @@ cancel_cmd:
 
 void k_docmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	char *arg_dup = ustrdup(arg->cmd.arg);
-	arg->cmd.fn(1, (char *[]){ arg_dup, NULL }, arg->cmd.force, /*range:*/NULL);
-	free(arg_dup);
+	const char **i;
+	char **argv;
+	size_t l;
+
+	for(l = 0, i = arg->cmd.argv; i && *i; i++, l++);
+
+	argv = umalloc((l + 1) * sizeof *argv);
+
+	for(l = 0, i = arg->cmd.argv; i && *i; i++, l++)
+		argv[l] = ustrdup(*i);
+
+	cmd_dispatch(&arg->cmd.fn, 1, argv, arg->cmd.force, /*range:*/NULL);
+
+	if(arg->cmd.argv[0])
+		for(l = 0; argv[l]; l++)
+			free(argv[l]);
+	free(argv);
 }
 
 void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)

@@ -173,8 +173,8 @@ bool parse_ranged_cmd(
 
 	/* look for command */
 	cmd_f = NULL;
-	for(int i = 0; cmds[i].cmd; i++)
-		if(!strcmp(cmds[i].cmd, argv[0])){
+	for(int i = 0; cmds[i].arg0; i++)
+		if(!strcmp(cmds[i].arg0, argv[0])){
 			cmd_f = &cmds[i];
 			break;
 		}

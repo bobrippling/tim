@@ -554,7 +554,7 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 	};
 
 	struct cmd_t c_p_fallback = {
-		.cmd = "p",
+		.arg0 = "p",
 		.f_argv = &c_p,
 		.single_arg = false,
 	};

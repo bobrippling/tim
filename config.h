@@ -127,8 +127,8 @@ const nkey_t nkeys[] = {
 
 	{ K_STR(CTRL_AND('o')), k_normal1, KEY_ARG_NONE, UI_INSERT /* !INSERT_ANY */ },
 
-	{ "ZZ", k_docmd, { .cmd = { c_x, .arg = "ZZ" } }, UI_NORMAL | UI_VISUAL_ANY },
-	{ "ZQ", k_docmd, { .cmd = { c_q, .arg = "ZQ", .force = true } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "ZZ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZZ", NULL }, .fn = { .arg0 = "ZZ", .f_argv = c_x,                 } } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "ZQ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZQ", NULL }, .fn = { .arg0 = "ZQ", .f_argv = c_q, .inverse = true } } }, UI_NORMAL | UI_VISUAL_ANY },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 

@@ -13,7 +13,7 @@ typedef bool cmd_f_arg1(
 
 typedef struct cmd_t
 {
-	const char *cmd;
+	const char *arg0;
 	union
 	{
 		cmd_f_argv *f_argv;
