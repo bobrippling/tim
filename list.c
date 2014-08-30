@@ -67,7 +67,7 @@ static list_t *mmap_to_lines(char *mem, size_t len, bool *eol)
 	char *const last = mem + len;
 
 	char *p, *begin;
-	for(p = begin = mem; p < last; p++)
+	for(p = begin = mem; p != last; p++)
 		if(*p == '\n')
 			mmap_new_line(&cur, p, &begin);
 
