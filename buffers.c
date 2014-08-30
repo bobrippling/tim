@@ -10,10 +10,7 @@
 #include "mem.h"
 #include "ui.h"
 
-static buffer_t   *buf_sel;
-
-static char      **buf_list;
-static int         buf_c;
+static buffer_t *buf_sel;
 
 buffer_t *buffers_cur()
 {
@@ -22,19 +19,12 @@ buffer_t *buffers_cur()
 
 void buffers_set_cur(buffer_t *b)
 {
-	/* FIXME: free old */
 	buf_sel = b;
 }
 
 void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 {
 	if(argc){
-		buf_c = argc;
-		buf_list = umalloc(argc * sizeof *buf_list);
-
-		for(int i = 0; i < argc; i++)
-			buf_list[i] = ustrdup(argv[i]);
-
 		int err;
 		buffer_new_fname(&buf_sel, argv[0], &err);
 		if(err)
