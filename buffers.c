@@ -22,7 +22,34 @@ void buffers_set_cur(buffer_t *b)
 	buf_sel = b;
 }
 
-void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
+static void buf_add_splitright(buffer_t *cur, buffer_t *new)
+{
+	buffer_add_neighbour(cur, true, new);
+}
+
+static void buf_add_splittop(buffer_t *cur, buffer_t *new)
+{
+	buffer_add_neighbour(cur, false, new);
+}
+
+static void load_argv(int argc, char **argv, void onload(buffer_t *cur, buffer_t *new))
+{
+	buffer_t *prev_buf = buf_sel;
+
+	for(int i = 1; i < argc; i++){
+		buffer_t *b;
+
+		int err;
+		buffer_new_fname(&b, argv[i], &err);
+		/* FIXME: ignore errors? */
+
+		onload(prev_buf, b);
+
+		prev_buf = b;
+	}
+}
+
+void buffers_init(int argc, char **argv, enum buffer_init_args init_args, unsigned off)
 {
 	if(argc){
 		int err;
@@ -30,30 +57,23 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 		if(err)
 			ui_err("\"%s\": %s", buffer_shortfname(argv[0]), strerror(errno));
 
-		bool splitright = false;
-		switch(a){
-			case BUF_VALL: splitright = true; break;
-			case BUF_HALL: splitright = false;  break;
+		switch(init_args){
+			case BUF_VALL:
+				load_argv(argc, argv, buf_add_splitright);
+				break;
+
+			case BUF_HALL:
+				load_argv(argc, argv, buf_add_splittop);
+				break;
+
 			default:
-				goto fin;
+				break;
 		}
 
-		buffer_t *prev_buf = buf_sel;
-		for(int i = 1; i < argc; i++){
-			buffer_t *b;
-
-			buffer_new_fname(&b, argv[i], &err);
-			/* FIXME: ignore errors? */
-
-			buffer_add_neighbour(prev_buf, splitright, b);
-
-			prev_buf = b;
-		}
 	}else{
 		buf_sel = buffer_new();
 	}
 
-fin:
 	if(off)
 		buf_sel->ui_pos->y = off;
 }
