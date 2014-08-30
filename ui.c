@@ -51,6 +51,59 @@ void ui_init()
 	nc_init();
 }
 
+static char *shorten_arg(const char *fmt, va_list l)
+{
+	/* tim uses %_s, %c, %d, %lu, %s:
+	 *
+	 * :r!grep -h ui_status *.c
+	 * :%s/%/%/g
+	 * :v/%/d
+	 * :%s@\(%[a-z_]\+\).*@\1@
+	 * :%!sort|uniq
+	 */
+	const char *s_ = strstr(fmt, "%_s");
+	if(!s_)
+		return (char *)fmt;
+
+	va_list cpy;
+	va_copy(cpy, l);
+
+	unsigned length = 0;
+
+	for(const char *p = fmt; *p; p++){
+		if(p < s_ && *p == '%') switch(*++p){
+			case '_':
+				break;
+			case 'c':
+				(void)va_arg(cpy, int);
+				length++;
+				break;
+			case 'd':
+				(void)va_arg(cpy, int);
+				length += 6;
+				break;
+			case 'l': /* lu */
+				length += va_arg(cpy, unsigned long);
+				length += 6;
+				break;
+			case 's':
+				length += strlen(va_arg(cpy, const char *));
+				break;
+		}
+	}
+
+	const char *to_shorten = va_arg(cpy, const char *);
+	va_end(cpy);
+
+	const unsigned to_shorten_len = strlen(to_shorten);
+	unsigned cols = nc_COLS();
+
+	if(length + to_shorten_len < cols)
+		return (char *)fmt;
+
+	// TODO: this won't work.. need a nicer way
+}
+
 static
 void ui_vstatus(bool err, const char *fmt, va_list l, int right)
 {
@@ -60,11 +113,17 @@ void ui_vstatus(bool err, const char *fmt, va_list l, int right)
 
 	if(err)
 		nc_style(COL_BG_RED);
-	nc_vstatus(fmt, l, right);
+
+	char *shortened_fmt = shorten_arg(fmt, l);
+
+	nc_vstatus(shortened_fmt, l, right);
 	if(err)
 		nc_style(0);
 
 	nc_set_yx(y, x);
+
+	if(shortened_fmt != fmt)
+		free(shortened_fmt);
 }
 
 void ui_status(const char *fmt, ...)
