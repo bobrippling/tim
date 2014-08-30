@@ -259,35 +259,63 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf;
-	char dir;
-
-	(void)a;
-
-	buf = buffers_cur();
 	bool raw;
-	dir = io_getch(IO_NOMAP, &raw, true);
-	(void)raw;
+	char dirch = io_getch(IO_NOMAP, &raw, true);
 
-	switch(dir){
-#define DIRECT(c, n) case c: buf = buf->neighbours[n]; break
+	enum { up, down, left, right } dir;
 
-		DIRECT('j', BUF_DOWN);
-		DIRECT('k', BUF_UP);
-		DIRECT('h', BUF_LEFT);
-		DIRECT('l', BUF_RIGHT);
+	switch(dirch){
+#define DIRECT(c, x) case c: dir = x; break
+		DIRECT('j', down);
+		DIRECT('k', up);
+		DIRECT('h', left);
+		DIRECT('l', right);
+#undef DIRECT
 
 		default:
+			ui_err("unrecognised direction '%c'", dirch);
+		case K_ESC:
 			return;
 	}
 
+	buffer_t *const curbuf = buffers_cur();
+	buffer_t *found = NULL;
 
-	if(buf){
-		buffers_set_cur(buf);
+	switch(dir){
+		case up:
+			found = curbuf->neighbours.above;
+			break;
+
+		case down:
+			found = curbuf->neighbours.below;
+			break;
+
+		case left:
+		case right:
+			for(found = curbuf; found->neighbours.above; found = found->neighbours.above);
+			found = (dir == left ? found->neighbours.left : found->neighbours.right);
+			if(!found)
+				break;
+
+			const int to_match = curbuf->screen_coord.y + curbuf->ui_pos->y - curbuf->ui_start.y;
+
+			while(found->neighbours.below)
+			{
+				if(found->screen_coord.y <= to_match
+				&& to_match <= found->screen_coord.y + found->screen_coord.h)
+				{
+					break;
+				}
+				found = found->neighbours.below;
+			}
+	}
+
+	if(found && found != curbuf){
+		buffers_set_cur(found);
 		ui_redraw();
 		ui_cur_changed();
 	}else{
-		ui_err("no buffer");
+		ui_err("no buffers in that direction");
 	}
 }
 

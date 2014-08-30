@@ -28,12 +28,11 @@ void buffers_set_cur(buffer_t *b)
 
 void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 {
-	int i;
-
 	if(argc){
 		buf_c = argc;
 		buf_list = umalloc(argc * sizeof *buf_list);
-		for(i = 0; i < argc; i++)
+
+		for(int i = 0; i < argc; i++)
 			buf_list[i] = ustrdup(argv[i]);
 
 		int err;
@@ -41,22 +40,22 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 		if(err)
 			ui_err("\"%s\": %s", buffer_shortfname(argv[0]), strerror(errno));
 
-		enum buffer_neighbour dir;
+		bool splitright = false;
 		switch(a){
-			case BUF_VALL: dir = BUF_RIGHT; break;
-			case BUF_HALL: dir = BUF_DOWN;  break;
+			case BUF_VALL: splitright = true; break;
+			case BUF_HALL: splitright = false;  break;
 			default:
 				goto fin;
 		}
 
 		buffer_t *prev_buf = buf_sel;
-		for(i = 1; i < argc; i++){
+		for(int i = 1; i < argc; i++){
 			buffer_t *b;
 
 			buffer_new_fname(&b, argv[i], &err);
 			/* FIXME: ignore errors? */
 
-			buffer_add_neighbour(prev_buf, dir, b);
+			buffer_add_neighbour(prev_buf, splitright, b);
 
 			prev_buf = b;
 		}

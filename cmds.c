@@ -253,16 +253,16 @@ usage:
 }
 
 static
-bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force, struct range *range)
+bool c_split(bool const splitright, int argc, char **argv, bool force, struct range *range)
 {
 	RANGE_NO();
-
-	buffer_t *b;
 
 	if(argc > 2){
 		ui_err("usage: %s [filename]", *argv);
 		return false;
 	}
+
+	buffer_t *b;
 
 	if(argc > 1){
 		int err;
@@ -274,7 +274,9 @@ bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force, struct
 		b = buffer_new();
 	}
 
-	buffer_add_neighbour(buffers_cur(), ne, b);
+	buffer_add_neighbour(buffers_cur(), splitright, b);
+	buffers_set_cur(b);
+
 	ui_redraw();
 	ui_cur_changed();
 
@@ -283,12 +285,12 @@ bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force, struct
 
 bool c_vs(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(BUF_RIGHT, argc, argv, force, range);
+	return c_split(true, argc, argv, force, range);
 }
 
 bool c_sp(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(BUF_DOWN, argc, argv, force, range);
+	return c_split(false, argc, argv, force, range);
 }
 
 bool c_run(char *cmd, char *rest, bool force, struct range *range)

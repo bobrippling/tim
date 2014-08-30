@@ -10,14 +10,6 @@
 
 typedef struct buffer buffer_t;
 
-enum buffer_neighbour
-{
-	BUF_LEFT,
-	BUF_RIGHT,
-	BUF_UP,
-	BUF_DOWN
-};
-
 enum case_tog
 {
 	CASE_TOGGLE,
@@ -44,7 +36,10 @@ struct buffer
 	point_t ui_start;     /* offset into buffer */
 	rect_t  screen_coord; /* buffer pos in screen */
 
-	buffer_t *neighbours[4];
+	struct
+	{
+		buffer_t *left, *right, *below, *above;
+	} neighbours;
 
 	char *fname;
 	bool eol;
@@ -107,7 +102,7 @@ void buffer_caseregion(
 
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);
-void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
+void buffer_add_neighbour(buffer_t *, bool splitright, buffer_t *);
 
 const char *buffer_shortfname(const char *); /* internal fname buffer */
 

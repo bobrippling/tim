@@ -292,12 +292,12 @@ void ui_draw_buf_col(buffer_t *buf, const rect_t *r_col)
 	int nrows;
 
 	for(nrows = 1, bi = buf;
-			bi->neighbours[BUF_DOWN];
-			bi = bi->neighbours[BUF_DOWN], nrows++);
+			bi->neighbours.below;
+			bi = bi->neighbours.below, nrows++);
 
 	h = r_col->h / nrows;
 
-	for(i = 0; buf; i++, buf = buf->neighbours[BUF_DOWN]){
+	for(i = 0; buf; i++, buf = buf->neighbours.below){
 		rect_t r = *r_col;
 		r.y = i * h;
 		r.h = h;
@@ -305,7 +305,7 @@ void ui_draw_buf_col(buffer_t *buf, const rect_t *r_col)
 		if(i){
 			ui_draw_hline(r.y, r.x, r.w - 1);
 			r.y++;
-			if(buf->neighbours[BUF_DOWN])
+			if(buf->neighbours.below)
 				r.h--;
 		}
 
@@ -325,12 +325,12 @@ void ui_redraw()
 	buf = buffer_topleftmost(buffers_cur());
 
 	for(ncols = 1, bi = buf;
-			bi->neighbours[BUF_RIGHT];
-			bi = bi->neighbours[BUF_RIGHT], ncols++);
+			bi->neighbours.right;
+			bi = bi->neighbours.right, ncols++);
 
 	w = nc_COLS() / ncols - (ncols + 1);
 
-	for(i = 0; buf; i++, buf = buf->neighbours[BUF_RIGHT]){
+	for(i = 0; buf; i++, buf = buf->neighbours.right){
 		rect_t r;
 
 		r.x = i * w;
@@ -341,7 +341,7 @@ void ui_redraw()
 		if(i){
 			ui_draw_vline(r.x, r.y, r.h - 1);
 			r.x++;
-			if(buf->neighbours[BUF_RIGHT])
+			if(buf->neighbours.right)
 				r.w--;
 		}
 

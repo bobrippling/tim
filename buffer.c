@@ -395,8 +395,8 @@ buffer_t *buffer_topleftmost(buffer_t *b)
 {
 	for(;;){
 		int changed = 0;
-		for(; b->neighbours[BUF_LEFT]; changed = 1, b = b->neighbours[BUF_LEFT]);
-		for(; b->neighbours[BUF_UP];   changed = 1, b = b->neighbours[BUF_UP]);
+		for(; b->neighbours.left;  changed = 1, b = b->neighbours.left);
+		for(; b->neighbours.above; changed = 1, b = b->neighbours.above);
 		if(!changed)
 			break;
 	}
@@ -404,23 +404,97 @@ buffer_t *buffer_topleftmost(buffer_t *b)
 	return b;
 }
 
-void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new)
+static void buffer_evict(buffer_t *const evictee)
 {
-	/* TODO; leaks, etc */
-	//buffer_t *sav = to->neighbours[loc];
-	enum buffer_neighbour rloc;
+	if(evictee->neighbours.above){
+		/* we are just a child in the chain */
+		assert(!evictee->neighbours.left);
+		assert(!evictee->neighbours.right);
 
-#define OPPOSITE(a, b) case a: rloc = b; break
+		buffer_t *above = evictee->neighbours.above;
 
-	switch(loc){
-		OPPOSITE(BUF_LEFT,  BUF_RIGHT);
-		OPPOSITE(BUF_RIGHT, BUF_LEFT);
-		OPPOSITE(BUF_DOWN,  BUF_UP);
-		OPPOSITE(BUF_UP,    BUF_DOWN);
+		assert(above->neighbours.below == evictee);
+		above->neighbours.below = evictee->neighbours.below;
+
+		if(evictee->neighbours.below)
+			evictee->neighbours.below->neighbours.above = above;
+
+		evictee->neighbours.above = evictee->neighbours.below = NULL;
+		return;
 	}
 
-	to->neighbours[loc] = new;
-	new->neighbours[rloc] = to;
+	/* we are a top-most chain.
+	 * remove ourselves from the left-right hierarchy
+	 * if we have a child below, it takes our place.
+	 */
+	buffer_t *const child = evictee->neighbours.below;
+
+	if(evictee->neighbours.left){
+		buffer_t *left = evictee->neighbours.left;
+
+		assert(left->neighbours.right == evictee);
+
+		buffer_t *target = child ? child : evictee->neighbours.right;
+		left->neighbours.right = target;
+		if(target)
+			target->neighbours.left = left;
+	}
+
+	if(evictee->neighbours.right){
+		buffer_t *right = evictee->neighbours.right;
+
+		assert(right->neighbours.left == evictee);
+
+		buffer_t *target = child ? child : evictee->neighbours.left;
+		right->neighbours.left = target;
+		if(target)
+			target->neighbours.right = right;
+	}
+
+	evictee->neighbours.left = evictee->neighbours.right = NULL;
+	evictee->neighbours.above = evictee->neighbours.below = NULL;
+}
+
+void buffer_add_neighbour(buffer_t *to, bool const splitright, buffer_t *new)
+{
+	buffer_evict(new);
+
+	if(splitright){
+		buffer_t *topmost;
+		for(topmost = to; topmost->neighbours.above; topmost = topmost->neighbours.above);
+
+		buffer_t *right = topmost->neighbours.right;
+
+		if(!right){
+			topmost->neighbours.right = new;
+			new->neighbours.left = topmost;
+		}else{
+			/* walk down until we find an entry where we left */
+			while(right->neighbours.below
+			&& right->ui_start.y <= new->ui_start.y)
+			{
+				right = right->neighbours.below;
+			}
+
+			buffer_t *replace = right->neighbours.below;
+			right->neighbours.below = new;
+			if(replace)
+				replace->neighbours.above = new;
+
+			new->neighbours.above = right;
+			new->neighbours.below = replace;
+		}
+
+	}else{
+		buffer_t *evicted = to->neighbours.below;
+
+		to->neighbours.below = new;
+		new->neighbours.above = to;
+
+		new->neighbours.below = evicted;
+		if(evicted)
+			evicted->neighbours.above = new;
+	}
 }
 
 list_t *buffer_current_line(const buffer_t *b, bool create)
