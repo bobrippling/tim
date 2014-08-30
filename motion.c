@@ -502,7 +502,6 @@ int m_paren(
 
 	switch(arg->i){
 		default:
-			ui_err("bad m_paren arg %c (%d)", arg->i, arg->i);
 			break;
 
 		case '%':
@@ -536,8 +535,10 @@ int m_paren(
 
 		case '{':
 		case '(':
+		case '<':
 		case '}':
 		case ')':
+		case '>':
 		{
 			repeat = DEFAULT_REPEAT(repeat);
 
