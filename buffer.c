@@ -433,27 +433,6 @@ unsigned buffer_nlines(const buffer_t *b)
 	return list_count(b->head);
 }
 
-const char *buffer_shortfname(const char *s)
-{
-#define SHORT_LEN_HALF 14
-	static char buf[(SHORT_LEN_HALF + 2) * 2];
-	size_t l = strlen(s);
-
-	if(l > sizeof(buf)){
-		const char *fin = s + l - SHORT_LEN_HALF;
-
-		strncpy(buf, s, SHORT_LEN_HALF);
-		buf[SHORT_LEN_HALF] = 0;
-
-		snprintf(buf + SHORT_LEN_HALF - 1, sizeof(buf) - SHORT_LEN_HALF,
-				"...%s", fin);
-
-		return buf;
-	}
-
-	return s;
-}
-
 static char *buffer_find2(
 		char *haystack, size_t haystack_sz,
 		const char *needle,

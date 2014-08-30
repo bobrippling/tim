@@ -109,8 +109,6 @@ void buffer_caseregion(
 buffer_t *buffer_topleftmost(buffer_t *b);
 void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
 
-const char *buffer_shortfname(const char *); /* internal fname buffer */
-
 bool buffer_findat(const buffer_t *, const char *, point_t *, int dir);
 
 point_t buffer_toscreen(const buffer_t *, point_t const *);

@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "pos.h"
 #include "ncurses.h"
@@ -15,6 +16,7 @@
 #include "cmds.h"
 #include "keys.h"
 #include "buffers.h"
+#include "mem.h"
 
 enum ui_ec ui_run = UI_RUNNING;
 
@@ -60,11 +62,31 @@ void ui_vstatus(bool err, const char *fmt, va_list l, int right)
 
 	if(err)
 		nc_style(COL_BG_RED);
-	nc_vstatus(fmt, l, right);
+
+	char *message = ustrvprintf(fmt, l);
+	/* just truncate in the middle if too long */
+	const size_t msglen = strlen(message);
+	const int cols = nc_COLS();
+
+	if(msglen >= (unsigned)cols){
+		const int dotslen = 3;
+		int half = (cols - dotslen) / 2;
+		char *replace = umalloc(msglen + 1);
+
+		snprintf(replace, msglen + 1, "%.*s...%s",
+				half, message, message + msglen - half);
+
+		free(message);
+		message = replace;
+	}
+
+	nc_status(message, right);
 	if(err)
 		nc_style(0);
 
 	nc_set_yx(y, x);
+
+	free(message);
 }
 
 void ui_status(const char *fmt, ...)

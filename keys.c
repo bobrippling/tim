@@ -297,7 +297,7 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 	(void)a;
 	ui_status("%s%s%s, x=%d y=%d eol=%c",
 			buf->fname ? "\"" : "",
-			buf->fname ? buffer_shortfname(buf->fname) : "<no name>",
+			buf->fname ? buf->fname : "<no name>",
 			buf->fname ? "\"" : "",
 			buf->ui_pos->x, buf->ui_pos->y,
 			"ny"[buf->eol]);

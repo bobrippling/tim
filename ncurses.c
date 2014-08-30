@@ -63,7 +63,7 @@ void nc_highlight(int on)
 	(on ? attron : attroff)(A_REVERSE);
 }
 
-void nc_vstatus(const char *fmt, va_list l, int right)
+void nc_status(const char *fmt, int right)
 {
 	scrollok(stdscr, 0);
 
@@ -73,7 +73,7 @@ void nc_vstatus(const char *fmt, va_list l, int right)
 
 	move(LINES - 1, x);
 	clrtoeol();
-	vwprintw(stdscr, fmt, l);
+	addstr(fmt);
 
 	scrollok(stdscr, 1);
 }
