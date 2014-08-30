@@ -49,11 +49,14 @@ static void mmap_new_line(list_t **pcur, char *p, char **panchor)
 	data[nchars] = '\0';
 
 	list_t *cur = *pcur;
+	if(cur->line){
+		cur->next = list_new(cur);
+		cur = cur->next;
+	}
 	cur->line = data;
 	cur->len_malloc = nchars + 1;
 	cur->len_line = nchars;
-	cur->next = list_new(cur);
-	*pcur = cur->next;
+	*pcur = cur;
 
 	*panchor = p + 1;
 }
