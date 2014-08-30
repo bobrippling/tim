@@ -32,6 +32,11 @@ static void buf_add_splittop(buffer_t *cur, buffer_t *new)
 	buffer_add_neighbour(cur, false, new);
 }
 
+static void buf_add_hidden(buffer_t *cur, buffer_t *new)
+{
+	new->hidden = true;
+}
+
 static void load_argv(int argc, char **argv, void onload(buffer_t *cur, buffer_t *new))
 {
 	buffer_t *prev_buf = buf_sel;
@@ -67,6 +72,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args init_args, unsign
 				break;
 
 			default:
+				load_argv(argc, argv, buf_add_hidden);
 				break;
 		}
 

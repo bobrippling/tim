@@ -44,6 +44,7 @@ struct buffer
 	char *fname;
 	bool eol;
 	bool modified;
+	bool hidden;
 	time_t mtime;
 
 	enum buf_mode ui_mode;
