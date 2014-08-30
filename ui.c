@@ -17,6 +17,7 @@
 #include "keys.h"
 #include "buffers.h"
 #include "mem.h"
+#include "str.h"
 
 enum ui_ec ui_run = UI_RUNNING;
 
@@ -114,6 +115,42 @@ void ui_rstatus(const char *fmt, ...)
 	va_end(l);
 }
 
+static void ui_match_paren(buffer_t *buf)
+{
+	list_t *l = buffer_current_line(buf, false);
+	int x = buf->ui_pos->x;
+	bool redraw = false;
+
+	if(buf->ui_paren.x != -1)
+		redraw = true;
+
+	buf->ui_paren = (point_t){ -1, -1 };
+
+	if(!l || (size_t)x >= l->len_line)
+		goto out;
+
+	char ch = l->line[x];
+	char other;
+	if(!paren_match(ch, &other))
+		goto out;
+
+	motion opposite = {
+		.func = m_paren,
+		.arg.i = other,
+		.how = M_EXCLUSIVE
+	};
+	point_t loc;
+	if(!motion_apply_buf_dry(&opposite, 0, buf, &loc))
+		goto out;
+
+	buf->ui_paren = loc;
+	redraw = true;
+
+out:
+	if(redraw)
+		ui_redraw();
+}
+
 static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 {
 	extern nkey_t nkeys[];
@@ -157,6 +194,10 @@ void ui_normal_1(unsigned *repeat, enum io io_mode)
 		const motion *m = motion_read(repeat, /*map:*/true);
 		if(m){
 			motion_apply_buf(m, *repeat, buf);
+
+			/* check if we're now on a paren */
+			ui_match_paren(buf);
+
 			return;
 		} /* else no motion */
 	} /* else insert */
@@ -286,11 +327,22 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		nc_clrtoeol();
 
 		for(int x = 0; x < lim; x++){
+			int offhl = 0;
+			const int real_y = buf->ui_start.y + y;
+
 			if(buf->ui_mode & UI_VISUAL_ANY)
 				nc_highlight(region_contains(
-							&hlregion, x, buf->ui_start.y + y));
+							&hlregion, x, real_y));
+
+			if(point_eq(&buf->ui_paren, (&(point_t){ .x=x, .y=real_y }))){
+				nc_highlight(1);
+				offhl = 1;
+			}
 
 			nc_addch(l->line[x]);
+
+			if(offhl)
+				nc_highlight(0);
 		}
 
 		nc_highlight(0);

@@ -34,6 +34,7 @@ buffer_t *buffer_new()
 	b->ui_pos = &b->ui_npos;
 	b->ui_mode = UI_NORMAL;
 	b->eol = true; /* default to nice eol */
+	b->ui_paren = (point_t){ -1, -1 };
 	return b;
 }
 
