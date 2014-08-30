@@ -39,7 +39,7 @@ void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
 		int err;
 		buffer_new_fname(&buf_sel, argv[0], &err);
 		if(err)
-			ui_err("\"%_s\": %s", argv[0], strerror(errno));
+			ui_err("\"%s\": %s", argv[0], strerror(errno));
 
 		enum buffer_neighbour dir;
 		switch(a){

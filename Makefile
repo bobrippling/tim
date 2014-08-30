@@ -1,6 +1,5 @@
 CFLAGS_WARN = -Wmissing-prototypes -Wno-unused-parameter -Wno-char-subscripts \
-              -Wno-missing-field-initializers -Wno-format-zero-length \
-              -Wno-format-invalid-specifier
+              -Wno-missing-field-initializers -Wno-format-zero-length
 
 CFLAGS_DEF = -D_XOPEN_SOURCE
 

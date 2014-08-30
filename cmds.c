@@ -113,7 +113,7 @@ bool c_w(int argc, char **argv, bool force, struct range *range)
 				return false;
 			}
 		}else if(errno != ENOENT){
-			ui_err("stat(%_s): %s", fname, strerror(errno));
+			ui_err("stat(%s): %s", fname, strerror(errno));
 			return false;
 		}
 	}
@@ -122,7 +122,7 @@ bool c_w(int argc, char **argv, bool force, struct range *range)
 
 	if(!f){
 got_err:
-		ui_err("%_s: %s", fname, strerror(errno));
+		ui_err("%s: %s", fname, strerror(errno));
 		if(f)
 			fclose(f);
 		return false;
@@ -135,7 +135,7 @@ got_err:
 		goto got_err;
 	}
 
-	ui_status("written to \"%_s\"", fname);
+	ui_status("written to \"%s\"", fname);
 
 	return true;
 }
@@ -183,9 +183,9 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 	if(!buffer_replace_fname(buf, fname)){
 		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
 		buffers_set_cur(b);
-		ui_err("%_s: %s", fname, strerror(errno));
+		ui_err("%s: %s", fname, strerror(errno));
 	}else{
-		ui_status("%_s: loaded", fname);
+		ui_status("%s: loaded", fname);
 		buffers_cur()->modified = false;
 	}
 
@@ -270,7 +270,7 @@ bool c_split(enum buffer_neighbour ne, int argc, char **argv, bool force, struct
 		buffer_new_fname(&b, argv[1], &err);
 
 		if(err)
-			ui_err("%_s: %s", argv[1], strerror(errno));
+			ui_err("%s: %s", argv[1], strerror(errno));
 	}else{
 		b = buffer_new();
 	}

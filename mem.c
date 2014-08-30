@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "mem.h"
 
@@ -52,4 +53,25 @@ char *join(const char *sep, char **vec, int n)
 		p[-len_sep] = '\0';
 
 	return r;
+}
+
+char *ustrvprintf(const char *fmt, va_list l)
+{
+	char *buf = NULL;
+	int len = 8, ret;
+
+	do{
+		va_list lcp;
+
+		len *= 2;
+		buf = urealloc(buf, len);
+
+		va_copy(lcp, l);
+		ret = vsnprintf(buf, len, fmt, lcp);
+		va_end(lcp);
+
+	}while(ret >= len);
+
+	return buf;
+
 }

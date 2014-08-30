@@ -2,7 +2,7 @@ main.o: main.c pos.h region.h list.h buffer.h bufmode.h yank.h ui.h \
  buffers.h
 ncurses.o: ncurses.c ncurses.h macros.h
 ui.o: ui.c pos.h ncurses.h region.h list.h buffer.h bufmode.h yank.h io.h \
- ui.h motion.h cmds.h keys.h buffers.h
+ ui.h motion.h cmds.h keys.h buffers.h mem.h
 mem.o: mem.c mem.h
 keys.o: keys.c pos.h region.h list.h buffer.h bufmode.h yank.h range.h \
  io.h ui.h motion.h cmds.h keys.h ncurses.h mem.h prompt.h map.h \
