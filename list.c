@@ -154,7 +154,7 @@ list_t *list_new_file(FILE *f, bool *eol)
 
 	return l;
 #else
-	return list_new_fd_read(fileno(f), eol);
+	return list_new_fd(fileno(f), eol);
 #endif
 }
 
