@@ -42,12 +42,16 @@ list_t *list_copy_deep(const list_t *const l, list_t *prev)
 
 static void mmap_new_line(list_t **pcur, char *p, char **panchor)
 {
-	char *data = umalloc(p - *panchor + 1);
+	const size_t nchars = p - *panchor;
+	char *data = umalloc(nchars + 1);
 
-	memcpy(data, *panchor, p - *panchor);
+	memcpy(data, *panchor, nchars);
+	data[nchars] = '\0';
 
 	list_t *cur = *pcur;
 	cur->line = data;
+	cur->len_malloc = nchars + 1;
+	cur->len_line = nchars;
 	cur->next = list_new(cur);
 	*pcur = cur->next;
 
