@@ -104,6 +104,7 @@ void buffer_caseregion(
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);
 void buffer_add_neighbour(buffer_t *, bool splitright, buffer_t *);
+void buffer_evict(buffer_t *evictee);
 
 const char *buffer_shortfname(const char *); /* internal fname buffer */
 

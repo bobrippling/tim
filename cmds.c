@@ -41,6 +41,17 @@
 	}                                    \
 	range_sort(range)
 
+static buffer_t *buffer_next(buffer_t *buf)
+{
+#define RET_IF(x) if(x) return x
+	RET_IF(buf->neighbours.below);
+	RET_IF(buf->neighbours.above);
+	RET_IF(buf->neighbours.right);
+	RET_IF(buf->neighbours.left);
+#undef RET_IF
+	return NULL;
+}
+
 bool c_q(int argc, char **argv, bool force, struct range *range)
 {
 	RANGE_NO();
@@ -55,7 +66,19 @@ bool c_q(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	ui_run = UI_EXIT_0;
+	buffer_t *buf = buffers_cur();
+	buffer_t *focus = buffer_next(buf);
+
+	buffer_evict(buf);
+	buffer_free(buf), buf = NULL;
+
+	buffers_set_cur(focus);
+	if(focus){
+		ui_redraw();
+		ui_cur_changed();
+	}else{
+		ui_run = UI_EXIT_0;
+	}
 
 	return true;
 }

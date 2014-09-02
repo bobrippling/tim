@@ -404,7 +404,7 @@ buffer_t *buffer_topleftmost(buffer_t *b)
 	return b;
 }
 
-static void buffer_evict(buffer_t *const evictee)
+void buffer_evict(buffer_t *const evictee)
 {
 	if(evictee->neighbours.above){
 		/* we are just a child in the chain */

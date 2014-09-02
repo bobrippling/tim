@@ -14,4 +14,13 @@ void buffers_term(void);
 buffer_t *buffers_cur(void);
 void buffers_set_cur(buffer_t *);
 
+#define ITER_BUFFERS(b)                               \
+	for(buf = buffers_cur();                            \
+			buf->neighbours.above;                          \
+			buf = buf->neighbours.above);                  \
+	for(; buf->neighbours.left;                         \
+			buf = buf->neighbours.left);                   \
+	for(buffer_t *h = buf; h; h = h->neighbours.right)  \
+		for(buf = h; buf; buf = buf->neighbours.below)
+
 #endif
