@@ -127,7 +127,7 @@ bool surround_block(
 		char arg, unsigned repeat,
 		buffer_t *buf, region_t *surround)
 {
-	return false;
+	return surround_paren('(', repeat, buf, surround);
 }
 
 bool surround_para(
