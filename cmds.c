@@ -41,6 +41,12 @@
 	}                                    \
 	range_sort(range)
 
+#define ARGV_NO()               \
+	if(argc != 1){                \
+		ui_err("usage: %s", *argv); \
+		return false;               \
+	}
+
 static buffer_t *buffer_next(buffer_t *buf)
 {
 #define RET_IF(x) if(x) return x
@@ -58,11 +64,7 @@ static bool quit_common(
 		bool force, struct range *range)
 {
 	RANGE_NO();
-
-	if(argc != 1){
-		ui_err("usage: %s", *argv);
-		return false;
-	}
+	ARGV_NO();
 
 	if(!force){
 		bool modified = false;
@@ -125,11 +127,7 @@ bool c_qa(int argc, char **argv, bool force, struct range *range)
 bool c_cq(int argc, char **argv, bool force, struct range *range)
 {
 	RANGE_NO();
-
-	if(argc != 1){
-		ui_err("usage: %s", *argv);
-		return false;
-	}
+	ARGV_NO();
 
 	/* no buffer checks */
 	ui_run = UI_EXIT_1;
@@ -227,11 +225,7 @@ bool c_x(int argc, char **argv, bool force, struct range *range)
 bool c_xa(int argc, char **argv, bool force, struct range *range)
 {
 	RANGE_NO();
-
-	if(argc != 1){
-		ui_err("usage: %s", *argv);
-		return false;
-	}
+	ARGV_NO();
 
 	buffer_t *buf;
 	ITER_BUFFERS(buf){
@@ -402,10 +396,7 @@ bool c_run(char *cmd, char *rest, bool force, struct range *range)
 
 bool c_p(int argc, char **argv, bool force, struct range *range)
 {
-	if(argc != 1){
-		ui_err("Usage: %s", *argv);
-		return false;
-	}
+	ARGV_NO();
 
 	buffer_t *const b = buffers_cur();
 
@@ -540,10 +531,7 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 
 bool c_d(int argc, char **argv, bool force, struct range *range)
 {
-	if(argc != 1){
-		ui_err("Usage: %s", *argv);
-		return false;
-	}
+	ARGV_NO();
 
 	command_bufaction(range, buffer_delregion.fn, 0);
 
@@ -552,10 +540,7 @@ bool c_d(int argc, char **argv, bool force, struct range *range)
 
 bool c_j(int argc, char **argv, bool force, struct range *range)
 {
-	if(argc != 1){
-		ui_err("Usage: %s", *argv);
-		return false;
-	}
+	ARGV_NO();
 
 	if(range && range->start != range->end){
 		/* :2j means :2,3j
