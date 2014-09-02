@@ -20,7 +20,7 @@ bool surround_apply(const surround_key_t *k,
 	if(!k->func(type, repeat, buf, r))
 		return false;
 
-	if(in_around == 'i'){
+	if(in_around == SURROUND_IN_CHAR){
 		int xdiff = r->end.x - r->begin.x;
 
 		if(r->end.y - r->begin.y == 0){
