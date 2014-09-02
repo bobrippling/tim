@@ -12,6 +12,8 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 
 .PHONY: deps clean check checkmem
 
+SRC = ${OBJ:.o=.c}
+
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
 
@@ -25,7 +27,10 @@ clean:
 	rm -f ${OBJ} tim
 
 deps:
-	cc -MM ${OBJ:.o=.c} > Makefile.dep
+	cc -MM ${SRC} > Makefile.dep
+
+tags:
+	ctags ${SRC}
 
 include Makefile.dep
-.PHONY: check checkmem clean deps
+.PHONY: check checkmem clean deps tags
