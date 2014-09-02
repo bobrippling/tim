@@ -80,6 +80,19 @@ int m_goto(motion_arg const *m, unsigned repeat, buffer_t *buf,
 	return MOTION_SUCCESS;
 }
 
+int m_aggregate(motion_arg const *m, unsigned repeat, buffer_t *buf,
+		point_t const *from, point_t *to)
+{
+	*to = *from;
+	for(int i = 0; i < 2; i++){
+		motion *entry = m->aggregate[i];
+		if(entry->func(&entry->arg, repeat, buf, to, to) == MOTION_FAILURE)
+			return MOTION_FAILURE;
+		repeat = 0;
+	}
+	return MOTION_SUCCESS;
+}
+
 int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf,
 		point_t const *from, point_t *to)
 {

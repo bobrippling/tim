@@ -42,6 +42,7 @@ union motion_arg
 		signed char dir;
 		char scan_ch;
 	};
+	struct motion *aggregate[2];
 };
 
 motion_func m_eof, m_eol, m_eos, m_goto, m_mos, m_move, m_sof, m_sol, m_sos;
@@ -50,6 +51,8 @@ motion_func m_word;
 motion_func m_para, m_paren, m_func;
 motion_func m_search, m_searchnext;
 motion_func m_visual;
+
+motion_func m_aggregate;
 
 typedef struct motion
 {
