@@ -239,11 +239,53 @@ static enum region_type ui_mode_to_region(enum buf_mode m)
 	return REGION_CHAR; /* doesn't matter */
 }
 
-static
-void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
+static void ui_calc_bufrects(buffer_t *buf,
+		const unsigned screenwidth, const unsigned screenheight)
 {
-	buf->screen_coord = *r;
+	unsigned nbuffers_h = 0;
+	buffer_t *buf_h;
+	for(buf_h = buf; buf_h; buf_h = buf_h->neighbours.right, nbuffers_h++);
 
+	const unsigned nvlines = nbuffers_h + 1;
+	const unsigned bufspace_v = screenwidth - nvlines;
+	unsigned bufwidth = bufspace_v / nbuffers_h;
+
+	unsigned i_h;
+	for(i_h = 0, buf_h = buf; buf_h; buf_h = buf_h->neighbours.right, i_h++){
+		unsigned nbuffers_v = 0;
+		buffer_t *buf_v;
+		for(buf_v = buf_h; buf_v; buf_v = buf_v->neighbours.below)
+			nbuffers_v++;
+
+		/* final buffer gets any left over cols */
+		if(!buf_h->neighbours.right)
+			bufwidth += bufspace_v % nbuffers_h;
+
+		const unsigned nhlines = nbuffers_v - 1;
+		const unsigned bufspace_h = screenheight - /*status*/1 - nhlines;
+		const unsigned bufheight = bufspace_h / nbuffers_v;
+
+		unsigned i_v;
+		for(i_v = 0, buf_v = buf_h; buf_v; buf_v = buf_v->neighbours.below, i_v++){
+			rect_t r = {
+				.x = i_h * (bufwidth + 1),
+				.y = i_v * (bufheight + 1),
+				.w = bufwidth,
+				.h = bufheight,
+			};
+
+			/* final buffer gets any left over lines */
+			if(!buf_v->neighbours.below)
+				r.h += bufspace_h % nbuffers_v;
+
+			buf_v->screen_coord = r;
+		}
+	}
+}
+
+static
+void ui_draw_buf_1(buffer_t *buf)
+{
 	const region_t hlregion = {
 		buf->ui_npos,
 		buf->ui_vpos,
@@ -253,14 +295,14 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 	list_t *l;
 	int y;
 	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0);
-			l && y < r->h;
+			l && y < buf->screen_coord.h;
 			l = l->next, y++)
 	{
-		const int lim = l->len_line < (unsigned)r->w
+		const int lim = l->len_line < (unsigned)buf->screen_coord.w
 			? l->len_line
-			: (unsigned)r->w;
+			: (unsigned)buf->screen_coord.w;
 
-		nc_set_yx(r->y + y, r->x);
+		nc_set_yx(buf->screen_coord.y + y, buf->screen_coord.x);
 		nc_clrtoeol();
 
 		for(int x = 0; x < lim; x++){
@@ -275,8 +317,8 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 	}
 
 	nc_style(COL_BLUE | ATTR_BOLD);
-	for(; y < r->h; y++){
-		nc_set_yx(r->y + y, r->x);
+	for(; y < buf->screen_coord.h; y++){
+		nc_set_yx(buf->screen_coord.y + y, buf->screen_coord.x);
 		nc_addch('~');
 		nc_clrtoeol();
 	}
@@ -284,68 +326,36 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 }
 
 static
-void ui_draw_buf_col(buffer_t *buf, const rect_t *r_col)
+void ui_draw_buf_col(buffer_t *buf)
 {
-	buffer_t *bi;
-	int i;
-	int h;
-	int nrows;
-
-	for(nrows = 1, bi = buf;
-			bi->neighbours.below;
-			bi = bi->neighbours.below, nrows++);
-
-	h = r_col->h / nrows;
-
-	for(i = 0; buf; i++, buf = buf->neighbours.below){
-		rect_t r = *r_col;
-		r.y = i * h;
-		r.h = h;
-
+	for(unsigned i = 0; buf; i++, buf = buf->neighbours.below){
 		if(i){
-			ui_draw_hline(r.y, r.x, r.w - 1);
-			r.y++;
-			if(buf->neighbours.below)
-				r.h--;
+			const rect_t *r = &buf->screen_coord;
+			ui_draw_hline(r->y - 1, r->x, r->w - 1);
 		}
 
-		ui_draw_buf_1(buf, &r);
+		ui_draw_buf_1(buf);
 	}
 }
 
 void ui_redraw()
 {
-	buffer_t *buf, *bi;
 	int save_y, save_x;
-	int w;
-	int ncols, i;
-
 	nc_get_yx(&save_y, &save_x);
 
-	buf = buffer_topleftmost(buffers_cur());
+	buffer_t *buf = buffer_topleftmost(buffers_cur());
 
-	for(ncols = 1, bi = buf;
-			bi->neighbours.right;
-			bi = bi->neighbours.right, ncols++);
+	unsigned const screenheight = nc_LINES();
+	ui_calc_bufrects(buf, nc_COLS(), screenheight);
 
-	w = nc_COLS() / ncols - (ncols + 1);
-
-	for(i = 0; buf; i++, buf = buf->neighbours.right){
-		rect_t r;
-
-		r.x = i * w;
-		r.y = 0;
-		r.w = w;
-		r.h = nc_LINES() - 1;
-
+	for(int i = 0; buf; i++, buf = buf->neighbours.right){
 		if(i){
-			ui_draw_vline(r.x, r.y, r.h - 1);
-			r.x++;
-			if(buf->neighbours.right)
-				r.w--;
+			const rect_t *r = &buf->screen_coord;
+			/* r->y should be zero, r->h-1 should be screen height */
+			ui_draw_vline(r->x - 1, r->y, screenheight - 1);
 		}
 
-		ui_draw_buf_col(buf, &r);
+		ui_draw_buf_col(buf);
 	}while(buf);
 
 	nc_set_yx(save_y, save_x);
