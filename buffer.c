@@ -298,7 +298,7 @@ void buffer_indent2(
 		? list_seek(buf->head, buf->ui_pos->y, 0)
 		: NULL;
 
-	for(int y = region->begin.y; y < region->end.y; y++){
+	for(int y = region->begin.y; y <= region->end.y; y++){
 		int x = 0;
 
 		switch(region->type){

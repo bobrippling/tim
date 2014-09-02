@@ -329,22 +329,14 @@ list_t *list_dellines(list_t **pl, list_t *prev, unsigned n)
 		return NULL;
 	l->prev = NULL;
 
-	if(n == 1){
-		list_t *adv = l->next;
-		l->next = NULL;
+	list_t *end_m1 = list_seek(l, n - 1, false);
 
-		*pl = adv;
-
+	if(end_m1){
+		*pl = end_m1->next;
+		end_m1->next = NULL;
 	}else{
-		list_t *end_m1 = list_seek(l, n - 2, false);
-
-		if(end_m1){
-			*pl = end_m1->next;
-			end_m1->next = NULL;
-		}else{
-			/* delete everything */
-			*pl = NULL;
-		}
+		/* delete everything */
+		*pl = NULL;
 	}
 
 	if(*pl)
@@ -381,10 +373,15 @@ list_t *list_append(list_t *accum, list_t *at, list_t *new)
 
 list_t *list_delregion(list_t **pl, const region_t *region)
 {
-	if(!(region->begin.y <= region->end.y))
+	if(region->begin.y > region->end.y)
 		return NULL;
-	if(!(region->begin.y < region->end.y || region->begin.x < region->end.x))
+
+	if(region->type != REGION_LINE
+	&& region->begin.y == region->end.y
+	&& region->begin.x >= region->end.x)
+	{
 		return NULL;
+	}
 
 	list_t **seeked = list_seekp(pl, region->begin.y, false);
 
@@ -430,7 +427,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 						list_tail(deleted),
 						list_dellines(
 							&l->next, l->prev,
-							line_change));
+							line_change - 1));
 			}
 
 
@@ -557,7 +554,6 @@ void list_joinregion(list_t **pl, const region_t *region)
 	assert(region->begin.y < region->end.y);
 
 	list_t *l, *start = list_seek(*pl, region->begin.y, false);
-	int i;
 
 	if(!start)
 		return;
@@ -565,8 +561,10 @@ void list_joinregion(list_t **pl, const region_t *region)
 	if(start->line)
 		str_rtrim(start->line, &start->len_line);
 
+	size_t i;
+
 	for(l = start->next, i = region->begin.y + 1;
-			l && i < region->end.y;
+			l && i <= (unsigned)region->end.y;
 			l = l->next, i++)
 	{
 		if(!l->line)
@@ -593,8 +591,9 @@ void list_joinregion(list_t **pl, const region_t *region)
 		start->len_line += l->len_line;
 	}
 
-	if(i > region->begin.y)
-		list_dellines(&start->next, start, i - region->begin.y);
+	size_t ndelete = i - (region->begin.y + 1);
+	if(ndelete)
+		list_dellines(&start->next, start, ndelete);
 }
 
 void list_insline(list_t **pl, int *x, int *y, int dir)
@@ -677,9 +676,7 @@ int list_filter(
 	/* parent */
 	close(child_in[0]), close(child_out[1]);
 
-	unsigned region_height = region->end.y - region->begin.y;
-	if(region->type != REGION_LINE)
-		region_height++;
+	const unsigned region_height = region->end.y - region->begin.y + 1;
 
 	list_t **phead = pl;
 	list_t *tail = list_seek(*phead, region_height, false);
@@ -743,10 +740,7 @@ void list_iter_region(
 		list_iter_f fn, void *ctx)
 {
 	size_t i = 0;
-	size_t end = r->end.y - r->begin.y;
-
-	if(r->type != REGION_LINE)
-		end++;
+	size_t end = r->end.y - r->begin.y + 1;
 
 	for(l = list_seek(l, r->begin.y, false);
 			l && i < end; l = l->next, i++)
