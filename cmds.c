@@ -131,24 +131,9 @@ bool c_cq(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
-bool c_w(int argc, char **argv, bool force, struct range *range)
+static bool write_buf(
+		buffer_t *buf, bool const force, bool const newfname)
 {
-	RANGE_TODO(*argv);
-
-	buffer_t *const buf = buffers_cur();
-
-	bool newfname = false;
-	if(argc == 2){
-		const char *old = buffer_fname(buf);
-
-		newfname = !old || strcmp(old, argv[1]);
-
-		buffer_set_fname(buf, argv[1]);
-	}else if(argc != 1){
-		ui_err("usage: %s filename", *argv);
-		return false;
-	}
-
 	const char *fname = buffer_fname(buf);
 	if(!fname){
 		ui_err("no filename");
@@ -190,8 +175,31 @@ got_err:
 		goto got_err;
 	}
 
-	ui_status("written to \"%s\"", buffer_shortfname(fname));
+	return true;
+}
 
+bool c_w(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_TODO(*argv);
+
+	buffer_t *const buf = buffers_cur();
+
+	bool newfname = false;
+	if(argc == 2){
+		const char *old = buffer_fname(buf);
+
+		newfname = !old || strcmp(old, argv[1]);
+
+		buffer_set_fname(buf, argv[1]);
+	}else if(argc != 1){
+		ui_err("usage: %s filename", *argv);
+		return false;
+	}
+
+	if(!write_buf(buf, force, newfname))
+		return false;
+
+	ui_status("written to \"%s\"", buffer_shortfname(buffer_fname(buf)));
 	return true;
 }
 
@@ -208,6 +216,29 @@ bool c_x(int argc, char **argv, bool force, struct range *range)
 
 	return c_w(argc, argv, false, range)
 		&& c_q(1, (char *[]){ *argv, NULL }, false, NULL);
+}
+
+bool c_xa(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_NO();
+
+	if(argc != 1){
+		ui_err("usage: %s", *argv);
+		return false;
+	}
+
+	buffer_t *buf;
+	ITER_BUFFERS(buf){
+		if(!buf->modified)
+			continue;
+
+		if(!write_buf(buf, force, false))
+			return false;
+	}
+
+	ui_run = UI_EXIT_0;
+
+	return true;
 }
 
 bool c_e(int argc, char **argv, bool force, struct range *range)
