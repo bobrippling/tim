@@ -134,7 +134,39 @@ bool surround_para(
 		char arg, unsigned repeat,
 		buffer_t *buf, region_t *surround)
 {
-	return false;
+	list_t *line = buffer_current_line(buf, false);
+	if(!line)
+		return false;
+
+	/* essentially: {jV} */
+
+	motion up_para = {
+		.func = m_aggregate,
+		.arg.aggregate = {
+			&(motion){
+				.func = m_para,
+				.arg.dir = -1,
+				.how = M_LINEWISE
+			},
+			&(motion){
+				.func = m_move,
+				.arg.pos = { .y = +1 },
+				.how = M_LINEWISE
+			}
+		}
+	};
+	motion down_para = {
+		.func = m_para,
+		.arg.dir = +1,
+		.how = M_LINEWISE
+	};
+
+	surround->type = REGION_LINE;
+
+	return surround_via_motions(
+			&up_para, 0,
+			&down_para, repeat,
+			buf, surround);
 }
 
 bool surround_word(
