@@ -84,7 +84,6 @@ bool surround_paren(
 			buf, surround);
 }
 
-#warning todo
 bool surround_quote(
 		const char arg, unsigned repeat,
 		buffer_t *buf, region_t *surround)
