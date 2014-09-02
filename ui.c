@@ -187,7 +187,7 @@ static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 	}
 }
 
-static bool try_surround(buffer_t *buf, unsigned repeat)
+static bool try_visual_surround(buffer_t *buf, unsigned repeat)
 {
 	if(buf->ui_mode & UI_VISUAL_ANY){
 		/* check surround */
@@ -211,7 +211,7 @@ static bool try_surround(buffer_t *buf, unsigned repeat)
 						case REGION_LINE: ui_set_bufmode(UI_VISUAL_LN); break;
 					}
 				}else{
-					ui_status("visual surround failed");
+					ui_status("surround %c%c failed", sur_ch, sur_type);
 				}
 				return true;
 			}
@@ -239,7 +239,7 @@ void ui_normal_1(unsigned *repeat, enum io io_mode)
 			return;
 		} /* else no motion */
 
-		if(try_surround(buf, *repeat))
+		if(try_visual_surround(buf, *repeat))
 			return;
 	} /* else insert */
 
