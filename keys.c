@@ -420,6 +420,41 @@ static void around_motion_apply(
 	ui_cur_changed();
 }
 
+static bool try_surround(
+		const char initial_ch, unsigned const repeat,
+		struct around_motion *action, region_t *used_region)
+{
+	bool raw;
+	int surround_ch = io_getch(IO_NOMAP, &raw, /*domaps*/false);
+
+	const surround_key_t *surround = surround_read(surround_ch);
+
+	if(!surround){
+		if(surround_ch != K_ESC)
+			ui_status("no surround '%c%c'", initial_ch, surround_ch);
+		return false;
+	}
+
+	buffer_t *buf = buffers_cur();
+
+	region_t r = {
+		.type = surround->type,
+		.begin = buf->ui_npos,
+		.end = buf->ui_vpos,
+	};
+
+	if(surround_apply(surround, initial_ch, surround_ch, repeat, buf, &r)){
+		around_motion_apply(
+				action, buf,
+				&r, used_region);
+		return true;
+	}
+
+	if(surround_ch != K_ESC)
+		ui_status("%c%c surround failed", initial_ch, surround_ch);
+	return false;
+}
+
 static bool around_motion(
 		unsigned repeat, const int from_ch,
 		bool always_linewise,
@@ -447,36 +482,8 @@ static bool around_motion(
 			repeat = 0;
 			m = &m_doubletap;
 		}else{
-			if(surround_beginning_char(ch)){
-				int surround_ch = io_getch(IO_NOMAP, &raw, /*domaps*/false);
-
-				const surround_key_t *surround = surround_read(surround_ch);
-
-				if(!surround){
-					if(surround_ch != K_ESC)
-						ui_status("no surround '%c%c'", ch, surround_ch);
-					return false;
-				}
-
-				buffer_t *buf = buffers_cur();
-
-				region_t r = {
-					.type = surround->type,
-					.begin = buf->ui_npos,
-					.end = buf->ui_vpos,
-				};
-
-				if(surround_apply(surround, ch, surround_ch, repeat, buf, &r)){
-					around_motion_apply(
-							action, buf,
-							&r, used_region);
-					return true;
-				}
-
-				if(ch != K_ESC)
-					ui_status("%c%c surround failed", ch, surround_ch);
-				return false;
-			}
+			if(surround_beginning_char(ch))
+				return try_surround(ch, repeat, action, used_region);
 
 			if(ch != K_ESC)
 				ui_err("no motion '%c'", ch);
