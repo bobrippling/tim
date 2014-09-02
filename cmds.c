@@ -52,7 +52,10 @@ static buffer_t *buffer_next(buffer_t *buf)
 	return NULL;
 }
 
-bool c_q(int argc, char **argv, bool force, struct range *range)
+static bool quit_common(
+		bool qall,
+		int argc, char **argv,
+		bool force, struct range *range)
 {
 	RANGE_NO();
 
@@ -61,26 +64,56 @@ bool c_q(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	if(!force && buffers_cur()->modified){
-		ui_err("buffer modified");
-		return false;
+	if(!force){
+		bool modified = false;
+		if(qall){
+			buffer_t *buf;
+
+			ITER_BUFFERS(buf){
+				if((modified = buf->modified))
+					goto out;
+			}
+out:;
+
+		}else{
+			modified = buffers_cur()->modified;
+		}
+
+		if(modified){
+			ui_err("buffer modified");
+			return false;
+		}
 	}
 
-	buffer_t *buf = buffers_cur();
-	buffer_t *focus = buffer_next(buf);
-
-	buffer_evict(buf);
-	buffer_free(buf), buf = NULL;
-
-	buffers_set_cur(focus);
-	if(focus){
-		ui_redraw();
-		ui_cur_changed();
-	}else{
+	if(qall){
 		ui_run = UI_EXIT_0;
+	}else{
+		buffer_t *buf = buffers_cur();
+		buffer_t *focus = buffer_next(buf);
+
+		buffer_evict(buf);
+		buffer_free(buf), buf = NULL;
+
+		buffers_set_cur(focus);
+		if(focus){
+			ui_redraw();
+			ui_cur_changed();
+		}else{
+			ui_run = UI_EXIT_0;
+		}
 	}
 
 	return true;
+}
+
+bool c_q(int argc, char **argv, bool force, struct range *range)
+{
+	return quit_common(false, argc, argv, force, range);
+}
+
+bool c_qa(int argc, char **argv, bool force, struct range *range)
+{
+	return quit_common(true, argc, argv, force, range);
 }
 
 bool c_cq(int argc, char **argv, bool force, struct range *range)

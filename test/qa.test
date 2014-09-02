@@ -1,0 +1,6 @@
+:first qa should fail, q! should close the temp buf
+:spihi:qa:q!iyo :qayo 
+__IN__
+hello
+__OUT__
+yo yo hello

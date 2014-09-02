@@ -23,7 +23,7 @@ typedef struct cmd_t
 	bool inverse; /* e.g. :v */
 } cmd_t;
 
-cmd_f_argv c_q, c_cq;
+cmd_f_argv c_q, c_cq, c_qa;
 cmd_f_argv c_w;
 cmd_f_argv c_x;
 cmd_f_argv c_e;
