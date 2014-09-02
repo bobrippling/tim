@@ -1,0 +1,17 @@
+fadi(jda{}jf(lci(helloj$p
+__IN__
+if(abc){
+	inside brace
+}
+end
+
+switch(more){
+hi
+}
+__OUT__
+if()
+end
+
+switch(hello){
+himore
+}
