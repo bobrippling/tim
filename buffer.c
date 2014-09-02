@@ -453,6 +453,10 @@ static void buffer_evict(buffer_t *const evictee)
 
 	evictee->neighbours.left = evictee->neighbours.right = NULL;
 	evictee->neighbours.above = evictee->neighbours.below = NULL;
+	if(child){
+		assert(child->neighbours.above == evictee);
+		child->neighbours.above = NULL;
+	}
 }
 
 void buffer_add_neighbour(buffer_t *to, bool const splitright, buffer_t *new)
