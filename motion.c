@@ -657,13 +657,11 @@ bool motion_to_region(
 	}
 
 	if(buf->ui_mode & UI_VISUAL_ANY){
-		/* only increment y in the line case */
 		r.end.x++;
-		if(m->how & M_LINEWISE || always_linewise)
-			r.end.y++;
 
-	}else if(!(m->how & M_EXCLUSIVE)){
-		m->how & M_LINEWISE ? ++r.end.y : ++r.end.x;
+	}else if(!(m->how & M_LINEWISE) && !(m->how & M_EXCLUSIVE)){
+		/* linewise motions are always inclusive */
+		++r.end.x;
 	}
 
 	*out = r;

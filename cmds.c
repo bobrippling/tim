@@ -344,7 +344,7 @@ static void command_bufaction(
 			b,
 			&(region_t){
 				.begin.y = range->start,
-				.end.y = range->end + 1,
+				.end.y = range->end,
 				.type = REGION_LINE
 			},
 			&(point_t){});
@@ -469,7 +469,7 @@ bool c_j(int argc, char **argv, bool force, struct range *range)
 		range->end--;
 	}
 
-	command_bufaction(range, buffer_joinregion.fn, true);
+	command_bufaction(range, buffer_joinregion.fn, 1);
 
 	return true;
 }
