@@ -21,23 +21,37 @@ bool surround_apply(const surround_key_t *k,
 		return false;
 
 	if(in_around == SURROUND_IN_CHAR){
-		int xdiff = r->end.x - r->begin.x;
+		switch(r->type){
+			case REGION_CHAR:
+			case REGION_COL:
+			{
+				int xdiff = r->end.x - r->begin.x;
 
-		if(r->end.y - r->begin.y == 0){
-			if(xdiff == 0)
-				return false;
-		}else{
-			xdiff = 1; /* anything > 0 */
-		}
+				if(r->end.y - r->begin.y == 0){
+					if(xdiff == 0)
+						return false;
+				}else{
+					xdiff = 1; /* anything > 0 */
+				}
 
-		list_advance_x(
-				list_seek(buf->head, r->begin.y, false),
-				+1, &r->begin.y, &r->begin.x);
+				list_advance_x(
+						list_seek(buf->head, r->begin.y, false),
+						+1, &r->begin.y, &r->begin.x);
 
-		if(xdiff > 0){
-			list_advance_x(
-					list_seek(buf->head, r->end.y, false),
-					-1, &r->end.y, &r->end.x);
+				if(xdiff > 0){
+					list_advance_x(
+							list_seek(buf->head, r->end.y, false),
+							-1, &r->end.y, &r->end.x);
+				}
+				break;
+			}
+			case REGION_LINE:
+				if(r->end.y > r->begin.y){
+					list_advance_y(
+							list_seek(buf->head, r->end.y, false),
+							-1, &r->end.y, &r->end.x);
+				}
+				break;
 		}
 	}
 	return true;
