@@ -1,0 +1,15 @@
+3jv2a{x
+__IN__
+main()
+{
+	if(i == 3){
+		f();
+	}
+}
+
+hi
+__OUT__
+main()
+
+
+hi
