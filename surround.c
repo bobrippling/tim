@@ -86,10 +86,42 @@ bool surround_paren(
 
 #warning todo
 bool surround_quote(
-		char arg, unsigned repeat,
+		const char arg, unsigned repeat,
 		buffer_t *buf, region_t *surround)
 {
-	return false;
+	list_t *line = buffer_current_line(buf, false);
+	if(!line)
+		return false;
+
+	if((unsigned)buf->ui_pos->x >= line->len_line)
+		return false;
+
+	int i;
+	for(i = buf->ui_pos->x; i >= 0; i--)
+		if(line->line[i] == arg)
+			break;
+	if(i < 0)
+		return false;
+
+	const int start = i;
+	for(i++; (unsigned)i < line->len_line; i++){
+		if(line->line[i] == '\\')
+			i++;
+		else if(line->line[i] == arg)
+			break;
+	}
+	if((unsigned)i >= line->len_line){
+		/* >=, since an escape may have caused us to go past */
+		return false;
+	}
+
+	*surround = (region_t){
+		.type = REGION_CHAR,
+		.begin = { .y = buf->ui_pos->y, .x = start },
+		.end   = { .y = buf->ui_pos->y, .x = i },
+	};
+
+	return true;
 }
 
 bool surround_block(
