@@ -91,6 +91,12 @@ out:;
 		buffer_t *buf = buffers_cur();
 		buffer_t *focus = buffer_next(buf);
 
+		/* check remaining buffers */
+		if(!force && !focus && buffers_next_fname()){
+			ui_err("more files to edit");
+			return false;
+		}
+
 		buffer_evict(buf);
 		buffer_free(buf), buf = NULL;
 

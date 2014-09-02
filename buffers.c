@@ -11,6 +11,12 @@
 #include "ui.h"
 
 static buffer_t *buf_sel;
+static char **remaining_fnames;
+
+char *buffers_next_fname(void)
+{
+	return remaining_fnames ? *remaining_fnames : NULL;
+}
 
 buffer_t *buffers_cur()
 {
@@ -30,11 +36,6 @@ static void buf_add_splitright(buffer_t *cur, buffer_t *new)
 static void buf_add_splittop(buffer_t *cur, buffer_t *new)
 {
 	buffer_add_neighbour(cur, false, new);
-}
-
-static void buf_add_hidden(buffer_t *cur, buffer_t *new)
-{
-	new->hidden = true;
 }
 
 static void load_argv(int argc, char **argv, void onload(buffer_t *cur, buffer_t *new))
@@ -72,7 +73,8 @@ void buffers_init(int argc, char **argv, enum buffer_init_args init_args, unsign
 				break;
 
 			default:
-				load_argv(argc, argv, buf_add_hidden);
+				/* stash argv */
+				remaining_fnames = argv + 1;
 				break;
 		}
 
