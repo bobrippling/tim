@@ -470,6 +470,15 @@ static bool around_motion(
 	const motion *m = motion_read_or_visual(
 			&repeat_motion, /* operator pending - no maps: */ false);
 
+	if(!repeat && !repeat_motion){
+		/* leave repeat as zero
+		 * e.g. dG will not set any repeats, telling 'G' / m_eof
+		 * to go to the default, end of file.
+		 */
+	}else{
+		repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
+	}
+
 	if(!m){
 		/* check for dd, etc */
 		bool raw;
@@ -492,15 +501,6 @@ static bool around_motion(
 	}
 
 	if(m){
-		if(!repeat && !repeat_motion){
-			/* leave repeat as zero
-			 * e.g. dG will not set any repeats, telling 'G' / m_eof
-			 * to go to the default, end of file.
-			 */
-		}else{
-			repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
-		}
-
 		buffer_t *b = buffers_cur();
 
 		region_t r;
