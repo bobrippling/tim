@@ -32,6 +32,8 @@ cmd_f_argv c_j;
 cmd_f_argv c_d;
 cmd_f_argv c_m;
 
+cmd_f_argv c_n;
+
 cmd_f_arg1 c_g;
 cmd_f_arg1 c_norm;
 cmd_f_arg1 c_r;

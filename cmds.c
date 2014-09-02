@@ -94,7 +94,7 @@ out:;
 		buffer_t *focus = buffer_next(buf);
 
 		/* check remaining buffers */
-		if(!force && !focus && buffers_next_fname()){
+		if(!force && !focus && buffers_next_fname(false)){
 			ui_err("more files to edit");
 			return false;
 		}
@@ -133,6 +133,53 @@ bool c_cq(int argc, char **argv, bool force, struct range *range)
 	ui_run = UI_EXIT_1;
 
 	return true;
+}
+
+static bool edit_common(const char *fname, bool const force)
+{
+	bool ret = false;
+
+	buffer_t *const buf = buffers_cur();
+	if(!force && buf->modified){
+		ui_err("buffer modified");
+		return false;
+	}
+
+	if(!buffer_replace_fname(buf, fname)){
+		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
+		buffers_set_cur(b);
+		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
+	}else{
+		ui_status("%s: loaded", buffer_shortfname(fname));
+		buffers_cur()->modified = false;
+		ret = true;
+	}
+
+	buffer_set_fname(buffers_cur(), fname);
+
+	ui_redraw();
+	ui_cur_changed();
+
+	return ret;
+}
+
+bool c_n(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_NO();
+	ARGV_NO();
+
+	if(buffers_cur()->modified && !force){
+		ui_err("buffer modified");
+		return false;
+	}
+
+	char *fname = buffers_next_fname(true);
+	if(!fname){
+		ui_err("no more files");
+		return false;
+	}
+
+	return edit_common(fname, force);
 }
 
 static bool write_buf(
@@ -260,27 +307,7 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	buffer_t *const buf = buffers_cur();
-	if(!force && buf->modified){
-		ui_err("buffer modified");
-		return false;
-	}
-
-	if(!buffer_replace_fname(buf, fname)){
-		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
-		buffers_set_cur(b);
-		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
-	}else{
-		ui_status("%s: loaded", buffer_shortfname(fname));
-		buffers_cur()->modified = false;
-	}
-
-	buffer_set_fname(buffers_cur(), fname);
-
-	ui_redraw();
-	ui_cur_changed();
-
-	return true;
+	return edit_common(fname, force);
 }
 
 bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)

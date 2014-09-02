@@ -15,7 +15,7 @@ buffer_t *buffers_cur(void);
 void buffers_set_cur(buffer_t *);
 
 /* argument list */
-char *buffers_next_fname(void);
+char *buffers_next_fname(bool pop);
 
 #define ITER_BUFFERS(b)                               \
 	for(buf = buffers_cur();                            \

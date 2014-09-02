@@ -13,9 +13,12 @@
 static buffer_t *buf_sel;
 static char **remaining_fnames;
 
-char *buffers_next_fname(void)
+char *buffers_next_fname(bool pop)
 {
-	return remaining_fnames ? *remaining_fnames : NULL;
+	char *fname = remaining_fnames ? *remaining_fnames : NULL;
+	if(pop && fname)
+		remaining_fnames++;
+	return fname;
 }
 
 buffer_t *buffers_cur()
