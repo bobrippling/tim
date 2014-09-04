@@ -371,6 +371,157 @@ list_t *list_append(list_t *accum, list_t *at, list_t *new)
 	return accum;
 }
 
+static list_t *list_delchars(list_t **seeked, const region_t *region)
+{
+	list_t *l = *seeked;
+	size_t line_change = region->end.y - region->begin.y;
+	list_t *deleted;
+
+	/* create `deleted' */
+	{
+		deleted = list_new(NULL);
+
+		if((unsigned)region->begin.x < l->len_line){
+			char *this_line = l->line;
+			size_t len = line_change == 0
+				? (unsigned)region->end.x - region->begin.x
+				: l->len_line - region->begin.x;
+
+			char *pulled_out = ustrdup_len(
+					this_line + region->begin.x,
+					len);
+
+			deleted->line = pulled_out;
+			deleted->len_line = deleted->len_malloc = len;
+		}
+		/* else we leave deleted empty */
+	}
+
+	if(line_change > 1){
+		deleted = list_append(
+				deleted,
+				list_tail(deleted),
+				list_dellines(
+					&l->next, l->prev,
+					line_change - 1));
+	}
+
+
+	/* wipe lines */
+	if(line_change > 0){
+		/* join the lines */
+		list_t *next = l->next;
+		size_t nextlen;
+		if((unsigned)region->end.x >= next->len_line){
+			nextlen = 0;
+		}else{
+			nextlen = next->len_line - region->end.x;
+		}
+		size_t fulllen = region->begin.x + nextlen;
+
+		if(l->len_malloc < fulllen)
+			l->line = urealloc(l->line, l->len_malloc = fulllen);
+
+		{
+			list_t *pullout = list_new(NULL);
+			deleted = list_append(deleted, list_tail(deleted), pullout);
+
+			size_t len = MIN((unsigned)region->end.x, next->len_line);
+			pullout->len_malloc = pullout->len_line = len;
+
+			pullout->line = ustrdup_len(next->line, len);
+		}
+
+		memcpy(l->line + region->begin.x,
+				next->line + region->end.x,
+				nextlen);
+		l->len_line = fulllen;
+
+		list_free(list_dellines(&l->next, l->prev, 1));
+
+	}else{
+		if(!l->len_line || (unsigned)region->end.x > l->len_line)
+			return deleted;
+
+		size_t diff = region->end.x - region->begin.x;
+
+		list_t *part = list_new(NULL);
+		part->line = umalloc(diff + 1);
+		part->len_line = diff;
+		part->len_malloc = diff + 1;
+		memcpy(part->line, l->line + region->begin.x, diff);
+
+		memmove(
+				l->line + region->begin.x,
+				l->line + region->end.x,
+				l->len_line - region->end.x);
+
+		l->len_line -= diff;
+	}
+
+	return deleted;
+}
+
+static list_t *list_delcols(list_t **seeked, const region_t *region)
+{
+	list_t *pos = *seeked;
+	list_t *deleted = NULL;
+	point_t begin = region->begin, end = region->end;
+
+	/* should've been sorted also */
+	assert(begin.x <= end.x);
+
+	for(int i = begin.y;
+			i <= end.y && pos;
+			i++, pos = pos->next)
+	{
+		if((unsigned)begin.x < pos->len_line){
+			struct
+			{
+				char *str;
+				size_t len;
+			} removed;
+
+			if((unsigned)end.x >= pos->len_line){
+				/* delete all */
+				removed.len = pos->len_line - begin.x + 1;
+				removed.str = ustrdup_len(
+						pos->line + begin.x,
+						removed.len);
+
+				pos->len_line = begin.x;
+
+			}else{
+				char *str = pos->line;
+
+				removed.len = end.x - begin.x;
+				removed.str = ustrdup_len(
+						str + begin.x,
+						removed.len);
+
+				memmove(
+						str + begin.x,
+						str + end.x,
+						pos->len_line - end.x);
+
+				pos->len_line -= end.x - begin.x;
+			}
+
+			/* removed text */
+			list_t *new = list_new(NULL);
+			new->line = removed.str;
+			new->len_malloc = new->len_line = removed.len;
+			deleted = list_append(deleted, list_tail(deleted), new);
+		}else{
+			deleted = list_append(
+					deleted, list_tail(deleted),
+					list_new(NULL));
+		}
+	}
+
+	return deleted;
+}
+
 list_t *list_delregion(list_t **pl, const region_t *region)
 {
 	if(region->begin.y > region->end.y)
@@ -397,150 +548,11 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 					region->end.y - region->begin.y + 1);
 			break;
 		case REGION_CHAR:
-		{
-			list_t *l = *seeked;
-			size_t line_change = region->end.y - region->begin.y;
-
-			/* create `deleted' */
-			{
-				deleted = list_new(NULL);
-
-				if((unsigned)region->begin.x < l->len_line){
-					char *this_line = l->line;
-					size_t len = line_change == 0
-							? (unsigned)region->end.x - region->begin.x
-							: l->len_line - region->begin.x;
-
-					char *pulled_out = ustrdup_len(
-							this_line + region->begin.x,
-							len);
-
-					deleted->line = pulled_out;
-					deleted->len_line = deleted->len_malloc = len;
-				}
-				/* else we leave deleted empty */
-			}
-
-			if(line_change > 1){
-				deleted = list_append(
-						deleted,
-						list_tail(deleted),
-						list_dellines(
-							&l->next, l->prev,
-							line_change - 1));
-			}
-
-
-			/* wipe lines */
-			if(line_change > 0){
-				/* join the lines */
-				list_t *next = l->next;
-				size_t nextlen;
-				if((unsigned)region->end.x >= next->len_line){
-					nextlen = 0;
-				}else{
-					nextlen = next->len_line - region->end.x;
-				}
-				size_t fulllen = region->begin.x + nextlen;
-
-				if(l->len_malloc < fulllen)
-					l->line = urealloc(l->line, l->len_malloc = fulllen);
-
-				{
-					list_t *pullout = list_new(NULL);
-					deleted = list_append(deleted, list_tail(deleted), pullout);
-
-					size_t len = MIN((unsigned)region->end.x, next->len_line);
-					pullout->len_malloc = pullout->len_line = len;
-
-					pullout->line = ustrdup_len(next->line, len);
-				}
-
-				memcpy(l->line + region->begin.x,
-						next->line + region->end.x,
-						nextlen);
-				l->len_line = fulllen;
-
-				list_free(list_dellines(&l->next, l->prev, 1));
-
-			}else{
-				if(!l->len_line || (unsigned)region->end.x > l->len_line)
-					return deleted;
-
-				size_t diff = region->end.x - region->begin.x;
-
-				list_t *part = list_new(NULL);
-				part->line = umalloc(diff + 1);
-				part->len_line = diff;
-				part->len_malloc = diff + 1;
-				memcpy(part->line, l->line + region->begin.x, diff);
-
-				memmove(
-						l->line + region->begin.x,
-						l->line + region->end.x,
-						l->len_line - region->end.x);
-
-				l->len_line -= diff;
-			}
+			deleted = list_delchars(seeked, region);
 			break;
-		}
 		case REGION_COL:
-		{
-			list_t *pos = *seeked;
-			point_t begin = region->begin, end = region->end;
-
-			/* should've been sorted also */
-			assert(begin.x <= end.x);
-
-			for(int i = begin.y;
-					i <= end.y && pos;
-					i++, pos = pos->next)
-			{
-				if((unsigned)begin.x < pos->len_line){
-					struct
-					{
-						char *str;
-						size_t len;
-					} removed;
-
-					if((unsigned)end.x >= pos->len_line){
-						/* delete all */
-						removed.len = pos->len_line - begin.x + 1;
-						removed.str = ustrdup_len(
-								pos->line + begin.x,
-								removed.len);
-
-						pos->len_line = begin.x;
-
-					}else{
-						char *str = pos->line;
-
-						removed.len = end.x - begin.x;
-						removed.str = ustrdup_len(
-								str + begin.x,
-								removed.len);
-
-						memmove(
-								str + begin.x,
-								str + end.x,
-								pos->len_line - end.x);
-
-						pos->len_line -= end.x - begin.x;
-					}
-
-					/* removed text */
-					list_t *new = list_new(NULL);
-					new->line = removed.str;
-					new->len_malloc = new->len_line = removed.len;
-					deleted = list_append(deleted, list_tail(deleted), new);
-				}else{
-					deleted = list_append(
-							deleted, list_tail(deleted),
-							list_new(NULL));
-				}
-			}
+			deleted = list_delcols(seeked, region);
 			break;
-		}
 	}
 
 	return deleted;
