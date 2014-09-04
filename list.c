@@ -383,9 +383,9 @@ static list_t *list_delchars(list_t **seeked, const region_t *region)
 
 		if((unsigned)region->begin.x < l->len_line){
 			char *this_line = l->line;
-			size_t len = line_change == 0
-				? (unsigned)region->end.x - region->begin.x
-				: l->len_line - region->begin.x;
+			size_t len = (line_change == 0
+				? (unsigned)region->end.x
+				: l->len_line) - region->begin.x;
 
 			char *pulled_out = ustrdup_len(
 					this_line + region->begin.x,
