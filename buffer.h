@@ -36,11 +36,6 @@ struct buffer
 	point_t ui_start;     /* offset into buffer */
 	rect_t  screen_coord; /* buffer pos in screen */
 
-	struct
-	{
-		buffer_t *left, *right, *below, *above;
-	} neighbours;
-
 	char *fname;
 	bool eol;
 	bool modified;
@@ -100,11 +95,6 @@ unsigned buffer_nlines(const buffer_t *);
 void buffer_caseregion(
 		buffer_t *, enum case_tog,
 		const region_t *region);
-
-/* positioning */
-buffer_t *buffer_topleftmost(buffer_t *b);
-void buffer_add_neighbour(buffer_t *, bool splitright, buffer_t *);
-void buffer_evict(buffer_t *evictee);
 
 const char *buffer_shortfname(const char *); /* internal fname buffer */
 
