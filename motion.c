@@ -103,7 +103,7 @@ int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-static int m_linesearch(
+static bool m_linesearch(
 		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
 		list_t *sfn(motion_arg const *, list_t *, int *, const void *),
 		const void *ctx)
@@ -127,10 +127,10 @@ static int m_linesearch(
 
 	to->y += n;
 
-	return MOTION_SUCCESS;
+	return true;
 limit:
 	to->y = arg->dir > 0 ? buffer_nlines(buf) : 0;
-	return MOTION_SUCCESS;
+	return false;
 }
 
 static list_t *m_search_para(
@@ -150,7 +150,9 @@ static list_t *m_search_para(
 
 int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	return m_linesearch(m, repeat, buf, to, m_search_para, NULL);
+	bool hitnull = m_linesearch(m, repeat, buf, to, m_search_para, NULL);
+
+	if(hitnull)
 }
 
 static list_t *m_search_func(
@@ -171,10 +173,9 @@ static list_t *m_search_func(
 
 int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
-	int r = m_linesearch(m, repeat, buf, to, m_search_func, &m->scan_ch);
-	if(r == MOTION_SUCCESS)
-		to->x = 0;
-	return r;
+	(void)m_linesearch(m, repeat, buf, to, m_search_func, &m->scan_ch);
+	to->x = 0;
+	return MOTION_SUCCESS;
 }
 
 enum word_state
