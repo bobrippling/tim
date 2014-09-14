@@ -191,9 +191,13 @@ static void buffer_replacechar_at(buffer_t *buf, char ch, int *x, int *y)
 	region_t r = { .type = REGION_COL };
 	r.begin = r.end = (point_t){ .y = *y, .x = *x };
 
+	r.end.x++;
+
 	/* TODO: replace column */
 
 	list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, list_replace_iter, &ch);
+
+	++*x;
 }
 
 static void buffer_inscolchar(buffer_t *buf, char ch, unsigned ncols)
