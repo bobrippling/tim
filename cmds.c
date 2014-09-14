@@ -254,6 +254,27 @@ bool c_w(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
+bool c_wa(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_NO();
+	ARGV_NO();
+
+	buffer_t *buf;
+
+	ITER_BUFFERS(buf){
+		if(!force && !buf->modified)
+			continue;
+
+		bool subforce = false;
+		if(!write_buf(buf, subforce, /*newfname:*/false))
+			return false;
+	}
+
+	ui_status("saved all%s buffers", force ? "" : " modified");
+
+	return true;
+}
+
 bool c_x(int argc, char **argv, bool force, struct range *range)
 {
 	buffer_t *buf = buffers_cur();
