@@ -772,6 +772,12 @@ void list_iter_region(
 	}
 }
 
+bool list_replace_iter(char *ch, list_t *l, int y, void *ctx)
+{
+	*ch = *(int *)ctx;
+	return true;
+}
+
 list_t *list_advance_y(
 		list_t *l, const int dir, int *py, int *px)
 {

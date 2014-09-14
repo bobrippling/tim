@@ -48,6 +48,8 @@ enum list_iter_flags
 	LIST_ITER_WHOLE_LINE = 1 << 1,
 };
 
+bool list_replace_iter(char *ch, list_t *l, int y, void *ctx);
+
 void list_iter_region(
 		list_t *, const region_t *,
 		enum list_iter_flags,
