@@ -197,7 +197,12 @@ static void buffer_replacechar_at(buffer_t *buf, char ch, int *x, int *y)
 
 	list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, list_replace_iter, &ch);
 
-	++*x;
+	if(isnewline(ch)){
+		*x = 0;
+		++*y;
+	}else{
+		++*x;
+	}
 
 	buf->modified = true;
 }
