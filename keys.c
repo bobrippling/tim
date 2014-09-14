@@ -320,7 +320,7 @@ static bool replace_iter(char *ch, list_t *l, int y, void *ctx)
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	if(a->i == 1){
-		// TODO: repeated
+		ui_set_bufmode(UI_REPLACE);
 	}else{
 		/* single char */
 		bool raw;

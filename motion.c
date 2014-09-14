@@ -430,6 +430,7 @@ int m_visual(
 		case UI_NORMAL:
 		case UI_INSERT: /* fall */
 		case UI_INSERT_COL:
+		case UI_REPLACE:
 		case UI_VISUAL_CHAR: *arg->phow = M_NONE; break;
 		case UI_VISUAL_LN:   *arg->phow = M_LINEWISE; break;
 		case UI_VISUAL_COL:  *arg->phow = M_COLUMN; break;

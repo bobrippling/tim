@@ -27,6 +27,7 @@ static const char *ui_bufmode_str(enum buf_mode m)
 		case UI_NORMAL: return "NORMAL";
 		case UI_INSERT_COL: return "INSERT BLOCK";
 		case UI_INSERT: return "INSERT";
+		case UI_REPLACE: return "REPLACE";
 		case UI_VISUAL_CHAR: return "VISUAL";
 		case UI_VISUAL_LN: return "VISUAL LINE";
 		case UI_VISUAL_COL: return "VISUAL BLOCK";
@@ -293,6 +294,7 @@ static enum region_type ui_mode_to_region(enum buf_mode m)
 	switch(m){
 		case UI_NORMAL:
 		case UI_INSERT:
+		case UI_REPLACE:
 		case UI_INSERT_COL:
 			break;
 		case UI_VISUAL_CHAR: return REGION_CHAR;

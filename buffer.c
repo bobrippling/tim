@@ -186,6 +186,16 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 	buf->modified = true;
 }
 
+static void buffer_replacechar_at(buffer_t *buf, char ch, int *x, int *y)
+{
+	region_t r = { .type = REGION_COL };
+	r.begin = r.end = (point_t){ .y = *y, .x = *x };
+
+	/* TODO: replace column */
+
+	list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, replace_iter, &ch);
+}
+
 static void buffer_inscolchar(buffer_t *buf, char ch, unsigned ncols)
 {
 	for(int i = ncols - 1; i >= 0; i--){
@@ -200,7 +210,9 @@ static void buffer_inscolchar(buffer_t *buf, char ch, unsigned ncols)
 			py = &buf->ui_pos->y;
 		}
 
-		buffer_inschar_at(buf, ch, px, py);
+		(buf->ui_mode & UI_REPLACE
+		 ? buffer_replacechar_at
+		 : buffer_inschar_at)(buf, ch, px, py);
 	}
 }
 

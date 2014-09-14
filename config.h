@@ -91,7 +91,7 @@ const nkey_t nkeys[] = {
 
 	/* TODO: visual replace */
 	{ "r",            k_replace,    { 0 },         UI_NORMAL | UI_VISUAL_ANY },
-	{ "R", /* TODO */ k_replace,    { 1 },         UI_NORMAL },
+	{ "R",            k_replace,    { 1 },         UI_NORMAL },
 
 	{ ":", k_prompt_cmd, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
 
