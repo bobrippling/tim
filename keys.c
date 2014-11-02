@@ -700,3 +700,63 @@ void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	buf->ui_mode = save;
 }
+
+void k_inc_dec(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *const buf = buffers_cur();
+	list_t *line = buffer_current_line(buf, false);
+
+	if(!line)
+		return;
+	if((unsigned)buf->ui_pos->x >= line->len_line)
+		return;
+
+	size_t pos = buf->ui_pos->x;
+	for(; pos < line->len_line; pos++)
+		if(isdigit(line->line[pos]) || line->line[pos] == '-')
+			break;
+	if(pos == line->len_line)
+		return;
+
+	char *end;
+	long long num = strtoll(&line->line[pos], &end, 0);
+	if(end == &line->line[pos])
+		return;
+
+	repeat = DEFAULT_REPEAT(repeat);
+
+	num += (signed)repeat * a->i;
+
+	char numbuf[64];
+	snprintf(numbuf, sizeof numbuf, "%lld", num);
+	const size_t numbuflen_new = strlen(numbuf);
+	const size_t numbuflen_old = end - &line->line[pos];
+
+	const long change = numbuflen_new - numbuflen_old;
+
+	if(change > 0){
+		if(line->len_line + change > line->len_malloc)
+			line->line = urealloc(line->line, line->len_malloc += change);
+
+		/* make way */
+		memmove(
+				&line->line[pos] + numbuflen_new,
+				&line->line[pos] + numbuflen_old,
+				line->len_line - pos - numbuflen_old);
+	}
+
+	memcpy(&line->line[pos], numbuf, numbuflen_new);
+
+	if(change < 0){
+		/* fill back */
+		memmove(
+				&line->line[pos] + numbuflen_new,
+				&line->line[pos] + numbuflen_old,
+				line->len_line - pos - numbuflen_old);
+	}
+
+	line->len_line += change;
+	buf->modified = true;
+
+	ui_redraw();
+}

@@ -130,6 +130,9 @@ const nkey_t nkeys[] = {
 	{ "ZZ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZZ", NULL }, .fn = { .arg0 = "ZZ", .f_argv = c_x,                 } } }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "ZQ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZQ", NULL }, .fn = { .arg0 = "ZQ", .f_argv = c_q, .inverse = true } } }, UI_NORMAL | UI_VISUAL_ANY },
 
+	{ K_STR(CTRL_AND('a')), k_inc_dec, { +1 }, UI_NORMAL },
+	{ K_STR(CTRL_AND('x')), k_inc_dec, { -1 }, UI_NORMAL },
+
 	/* leaders: */
 	{ "\\x", k_docmd, { .cmd = { .argv = (const char *[]){ "r", "xselo", NULL }, .fn = { .f_arg1 = c_r, .single_arg = true, .inverse = true } } }, UI_NORMAL },
 };
