@@ -134,6 +134,8 @@ const nkey_t nkeys[] = {
 	{ K_STR(CTRL_AND('a')), k_inc_dec, { +1 }, UI_NORMAL },
 	{ K_STR(CTRL_AND('x')), k_inc_dec, { -1 }, UI_NORMAL },
 
+	{ "ga", k_showch, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY },
+
 	/* leaders: */
 	{ "\\x", k_docmd, { .cmd = { .argv = (const char *[]){ "r", "xselo", NULL }, .fn = { .f_arg1 = c_r, .single_arg = true, .inverse = true } } }, UI_NORMAL },
 };

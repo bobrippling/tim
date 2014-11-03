@@ -303,6 +303,24 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 			"ny"[buf->eol]);
 }
 
+void k_showch(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+	list_t *l = buffer_current_line(buf, false);
+	if(l){
+		if((unsigned)buf->ui_pos->x < l->len_line){
+			const int ch = l->line[buf->ui_pos->x];
+
+			ui_status("<%s> %d Hex %x Octal %o",
+					ch ? (char[]){ ch, 0 } : "^@",
+					ch, ch, ch);
+			return;
+		}
+	}
+
+	ui_status("NUL");
+}
+
 void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_insline(buffers_cur(), a->i);

@@ -59,7 +59,7 @@ key_func k_escape;
 key_func k_redraw;
 key_func k_scroll;
 key_func k_winsel;
-key_func k_show;
+key_func k_show, k_showch;
 key_func k_open;
 key_func k_del, k_change, k_yank;
 key_func k_motion;
