@@ -42,6 +42,12 @@ int m_eol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	list_t *l = buffer_current_line(buf, false);
 
 	to->x = l && l->len_line > 0 ? l->len_line - 1 : 0;
+
+	bool nonblank = m->i;
+	if(nonblank){
+		for(; to->x > 0 && isspace(l->line[to->x]); to->x--);
+	}
+
 	return MOTION_SUCCESS;
 }
 
