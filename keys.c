@@ -843,7 +843,17 @@ out_badtag:
 
 void word_man(const char *word, bool flag)
 {
-	char *cmd = join("", (const char *[]){ "man ", word }, 2);
+	/* if the word is all hexadecimal, try git show */
+	bool hex = true;
+
+	for(const char *p = word; *p; p++){
+		if(!isxdigit(*p)){
+			hex = false;
+			break;
+		}
+	}
+
+	char *cmd = join(" ", (const char *[]){ hex ? "git show" : "man", word }, 2);
 
 	shellout(cmd);
 
