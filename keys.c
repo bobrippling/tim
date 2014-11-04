@@ -25,6 +25,7 @@
 #include "prompt.h"
 #include "map.h"
 #include "str.h"
+#include "external.h"
 #include "ctags.h"
 
 #include "buffers.h"
@@ -838,4 +839,13 @@ out:
 out_badtag:
 	ui_err("bad tag '%s'", tag.line);
 	goto out;
+}
+
+void word_man(const char *word, bool flag)
+{
+	char *cmd = join("", (const char *[]){ "man ", word }, 2);
+
+	shellout(cmd);
+
+	free(cmd);
 }
