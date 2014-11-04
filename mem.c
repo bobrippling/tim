@@ -49,7 +49,7 @@ char *join(const char *sep, const char **vec, int n)
 	p = r = umalloc(len);
 
 	for(i = 0; i < n; i++){
-		p += sprintf(p, "%s%s", vec[i], sep_actual);
+		p += sprintf(p, "%s%s", sep_actual, vec[i]);
 		sep_actual = sep;
 	}
 
