@@ -614,7 +614,9 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	if(dir < 0)
 		--*y;
 
-	l = list_seek(*pl, *y, true);
+	/* list_seekp() to create if necessary,
+	 * and make that creation available in *pl */
+	l = *list_seekp(pl, *y, true);
 
 	save = l->next;
 	l->next = list_new(l);
