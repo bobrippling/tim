@@ -128,7 +128,8 @@ got_err:
 		return false;
 	}
 
-	buffer_write_file(buf, -1, f, buf->eol);
+	if(buffer_write_file(buf, -1, f, buf->eol) != 0)
+		goto got_err; /* file cleanup handled */
 
 	if(fclose(f)){
 		f = NULL;
