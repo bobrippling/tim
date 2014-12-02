@@ -261,24 +261,13 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	bool raw;
-	char dirch = io_getch(IO_NOMAP, &raw, true);
-
 	enum { up, down, left, right } dir;
 
-	switch(dirch){
-#define DIRECT(c, x) case c: dir = x; break
-		DIRECT('j', down);
-		DIRECT('k', up);
-		DIRECT('h', left);
-		DIRECT('l', right);
-#undef DIRECT
-
-		default:
-			ui_err("unrecognised direction '%c'", dirch);
-		case K_ESC:
-			return;
-	}
+	/**/ if(a->pos.x > 0) dir = right;
+	else if(a->pos.x < 0) dir = left;
+	else if(a->pos.y > 0) dir = down;
+	else if(a->pos.y < 0) dir = up;
+	else return;
 
 	window *const curwin = windows_cur();
 	window *found = NULL;

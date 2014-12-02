@@ -116,7 +116,10 @@ const nkey_t nkeys[] = {
 	{ "zt",  k_scroll,     { .pos = { 1, -1 } },     UI_NORMAL | UI_VISUAL_ANY },
 	{ "zb",  k_scroll,     { .pos = { 1, +1 } },     UI_NORMAL | UI_VISUAL_ANY },
 
-	{ K_STR(CTRL_AND('w')),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'h', 0 }, k_winsel, { .pos.x = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'l', 0 }, k_winsel, { .pos.x = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'j', 0 }, k_winsel, { .pos.y = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'k', 0 }, k_winsel, { .pos.y = -1 }, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('g')),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
