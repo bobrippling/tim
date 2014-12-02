@@ -386,7 +386,11 @@ usage:
 }
 
 static
-bool c_split(bool const splitright, int argc, char **argv, bool force, struct range *range)
+bool c_split(
+		bool const splitright,
+		bool const withcurrent,
+		int argc, char **argv,
+		bool force, struct range *range)
 {
 	RANGE_NO();
 
@@ -403,6 +407,8 @@ bool c_split(bool const splitright, int argc, char **argv, bool force, struct ra
 
 		if(err)
 			ui_err("%s: %s", buffer_shortfname(argv[1]), strerror(errno));
+	}else if(withcurrent){
+		b = retain(buffers_cur());
 	}else{
 		b = buffer_new();
 	}
@@ -421,12 +427,22 @@ bool c_split(bool const splitright, int argc, char **argv, bool force, struct ra
 
 bool c_vs(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(true, argc, argv, force, range);
+	return c_split(true, true, argc, argv, force, range);
+}
+
+bool c_vnew(int argc, char **argv, bool force, struct range *range)
+{
+	return c_split(true, false, argc, argv, force, range);
 }
 
 bool c_sp(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(false, argc, argv, force, range);
+	return c_split(false, true, argc, argv, force, range);
+}
+
+bool c_new(int argc, char **argv, bool force, struct range *range)
+{
+	return c_split(false, false, argc, argv, force, range);
 }
 
 bool c_run(char *cmd, char *rest, bool force, struct range *range)

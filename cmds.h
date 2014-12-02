@@ -38,8 +38,8 @@ cmd_f_arg1 c_g;
 cmd_f_arg1 c_norm;
 cmd_f_arg1 c_r;
 
-cmd_f_argv c_vs;
-cmd_f_argv c_sp;
+cmd_f_argv c_vs, c_vnew;
+cmd_f_argv c_sp, c_new;
 
 cmd_f_arg1 c_run;
 

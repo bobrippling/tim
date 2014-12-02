@@ -14,8 +14,10 @@ const cmd_t cmds[] = {
 	{ "xa",  .f_argv = c_xa  },
 	{ "wq",  .f_argv = c_x   },
 
-	{ "vs",  .f_argv = c_vs  },
-	{ "sp",  .f_argv = c_sp  },
+	{ "vs",  .f_argv = c_vs },
+	{ "vnew", .f_argv = c_vnew },
+	{ "sp",  .f_argv = c_sp },
+	{ "new", .f_argv = c_new },
 
 	{ "n", .f_argv = c_n },
 
