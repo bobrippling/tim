@@ -748,6 +748,8 @@ void word_list(const char *word, bool flag)
 	for(list_t *i = b->head; i; i = i->next, n++)
 		if(tim_strstr(i->line, i->len_line, word))
 			ui_printf("%d: %d %s", ++hit, n, i->line);
+
+	ui_want_return();
 }
 
 void word_tag(const char *word, bool flag)
