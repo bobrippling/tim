@@ -26,3 +26,8 @@ buffer_t *buffers_find(const char *fname)
 
 	return NULL;
 }
+
+bool buffers_modified_single(const buffer_t *b)
+{
+	return b->modified && buffer_opencount(b) == 1;
+}

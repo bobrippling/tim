@@ -45,6 +45,8 @@ struct buffer
 buffer_t *buffer_new(void);
 void buffer_new_fname(buffer_t **, const char *, int *err);
 
+int buffer_opencount(const buffer_t *);
+
 void buffer_free(buffer_t *);
 
 int buffer_write_file(buffer_t *, int n, FILE *, bool eol);

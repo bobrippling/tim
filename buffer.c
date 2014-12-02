@@ -93,6 +93,11 @@ fin:
 	*pb = b;
 }
 
+int buffer_opencount(const buffer_t *b)
+{
+	return b->retains.rcount;
+}
+
 int buffer_write_file(buffer_t *b, int n, FILE *f, bool eol)
 {
 	int r = list_write_file(b->head, n, f, eol);

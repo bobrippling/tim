@@ -69,7 +69,7 @@ static bool quit_common(
 out:;
 
 		}else{
-			modified = buffers_cur()->modified;
+			modified = buffers_modified_single(buffers_cur());
 		}
 
 		if(modified){
@@ -131,8 +131,7 @@ static bool edit_common(const char *fname, bool const force)
 	bool ret = false;
 
 	window *win = windows_cur();
-	buffer_t *const buf = win->buf;
-	if(!force && buf->modified){
+	if(!force && buffers_modified_single(win->buf)){
 		ui_err("buffer modified");
 		return false;
 	}
@@ -163,7 +162,7 @@ bool c_n(int argc, char **argv, bool force, struct range *range)
 	RANGE_NO();
 	ARGV_NO();
 
-	if(buffers_cur()->modified && !force){
+	if(buffers_modified_single(buffers_cur()) && !force){
 		ui_err("buffer modified");
 		return false;
 	}
