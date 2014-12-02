@@ -773,7 +773,7 @@ void k_on_word(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void word_search(const char *word, bool flag)
 {
-	m_setlastsearch(ustrdup(word));
+	m_setlastsearch(ustrdup(word), /*forward:*/true);
 
 	motion m_search = {
 		.func = m_searchnext,
