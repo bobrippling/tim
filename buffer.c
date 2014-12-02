@@ -27,6 +27,9 @@ void buffer_free(buffer_t *b)
 buffer_t *buffer_new()
 {
 	buffer_t *b = umalloc(sizeof *b);
+
+	retain_init(b);
+
 	b->head = list_new(NULL);
 	b->eol = true; /* default to nice eol */
 	return b;
