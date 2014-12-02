@@ -779,8 +779,12 @@ void word_tag(const char *word, bool flag)
 		search += 2;
 	}
 
-	if(!ui_replace_curbuf(tag.fname))
+	const char *current = buffer_fname(buffers_cur());
+	if(current && !strcmp(tag.fname, current)){
+		/* we're the same file, don't need to replace/do modification check */
+	}else if(!ui_replace_curbuf(tag.fname)){
 		goto out;
+	}
 
 	{
 		*buffers_cur()->ui_pos = (point_t){ 0 };
