@@ -108,6 +108,7 @@ void window_evict(window *const evictee)
 	 * if we have a child below, it takes our place.
 	 */
 	window *const child = evictee->neighbours.below;
+	const bool hadleft = evictee->neighbours.left;
 
 	if(evictee->neighbours.left){
 		window *left = evictee->neighbours.left;
@@ -123,7 +124,7 @@ void window_evict(window *const evictee)
 	if(evictee->neighbours.right){
 		window *right = evictee->neighbours.right;
 
-		assert(right->neighbours.left == evictee);
+		assert(right->neighbours.left == (hadleft ? evictee->neighbours.left : evictee));
 
 		window *target = child ? child : evictee->neighbours.left;
 		right->neighbours.left = target;
