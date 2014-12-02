@@ -16,6 +16,7 @@
 #include "ncurses.h"
 #include "str.h"
 #include "retain.h"
+#include "buffers.h"
 
 void buffer_free(buffer_t *b)
 {
@@ -62,10 +63,15 @@ buffer_t *buffer_new_file(FILE *f)
 
 void buffer_new_fname(buffer_t **pb, const char *fname, int *err)
 {
-	buffer_t *b;
-	FILE *f;
+	/* look for an existing buffer first */
+	buffer_t *b = buffers_find(fname);
 
-	f = fopen(fname, "r");
+	if(b){
+		*pb = retain(b);
+		return;
+	}
+
+	FILE *f = fopen(fname, "r");
 	if(!f){
 got_err:
 		*err = 1;

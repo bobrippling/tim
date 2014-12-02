@@ -9,7 +9,7 @@ CFLAGS = -Wall -Wextra -g -std=c11 -fms-extensions -fno-common \
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o motion.o external.o str.o prompt.o io.o \
 	yank.o pos.o region.o retain.o range.o parse_cmd.o \
-	window.o windows.o
+	buffers.o window.o windows.o
 
 .PHONY: deps clean check checkmem
 
