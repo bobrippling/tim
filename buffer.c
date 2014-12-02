@@ -17,9 +17,6 @@
 #include "str.h"
 #include "retain.h"
 
-static
-int buffer_replace_file(buffer_t *b, FILE *f);
-
 void buffer_free(buffer_t *b)
 {
 	list_free(b->head);
@@ -31,51 +28,23 @@ buffer_t *buffer_new()
 {
 	buffer_t *b = umalloc(sizeof *b);
 	b->head = list_new(NULL);
-	b->ui_pos = &b->ui_npos;
-	b->ui_mode = UI_NORMAL;
 	b->eol = true; /* default to nice eol */
 	return b;
 }
 
-void buffer_togglev(buffer_t *buf, bool corner_toggle)
+static int buffer_replace_file(buffer_t *b, FILE *f)
 {
-	if(corner_toggle){
-		point_t *alt = buffer_uipos_alt(buf);
+	list_t *l = list_new_file(f, &b->eol);
 
-		int tmp = buf->ui_pos->x;
-		buf->ui_pos->x = alt->x;
-		alt->x = tmp;
-	}else{
-		buf->ui_pos = (buf->ui_pos == &buf->ui_npos)
-			? &buf->ui_vpos
-			: &buf->ui_npos;
-	}
-}
-
-int buffer_setmode(buffer_t *buf, enum buf_mode m)
-{
-	if(!m || (m & (m - 1))){
-		return -1;
-	}else{
-		if(buf->ui_mode & UI_INSERT_ANY)
-			buf->prev_insert = *buf->ui_pos;
-
-		if(m & UI_VISUAL_ANY){
-			if((buf->ui_mode & UI_VISUAL_ANY) == 0){
-				/* from non-visual to visual */
-				*buffer_uipos_alt(buf) = *buf->ui_pos;
-			}
-		}else{
-			/* from a visual, save state */
-			buf->prev_visual.mode = buf->ui_mode;
-
-			buf->prev_visual.npos = *buf->ui_pos;
-			buf->prev_visual.vpos = *buffer_uipos_alt(buf);
-		}
-
-		buf->ui_mode = m;
+	if(!l)
 		return 0;
-	}
+
+	list_free(b->head);
+	b->head = l;
+
+	b->mtime = time(NULL);
+
+	return 1;
 }
 
 static
@@ -113,38 +82,6 @@ got_err:
 fin:
 	buffer_set_fname(b, fname);
 	*pb = b;
-}
-
-int buffer_replace_file(buffer_t *b, FILE *f)
-{
-	list_t *l = list_new_file(f, &b->eol);
-
-	if(!l)
-		return 0;
-
-	list_free(b->head);
-	b->head = l;
-
-	b->mtime = time(NULL);
-
-	return 1;
-}
-
-int buffer_replace_fname(buffer_t *b, const char *fname)
-{
-	FILE *f = fopen(fname, "r");
-	int r;
-
-	if(!f)
-		return 0;
-
-	r = buffer_replace_file(b, f);
-	fclose(f);
-
-	if(r)
-		b->ui_pos->y = MIN(b->ui_pos->y, list_count(b->head));
-
-	return r;
 }
 
 int buffer_write_file(buffer_t *b, int n, FILE *f, bool eol)
@@ -185,34 +122,23 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 	buf->modified = true;
 }
 
-static void buffer_inscolchar(buffer_t *buf, char ch, unsigned ncols)
+void buffer_inscolchar(
+		buffer_t *buf, char ch, unsigned ncols,
+		point_t *const ui_pos)
 {
 	for(int i = ncols - 1; i >= 0; i--){
-		int y = buf->ui_pos->y + i;
-		int x = buf->ui_pos->x;
+		int y = ui_pos->y + i;
+		int x = ui_pos->x;
 		int *px = &x;
 		int *py = &y;
 
 		/* update x and y in the last case */
 		if(i == 0){
-			px = &buf->ui_pos->x;
-			py = &buf->ui_pos->y;
+			px = &ui_pos->x;
+			py = &ui_pos->y;
 		}
 
 		buffer_inschar_at(buf, ch, px, py);
-	}
-}
-
-void buffer_inschar(buffer_t *buf, char ch)
-{
-	if(buf->ui_mode != UI_INSERT_COL || isnewline(ch)){
-		/* can't col-insert a newline, revert */
-		if(buf->ui_mode == UI_INSERT_COL)
-			buffer_setmode(buf, UI_INSERT);
-
-		buffer_inscolchar(buf, ch, 1);
-	}else{
-		buffer_inscolchar(buf, ch, buf->col_insert_height);
 	}
 }
 
@@ -246,7 +172,11 @@ void buffer_yankregion_f(buffer_t *buf, const region_t *region, point_t *out)
 		yank *yank = yank_new(yanked, region->type);
 		yank_push(yank);
 
-		buffer_insyank(buf, yank, /*prepend:*/true, /*modify:*/false);
+		point_t ui_pos = region->begin;
+
+		buffer_insyank(buf, yank, &ui_pos,
+				/*prepend:*/true, /*modify:*/false);
+
 		release(yank, yank_free);
 	}
 
@@ -257,12 +187,15 @@ struct buffer_action buffer_yankregion = {
 	.fn = buffer_yankregion_f
 };
 
-void buffer_insyank(buffer_t *buf, const yank *y, bool prepend, bool modify)
+void buffer_insyank(
+		buffer_t *buf, const yank *y,
+		point_t *ui_pos,
+		bool prepend, bool modify)
 {
 	yank_put_in_list(y,
-			list_seekp(&buf->head, buf->ui_pos->y, true),
+			list_seekp(&buf->head, ui_pos->y, true),
 			prepend,
-			&buf->ui_pos->y, &buf->ui_pos->x);
+			&ui_pos->y, &ui_pos->x);
 
 	if(modify)
 		buf->modified = true;
@@ -294,7 +227,7 @@ void buffer_indent2(
 	/* region is sorted by y */
 	const int min_x = MIN(region->begin.x, region->end.x);
 	list_t *pos = dir < 0
-		? list_seek(buf->head, buf->ui_pos->y, 0)
+		? list_seek(buf->head, region->begin.y, 0)
 		: NULL;
 
 	for(int y = region->begin.y; y < region->end.y; y++){
@@ -385,125 +318,10 @@ void buffer_caseregion(
 	buf->modified = true;
 }
 
-void buffer_insline(buffer_t *buf, int dir)
+void buffer_insline(buffer_t *buf, int dir, point_t *ui_pos)
 {
-	list_insline(&buf->head, &buf->ui_pos->x, &buf->ui_pos->y, dir);
+	list_insline(&buf->head, &ui_pos->x, &ui_pos->y, dir);
 	buf->modified = true;
-}
-
-buffer_t *buffer_topleftmost(buffer_t *b)
-{
-	for(;;){
-		int changed = 0;
-		for(; b->neighbours.left;  changed = 1, b = b->neighbours.left);
-		for(; b->neighbours.above; changed = 1, b = b->neighbours.above);
-		if(!changed)
-			break;
-	}
-
-	return b;
-}
-
-void buffer_evict(buffer_t *const evictee)
-{
-	if(evictee->neighbours.above){
-		/* we are just a child in the chain */
-		assert(!evictee->neighbours.left);
-		assert(!evictee->neighbours.right);
-
-		buffer_t *above = evictee->neighbours.above;
-
-		assert(above->neighbours.below == evictee);
-		above->neighbours.below = evictee->neighbours.below;
-
-		if(evictee->neighbours.below)
-			evictee->neighbours.below->neighbours.above = above;
-
-		evictee->neighbours.above = evictee->neighbours.below = NULL;
-		return;
-	}
-
-	/* we are a top-most chain.
-	 * remove ourselves from the left-right hierarchy
-	 * if we have a child below, it takes our place.
-	 */
-	buffer_t *const child = evictee->neighbours.below;
-
-	if(evictee->neighbours.left){
-		buffer_t *left = evictee->neighbours.left;
-
-		assert(left->neighbours.right == evictee);
-
-		buffer_t *target = child ? child : evictee->neighbours.right;
-		left->neighbours.right = target;
-		if(target)
-			target->neighbours.left = left;
-	}
-
-	if(evictee->neighbours.right){
-		buffer_t *right = evictee->neighbours.right;
-
-		assert(right->neighbours.left == evictee);
-
-		buffer_t *target = child ? child : evictee->neighbours.left;
-		right->neighbours.left = target;
-		if(target)
-			target->neighbours.right = right;
-	}
-
-	evictee->neighbours.left = evictee->neighbours.right = NULL;
-	evictee->neighbours.above = evictee->neighbours.below = NULL;
-	if(child){
-		assert(child->neighbours.above == evictee);
-		child->neighbours.above = NULL;
-	}
-}
-
-void buffer_add_neighbour(buffer_t *to, bool const splitright, buffer_t *new)
-{
-	buffer_evict(new);
-
-	if(splitright){
-		buffer_t *topmost;
-		for(topmost = to; topmost->neighbours.above; topmost = topmost->neighbours.above);
-
-		buffer_t *right = topmost->neighbours.right;
-
-		if(!right){
-			topmost->neighbours.right = new;
-			new->neighbours.left = topmost;
-		}else{
-			/* walk down until we find an entry where we left */
-			while(right->neighbours.below
-			&& right->ui_start.y <= new->ui_start.y)
-			{
-				right = right->neighbours.below;
-			}
-
-			buffer_t *replace = right->neighbours.below;
-			right->neighbours.below = new;
-			if(replace)
-				replace->neighbours.above = new;
-
-			new->neighbours.above = right;
-			new->neighbours.below = replace;
-		}
-
-	}else{
-		buffer_t *evicted = to->neighbours.below;
-
-		to->neighbours.below = new;
-		new->neighbours.above = to;
-
-		new->neighbours.below = evicted;
-		if(evicted)
-			evicted->neighbours.above = new;
-	}
-}
-
-list_t *buffer_current_line(const buffer_t *b, bool create)
-{
-	return list_seek(b->head, b->ui_pos->y, create);
 }
 
 unsigned buffer_nlines(const buffer_t *b)
@@ -571,28 +389,4 @@ bool buffer_findat(const buffer_t *buf, const char *search, point_t *at, int dir
 	}
 
 	return false;
-}
-
-point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
-{
-	list_t *l = list_seek(buf->head, buf->ui_pos->y, 0);
-	int xoff = 0;
-
-	if(l && l->len_line > 0)
-		for(int x = MIN((unsigned)buf->ui_pos->x, l->len_line - 1);
-				x >= 0;
-				x--)
-			xoff += nc_charlen(l->line[x]) - 1;
-
-	return (point_t){
-		buf->screen_coord.x + pt->x - buf->ui_start.x + xoff,
-		buf->screen_coord.y + pt->y - buf->ui_start.y
-	};
-}
-
-point_t *buffer_uipos_alt(buffer_t *buf)
-{
-	if(buf->ui_pos == &buf->ui_vpos)
-		return &buf->ui_npos;
-	return &buf->ui_vpos;
 }

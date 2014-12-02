@@ -9,6 +9,8 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "window.h"
+#include "windows.h"
 #include "io.h"
 #include "ui.h"
 #include "motion.h"
@@ -33,15 +35,15 @@ static const char *ui_bufmode_str(enum buf_mode m)
 
 void ui_set_bufmode(enum buf_mode m)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
 
-	if(buffer_setmode(buf, m)){
+	if(window_setmode(win, m)){
 		ui_err("bad mode 0x%x", m);
 	}else{
 		ui_redraw();
 		ui_cur_changed();
 		nc_style(COL_BROWN);
-		ui_status("%s", ui_bufmode_str(buf->ui_mode));
+		ui_status("%s", ui_bufmode_str(win->ui_mode));
 		nc_style(0);
 	}
 }
@@ -114,10 +116,10 @@ static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 		if(ch == 0 || (char)ch == -1) /* eof */
 			ui_run = UI_EXIT_1;
 
-		buffer_t *const buf = buffers_cur();
+		window *const win = windows_cur();
 
-		if(buf->ui_mode & UI_INSERT_ANY){
-			buffer_inschar(buf, ch);
+		if(win->ui_mode & UI_INSERT_ANY){
+			window_inschar(win, ch);
 			ui_redraw(); // TODO: queue these
 			ui_cur_changed();
 		}else if(ch != K_ESC){
@@ -128,13 +130,13 @@ static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 
 void ui_normal_1(unsigned *repeat, enum io io_mode)
 {
-	buffer_t *buf = buffers_cur();
-	const bool ins = buf->ui_mode & UI_INSERT_ANY;
+	window *win = windows_cur();
+	const bool ins = win->ui_mode & UI_INSERT_ANY;
 
 	if(!ins){
 		const motion *m = motion_read(repeat, /*map:*/true);
 		if(m){
-			motion_apply_buf(m, *repeat, buf);
+			motion_apply_win(m, *repeat, win);
 			return;
 		} /* else no motion */
 	} /* else insert */
@@ -156,17 +158,17 @@ int ui_main()
 			case UI_EXIT_1: return 1;
 		}
 
-		buffer_t *buf = buffers_cur();
+		window *win = windows_cur();
 
-		if(buf->ui_mode & UI_VISUAL_ANY){
-			point_t *alt = buffer_uipos_alt(buf);
+		if(win->ui_mode & UI_VISUAL_ANY){
+			point_t *alt = window_uipos_alt(win);
 
 			ui_rstatus("%d,%d - %d,%d",
-					buf->ui_pos->y, buf->ui_pos->x,
+					win->ui_pos->y, win->ui_pos->x,
 					alt->y, alt->x);
 		}
 
-		const enum io io_mode = bufmode_to_iomap(buf->ui_mode);
+		const enum io io_mode = bufmode_to_iomap(win->ui_mode);
 
 		unsigned repeat = 0;
 		ui_normal_1(&repeat, io_mode | IO_MAPRAW);
@@ -181,30 +183,30 @@ void ui_term()
 void ui_cur_changed()
 {
 	int need_redraw = 0;
-	buffer_t *buf = buffers_cur();
-	const int nl = buf->screen_coord.h;
+	window *win = windows_cur();
+	const int nl = win->screen_coord.h;
 
-	if(buf->ui_pos->x < 0)
-		buf->ui_pos->x = 0;
+	if(win->ui_pos->x < 0)
+		win->ui_pos->x = 0;
 
-	if(buf->ui_pos->y < 0)
-		buf->ui_pos->y = 0;
+	if(win->ui_pos->y < 0)
+		win->ui_pos->y = 0;
 
-	if(buf->ui_pos->y > buf->ui_start.y + nl - 1){
-		buf->ui_start.y = buf->ui_pos->y - nl + 1;
+	if(win->ui_pos->y > win->ui_start.y + nl - 1){
+		win->ui_start.y = win->ui_pos->y - nl + 1;
 		need_redraw = 1;
-	}else if(buf->ui_pos->y < buf->ui_start.y){
-		buf->ui_start.y = buf->ui_pos->y;
+	}else if(win->ui_pos->y < win->ui_start.y){
+		win->ui_start.y = win->ui_pos->y;
 		need_redraw = 1;
 	}
 
-	if(buf->ui_mode & UI_VISUAL_ANY)
+	if(win->ui_mode & UI_VISUAL_ANY)
 		need_redraw = 1;
 
 	if(need_redraw)
 		ui_redraw();
 
-	point_t cursor = buffer_toscreen(buf, buf->ui_pos);
+	point_t cursor = window_toscreen(win, win->ui_pos);
 	nc_set_yx(cursor.y, cursor.x);
 }
 
@@ -239,76 +241,33 @@ static enum region_type ui_mode_to_region(enum buf_mode m)
 	return REGION_CHAR; /* doesn't matter */
 }
 
-static void ui_calc_bufrects(buffer_t *buf,
-		const unsigned screenwidth, const unsigned screenheight)
-{
-	unsigned nbuffers_h = 0;
-	buffer_t *buf_h;
-	for(buf_h = buf; buf_h; buf_h = buf_h->neighbours.right, nbuffers_h++);
-
-	const unsigned nvlines = nbuffers_h + 1;
-	const unsigned bufspace_v = screenwidth - nvlines;
-	unsigned bufwidth = bufspace_v / nbuffers_h;
-
-	unsigned i_h;
-	for(i_h = 0, buf_h = buf; buf_h; buf_h = buf_h->neighbours.right, i_h++){
-		unsigned nbuffers_v = 0;
-		buffer_t *buf_v;
-		for(buf_v = buf_h; buf_v; buf_v = buf_v->neighbours.below)
-			nbuffers_v++;
-
-		/* final buffer gets any left over cols */
-		if(!buf_h->neighbours.right)
-			bufwidth += bufspace_v % nbuffers_h;
-
-		const unsigned nhlines = nbuffers_v - 1;
-		const unsigned bufspace_h = screenheight - /*status*/1 - nhlines;
-		const unsigned bufheight = bufspace_h / nbuffers_v;
-
-		unsigned i_v;
-		for(i_v = 0, buf_v = buf_h; buf_v; buf_v = buf_v->neighbours.below, i_v++){
-			rect_t r = {
-				.x = i_h * (bufwidth + 1),
-				.y = i_v * (bufheight + 1),
-				.w = bufwidth,
-				.h = bufheight,
-			};
-
-			/* final buffer gets any left over lines */
-			if(!buf_v->neighbours.below)
-				r.h += bufspace_h % nbuffers_v;
-
-			buf_v->screen_coord = r;
-		}
-	}
-}
-
 static
-void ui_draw_buf_1(buffer_t *buf)
+void ui_draw_win_1(window *win)
 {
+	buffer_t *buf = win->buf;
 	const region_t hlregion = {
-		buf->ui_npos,
-		buf->ui_vpos,
-		ui_mode_to_region(buf->ui_mode),
+		win->ui_npos,
+		win->ui_vpos,
+		ui_mode_to_region(win->ui_mode),
 	};
 
 	list_t *l;
 	int y;
-	for(y = 0, l = list_seek(buf->head, buf->ui_start.y, 0);
-			l && y < buf->screen_coord.h;
+	for(y = 0, l = list_seek(buf->head, win->ui_start.y, 0);
+			l && y < win->screen_coord.h;
 			l = l->next, y++)
 	{
-		const int lim = l->len_line < (unsigned)buf->screen_coord.w
+		const int lim = l->len_line < (unsigned)win->screen_coord.w
 			? l->len_line
-			: (unsigned)buf->screen_coord.w;
+			: (unsigned)win->screen_coord.w;
 
-		nc_set_yx(buf->screen_coord.y + y, buf->screen_coord.x);
+		nc_set_yx(win->screen_coord.y + y, win->screen_coord.x);
 		nc_clrtoeol();
 
 		for(int x = 0; x < lim; x++){
-			if(buf->ui_mode & UI_VISUAL_ANY)
+			if(win->ui_mode & UI_VISUAL_ANY)
 				nc_highlight(region_contains(
-							&hlregion, x, buf->ui_start.y + y));
+							&hlregion, x, win->ui_start.y + y));
 
 			nc_addch(l->line[x]);
 		}
@@ -317,8 +276,8 @@ void ui_draw_buf_1(buffer_t *buf)
 	}
 
 	nc_style(COL_BLUE | ATTR_BOLD);
-	for(; y < buf->screen_coord.h; y++){
-		nc_set_yx(buf->screen_coord.y + y, buf->screen_coord.x);
+	for(; y < win->screen_coord.h; y++){
+		nc_set_yx(win->screen_coord.y + y, win->screen_coord.x);
 		nc_addch('~');
 		nc_clrtoeol();
 	}
@@ -326,15 +285,15 @@ void ui_draw_buf_1(buffer_t *buf)
 }
 
 static
-void ui_draw_buf_col(buffer_t *buf)
+void ui_draw_window_col(window *win)
 {
-	for(unsigned i = 0; buf; i++, buf = buf->neighbours.below){
+	for(unsigned i = 0; win; i++, win = win->neighbours.below){
 		if(i){
-			const rect_t *r = &buf->screen_coord;
+			const rect_t *r = &win->screen_coord;
 			ui_draw_hline(r->y - 1, r->x, r->w - 1);
 		}
 
-		ui_draw_buf_1(buf);
+		ui_draw_win_1(win);
 	}
 }
 
@@ -343,20 +302,20 @@ void ui_redraw()
 	int save_y, save_x;
 	nc_get_yx(&save_y, &save_x);
 
-	buffer_t *buf = buffer_topleftmost(buffers_cur());
+	window *win = window_topleftmost(windows_cur());
 
 	unsigned const screenheight = nc_LINES();
-	ui_calc_bufrects(buf, nc_COLS(), screenheight);
+	window_calc_rects(win, nc_COLS(), screenheight);
 
-	for(int i = 0; buf; i++, buf = buf->neighbours.right){
+	for(int i = 0; win; i++, win = win->neighbours.right){
 		if(i){
-			const rect_t *r = &buf->screen_coord;
+			const rect_t *r = &win->screen_coord;
 			/* r->y should be zero, r->h-1 should be screen height */
 			ui_draw_vline(r->x - 1, r->y, screenheight - 1);
 		}
 
-		ui_draw_buf_col(buf);
-	}while(buf);
+		ui_draw_window_col(win);
+	}
 
 	nc_set_yx(save_y, save_x);
 }

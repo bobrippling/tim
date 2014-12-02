@@ -8,13 +8,14 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "window.h"
 #include "motion.h"
 #include "ui.h"
 #include "io.h"
 #include "str.h"
 #include "prompt.h"
 
-#define UI_TOP(buf) buf->ui_start.y
+#define UI_TOP(win) win->ui_start.y
 
 enum
 {
@@ -22,48 +23,48 @@ enum
 	MOTION_SUCCESS = 1
 };
 
-static int m_line_goto(int *y, unsigned repeat, bool end, buffer_t *buf)
+static int m_line_goto(int *y, unsigned repeat, bool end, window *win)
 {
 	if(repeat == 0) /* default */
-		*y = end ? list_count(buf->head) : 0;
+		*y = end ? list_count(win->buf->head) : 0;
 	else
 		*y = repeat - 1;
 
 	return MOTION_SUCCESS;
 }
 
-int m_eof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_eof(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	return m_line_goto(&to->y, repeat, true, buf);
+	return m_line_goto(&to->y, repeat, true, win);
 }
 
-int m_eol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_eol(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false);
+	list_t *l = window_current_line(win, false);
 
 	to->x = l && l->len_line > 0 ? l->len_line - 1 : 0;
 	return MOTION_SUCCESS;
 }
 
-int m_sos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_sos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	to->y = UI_TOP(buf);
+	to->y = UI_TOP(win);
 	return MOTION_SUCCESS;
 }
 
-int m_eos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_eos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	to->y = UI_TOP(buf) + buf->screen_coord.h - 1;
+	to->y = UI_TOP(win) + win->screen_coord.h - 1;
 	return MOTION_SUCCESS;
 }
 
-int m_mos(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_mos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	to->y = UI_TOP(buf) + buf->screen_coord.h / 2 - 1;
+	to->y = UI_TOP(win) + win->screen_coord.h / 2 - 1;
 	return MOTION_SUCCESS;
 }
 
-int m_goto(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_goto(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	if(m->pos.y > -1)
 		to->y = m->pos.y * DEFAULT_REPEAT(repeat);
@@ -74,7 +75,7 @@ int m_goto(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_move(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	to->y += m->pos.y * DEFAULT_REPEAT(repeat);
 	to->x += m->pos.x * DEFAULT_REPEAT(repeat);
@@ -83,14 +84,14 @@ int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-int m_sof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_sof(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	return m_line_goto(&to->y, repeat, false, buf);
+	return m_line_goto(&to->y, repeat, false, win);
 }
 
-int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_sol(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false);
+	list_t *l = window_current_line(win, false);
 	unsigned int i;
 
 	if(l){
@@ -104,14 +105,14 @@ int m_sol(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 }
 
 static int m_linesearch(
-		motion_arg const *arg, unsigned repeat, buffer_t *buf, point_t *to,
+		motion_arg const *arg, unsigned repeat, window *win, point_t *to,
 		list_t *sfn(motion_arg const *, list_t *, int *, const void *),
 		const void *ctx)
 {
-	list_t *l = buffer_current_line(buf, false); /* fine - repeat handled */
+	list_t *l = window_current_line(win, false); /* fine - repeat handled */
 	int n = 0;
 
-	*to = *buf->ui_pos;
+	*to = *win->ui_pos;
 
 	if(!l)
 		goto limit;
@@ -129,7 +130,7 @@ static int m_linesearch(
 
 	return MOTION_SUCCESS;
 limit:
-	to->y = arg->dir > 0 ? buffer_nlines(buf) : 0;
+	to->y = arg->dir > 0 ? buffer_nlines(win->buf) : 0;
 	return MOTION_SUCCESS;
 }
 
@@ -148,9 +149,9 @@ static list_t *m_search_para(
 	return l;
 }
 
-int m_para(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_para(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	return m_linesearch(m, repeat, buf, to, m_search_para, NULL);
+	return m_linesearch(m, repeat, win, to, m_search_para, NULL);
 }
 
 static list_t *m_search_func(
@@ -169,9 +170,9 @@ static list_t *m_search_func(
 	return l;
 }
 
-int m_func(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_func(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	int r = m_linesearch(m, repeat, buf, to, m_search_func, &m->scan_ch);
+	int r = m_linesearch(m, repeat, win, to, m_search_func, &m->scan_ch);
 	if(r == MOTION_SUCCESS)
 		to->x = 0;
 	return r;
@@ -281,14 +282,14 @@ static int m_word1(
 	return MOTION_SUCCESS;
 }
 
-int m_word(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_word(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	const int dir = m->word_type & WORD_BACKWARD ? -1 : 1;
 	const bool end = m->word_type & WORD_END;
 	const bool space = m->word_type & WORD_SPACE;
 
 	for(repeat = DEFAULT_REPEAT(repeat); repeat > 0; repeat--)
-		if(m_word1(buf, dir, end, space, to) == MOTION_FAILURE)
+		if(m_word1(win->buf, dir, end, space, to) == MOTION_FAILURE)
 			return MOTION_FAILURE;
 
 	return MOTION_SUCCESS;
@@ -302,14 +303,14 @@ static char *strchrdir(char *p, char ch, bool forward, char *start, size_t len)
 		return memchr(p, ch, len - (p - start));
 }
 
-static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buffer_t *buf, point_t *to)
+static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, window *win, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false); /* fine - repeat handled */
+	list_t *l = window_current_line(win, false); /* fine - repeat handled */
 
 	if(!l)
 		return MOTION_FAILURE;
 
-	point_t bpos = *buf->ui_pos;
+	point_t bpos = *win->ui_pos;
 
 	if(!(ftype & F_REV)){
 		bpos.x++;
@@ -358,29 +359,29 @@ static int m_findnext2(const int ch, enum find_type ftype, unsigned repeat, buff
 static int last_find_ch;
 static enum find_type last_find_type;
 
-int m_findnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_findnext(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	return m_findnext2(
 			last_find_ch,
 			m->find_type ^ last_find_type,
 			repeat,
-			buf,
+			win,
 			to);
 }
 
-int m_find(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_find(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	bool raw;
 	return m_findnext2(
 			last_find_ch = io_getch(IO_NOMAP /* vim doesn't mapraw here */, &raw, true),
 			last_find_type = m->find_type,
-			repeat, buf, to);
+			repeat, win, to);
 }
 
 static char *lastsearch;
 static bool lastsearch_forward;
 
-int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_searchnext(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	if(!lastsearch){
 		ui_err("no last search");
@@ -390,9 +391,9 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 	const int dir = ((m->i > 0) == lastsearch_forward) ? 1 : -1;
 
 	repeat = DEFAULT_REPEAT(repeat);
-	*to = *buf->ui_pos;
+	*to = *win->ui_pos;
 	while(repeat --> 0){
-		if(!buffer_findat(buf, lastsearch, to, dir)){
+		if(!buffer_findat(win->buf, lastsearch, to, dir)){
 			ui_err("search pattern not found");
 			return MOTION_FAILURE;
 		}
@@ -402,7 +403,7 @@ int m_searchnext(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *t
 	return MOTION_SUCCESS;
 }
 
-int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+int m_search(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	lastsearch_forward = m->i > 0;
 
@@ -413,20 +414,20 @@ int m_search(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	free(lastsearch);
 	lastsearch = target;
 
-	return m_searchnext(m, repeat, buf, to);
+	return m_searchnext(m, repeat, win, to);
 }
 
 int m_visual(
 		motion_arg const *arg, unsigned repeat,
-		buffer_t *buf, point_t *to)
+		window *win, point_t *to)
 {
 	(void)repeat;
 
-	if(!(buf->ui_mode & UI_VISUAL_ANY))
+	if(!(win->ui_mode & UI_VISUAL_ANY))
 		return MOTION_FAILURE;
 
 	/* line, char? */
-	switch(buf->ui_mode){
+	switch(win->ui_mode){
 		case UI_NORMAL:
 		case UI_INSERT: /* fall */
 		case UI_INSERT_COL:
@@ -436,7 +437,7 @@ int m_visual(
 	}
 
 	/* set `to' to the opposite corner */
-	*to = *buffer_uipos_alt(buf);
+	*to = *window_uipos_alt(win);
 
 	return MOTION_SUCCESS;
 }
@@ -495,9 +496,9 @@ static bool find_unnested_paren(
 
 int m_paren(
 		motion_arg const *arg, unsigned repeat,
-		buffer_t *buf, point_t *to)
+		window *win, point_t *to)
 {
-	list_t *l = buffer_current_line(buf, false);
+	list_t *l = window_current_line(win, false);
 	if(!l)
 		return MOTION_FAILURE;
 
@@ -510,8 +511,8 @@ int m_paren(
 		{
 			/* look forward for a paren on this line, then match */
 			char paren = 0, opp;
-			unsigned x = buf->ui_pos->x;
-			unsigned y = buf->ui_pos->y;
+			unsigned x = win->ui_pos->x;
+			unsigned y = win->ui_pos->y;
 
 			if(x >= l->len_line)
 				x = l->len_line - 1;
@@ -545,7 +546,7 @@ int m_paren(
 			/* look for an unmatched `arg->i' */
 			char paren = arg->i, opp = paren_opposite(paren);
 
-			point_t pos = *buf->ui_pos;
+			point_t pos = *win->ui_pos;
 
 			int dir = paren_left(paren) ? -1 : 1;
 			bool done_one = false;
@@ -584,12 +585,12 @@ int m_paren(
 	return MOTION_FAILURE;
 }
 
-int motion_apply_buf_dry(
+int motion_apply_win_dry(
 		const motion *m, unsigned repeat,
-		buffer_t *buf, point_t *out)
+		window *win, point_t *out)
 {
-	*out = *buf->ui_pos;
-	int r = m->func(&m->arg, repeat, buf, out);
+	*out = *win->ui_pos;
+	int r = m->func(&m->arg, repeat, win, out);
 	if(r == MOTION_SUCCESS){
 		if(out->y < 0 || out->x < 0)
 			r = MOTION_FAILURE;
@@ -597,13 +598,13 @@ int motion_apply_buf_dry(
 	return r;
 }
 
-int motion_apply_buf(const motion *m, unsigned repeat, buffer_t *buf)
+int motion_apply_win(const motion *m, unsigned repeat, window *win)
 {
 	point_t to;
 
-	if(motion_apply_buf_dry(m, repeat, buf, &to)){
-		if(memcmp(buf->ui_pos, &to, sizeof to)){
-			*buf->ui_pos = to;
+	if(motion_apply_win_dry(m, repeat, win, &to)){
+		if(memcmp(win->ui_pos, &to, sizeof to)){
+			*win->ui_pos = to;
 			ui_cur_changed();
 		}
 		return MOTION_SUCCESS;
@@ -613,12 +614,12 @@ int motion_apply_buf(const motion *m, unsigned repeat, buffer_t *buf)
 
 bool motion_to_region(
 		const motion *m, unsigned repeat, bool always_linewise,
-		buffer_t *buf, region_t *out)
+		window *win, region_t *out)
 {
 	region_t r = {
-		.begin = *buf->ui_pos
+		.begin = *win->ui_pos
 	};
-	if(!motion_apply_buf_dry(m, repeat, buf, &r.end))
+	if(!motion_apply_win_dry(m, repeat, win, &r.end))
 		return false;
 
 	/* reverse if negative range */
@@ -637,7 +638,7 @@ bool motion_to_region(
 		r.type = REGION_CHAR;
 	}
 
-	if(buf->ui_mode & UI_VISUAL_ANY){
+	if(win->ui_mode & UI_VISUAL_ANY){
 		/* only increment y in the line case */
 		r.end.x++;
 		if(m->how & M_LINEWISE || always_linewise)

@@ -7,6 +7,8 @@
 #include "list.h"
 #include "buffer.h"
 #include "buffers.h"
+#include "window.h"
+#include "windows.h"
 
 #include "range.h"
 
@@ -23,7 +25,7 @@ bool parse_range_1(
 			break;
 
 		case '.':
-			*out = buffers_cur()->ui_pos->y;
+			*out = windows_cur()->ui_pos->y;
 			range++;
 			break;
 		case '$':
@@ -35,7 +37,7 @@ bool parse_range_1(
 		default:
 			/* don't touch range */
 			handled = false;
-			*out = buffers_cur()->ui_pos->y;
+			*out = windows_cur()->ui_pos->y;
 			break;
 	}
 

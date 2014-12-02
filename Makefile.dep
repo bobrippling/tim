@@ -1,21 +1,20 @@
-main.o: main.c pos.h region.h list.h buffer.h bufmode.h yank.h ui.h \
- buffers.h
+main.o: main.c pos.h region.h list.h buffer.h bufmode.h yank.h retain.h \
+ ui.h window.h windows.h
 ncurses.o: ncurses.c ncurses.h macros.h
-ui.o: ui.c pos.h ncurses.h region.h list.h buffer.h bufmode.h yank.h io.h \
- ui.h motion.h cmds.h keys.h buffers.h
+ui.o: ui.c pos.h ncurses.h region.h list.h buffer.h bufmode.h yank.h \
+ retain.h window.h windows.h io.h ui.h motion.h cmds.h keys.h buffers.h
 mem.o: mem.c mem.h
-keys.o: keys.c pos.h region.h list.h buffer.h bufmode.h yank.h range.h \
- io.h ui.h motion.h cmds.h keys.h ncurses.h mem.h prompt.h map.h \
- parse_cmd.h buffers.h retain.h config.h
+keys.o: keys.c pos.h region.h list.h buffer.h bufmode.h yank.h retain.h \
+ window.h windows.h range.h io.h ui.h motion.h cmds.h keys.h ncurses.h \
+ mem.h prompt.h map.h parse_cmd.h buffers.h config.h
 cmds.o: cmds.c range.h cmds.h pos.h region.h list.h buffer.h bufmode.h \
- yank.h io.h ui.h buffers.h external.h mem.h parse_cmd.h str.h
-buffer.o: buffer.c pos.h region.h list.h buffer.h bufmode.h yank.h mem.h \
- macros.h ncurses.h str.h retain.h
+ yank.h retain.h io.h ui.h buffers.h external.h mem.h parse_cmd.h str.h \
+ window.h windows.h
+buffer.o: buffer.c pos.h region.h list.h buffer.h bufmode.h yank.h \
+ retain.h mem.h macros.h ncurses.h str.h
 list.o: list.c pos.h region.h range.h list.h mem.h str.h macros.h
-buffers.o: buffers.c pos.h region.h list.h buffer.h bufmode.h yank.h \
- buffers.h mem.h ui.h
 motion.o: motion.c pos.h region.h list.h buffer.h bufmode.h yank.h \
- motion.h ui.h io.h str.h prompt.h
+ retain.h window.h motion.h ui.h io.h str.h prompt.h
 external.o: external.c mem.h ui.h external.h
 str.o: str.c str.h
 prompt.o: prompt.c prompt.h ncurses.h io.h bufmode.h mem.h
@@ -24,7 +23,12 @@ yank.o: yank.c pos.h region.h list.h yank.h mem.h retain.h
 pos.o: pos.c pos.h
 region.o: region.c pos.h region.h
 retain.o: retain.c retain.h
-range.o: range.c pos.h region.h list.h buffer.h bufmode.h yank.h \
- buffers.h range.h
+range.o: range.c pos.h region.h list.h buffer.h bufmode.h yank.h retain.h \
+ buffers.h window.h windows.h range.h
 parse_cmd.o: parse_cmd.c mem.h pos.h region.h list.h buffer.h bufmode.h \
- yank.h buffers.h range.h cmds.h parse_cmd.h config_cmds.h
+ yank.h retain.h buffers.h range.h cmds.h window.h windows.h parse_cmd.h \
+ config_cmds.h
+window.o: window.c mem.h macros.h pos.h region.h list.h buffer.h \
+ bufmode.h yank.h retain.h window.h ncurses.h
+windows.o: windows.c pos.h region.h list.h buffer.h bufmode.h yank.h \
+ retain.h window.h windows.h ui.h

@@ -9,6 +9,8 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "window.h"
+#include "windows.h"
 #include "yank.h"
 #include "range.h"
 
@@ -42,7 +44,7 @@ int keys_filter(
 	bool potential[n_ents];
 
 	if(mode_off >= 0){
-		enum buf_mode curmode = buffers_cur()->ui_mode;
+		enum buf_mode curmode = windows_cur()->ui_mode;
 
 		for(unsigned i = 0; i < n_ents; i++){
 			enum buf_mode mode = *(enum buf_mode *)(
@@ -111,7 +113,7 @@ out:
 const motion *motion_read(unsigned *repeat, bool apply_maps)
 {
 	const enum io io_m =
-		apply_maps ? bufmode_to_iomap(buffers_cur()->ui_mode) : IO_NOMAP;
+		apply_maps ? bufmode_to_iomap(windows_cur()->ui_mode) : IO_NOMAP;
 
 	*repeat = io_read_repeat(io_m);
 
@@ -129,8 +131,8 @@ const motion *motion_read(unsigned *repeat, bool apply_maps)
 static
 const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 {
-	buffer_t *buf = buffers_cur();
-	if(buf->ui_mode & UI_VISUAL_ANY){
+	window *win = windows_cur();
+	if(win->ui_mode & UI_VISUAL_ANY){
 		static motion visual = {
 			.func = m_visual,
 			.arg.phow = &visual.how
@@ -206,9 +208,9 @@ void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
 
-	const bool was_insert = buf->ui_mode & UI_INSERT_ANY;
+	const bool was_insert = win->ui_mode & UI_INSERT_ANY;
 
 	/* set normal mode before the move - lets us capture the position */
 	ui_set_bufmode(UI_NORMAL);
@@ -219,39 +221,39 @@ void k_escape(const keyarg_u *a, unsigned repeat, const int from_ch)
 			.arg = { .pos = { -1, 0 } }
 		};
 
-		motion_apply_buf(&move, /*repeat:*/1, buf);
+		motion_apply_win(&move, /*repeat:*/1, win);
 	}
 }
 
 void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
 
 	if(a->pos.x){
 		/* y: 0=mid, -1=top, 1=bot */
 		int h = 0;
 		switch(a->pos.y){
 			case 0:
-				h = buf->screen_coord.h / 2;
+				h = win->screen_coord.h / 2;
 				break;
 			case -1:
 				break;
 			case 1:
-				h = buf->screen_coord.h - 1;
+				h = win->screen_coord.h - 1;
 				break;
 		}
-		buf->ui_start.y = buf->ui_pos->y - h;
+		win->ui_start.y = win->ui_pos->y - h;
 	}else{
-		buf->ui_start.y += a->pos.y;
+		win->ui_start.y += a->pos.y;
 	}
 
-	if(buf->ui_start.y < 0)
-		buf->ui_start.y = 0;
+	if(win->ui_start.y < 0)
+		win->ui_start.y = 0;
 
-	if(buf->ui_pos->y < buf->ui_start.y)
-		buf->ui_pos->y = buf->ui_start.y;
-	else if(buf->ui_pos->y >= buf->ui_start.y + buf->screen_coord.h)
-		buf->ui_pos->y = buf->ui_start.y + buf->screen_coord.h - 1;
+	if(win->ui_pos->y < win->ui_start.y)
+		win->ui_pos->y = win->ui_start.y;
+	else if(win->ui_pos->y >= win->ui_start.y + win->screen_coord.h)
+		win->ui_pos->y = win->ui_start.y + win->screen_coord.h - 1;
 
 	ui_redraw();
 	ui_cur_changed();
@@ -278,26 +280,26 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 			return;
 	}
 
-	buffer_t *const curbuf = buffers_cur();
-	buffer_t *found = NULL;
+	window *const curwin = windows_cur();
+	window *found = NULL;
 
 	switch(dir){
 		case up:
-			found = curbuf->neighbours.above;
+			found = curwin->neighbours.above;
 			break;
 
 		case down:
-			found = curbuf->neighbours.below;
+			found = curwin->neighbours.below;
 			break;
 
 		case left:
 		case right:
-			for(found = curbuf; found->neighbours.above; found = found->neighbours.above);
+			for(found = curwin; found->neighbours.above; found = found->neighbours.above);
 			found = (dir == left ? found->neighbours.left : found->neighbours.right);
 			if(!found)
 				break;
 
-			const int to_match = curbuf->screen_coord.y + curbuf->ui_pos->y - curbuf->ui_start.y;
+			const int to_match = curwin->screen_coord.y + curwin->ui_pos->y - curwin->ui_start.y;
 
 			while(found->neighbours.below)
 			{
@@ -310,8 +312,8 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 			}
 	}
 
-	if(found && found != curbuf){
-		buffers_set_cur(found);
+	if(found && found != curwin){
+		windows_set_cur(found);
 		ui_redraw();
 		ui_cur_changed();
 	}else{
@@ -321,19 +323,21 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
+	buffer_t *buf = win->buf;
 	(void)a;
 	ui_status("%s%s%s, x=%d y=%d eol=%c",
 			buf->fname ? "\"" : "",
 			buf->fname ? buffer_shortfname(buf->fname) : "<no name>",
 			buf->fname ? "\"" : "",
-			buf->ui_pos->x, buf->ui_pos->y,
+			win->ui_pos->x, win->ui_pos->y,
 			"ny"[buf->eol]);
 }
 
 void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_insline(buffers_cur(), a->i);
+	window *win = windows_cur();
+	buffer_insline(win->buf, a->i, win->ui_pos);
 	ui_set_bufmode(UI_INSERT);
 	ui_redraw();
 	ui_cur_changed();
@@ -365,15 +369,15 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 			.how = M_NONE
 		};
 
-		buffer_t *buf = buffers_cur();
+		window *win = windows_cur();
 		const motion *mchosen =
-			buf->ui_mode & UI_VISUAL_ANY
+			win->ui_mode & UI_VISUAL_ANY
 			? motion_read_or_visual(&(unsigned){0}, false)
 			: &move_repeat;
 
 
 		region_t r;
-		if(!motion_to_region(mchosen, 1, false, buf, &r))
+		if(!motion_to_region(mchosen, 1, false, win, &r))
 			return;
 
 		/* special case - single _line_ replace
@@ -387,15 +391,17 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		if(ins_nl)
 			ch = '\n';
 
+		buffer_t *const buf = win->buf;
+
 		list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, replace_iter, &ch);
 
 		if(ins_nl){
-			buf->ui_pos->x = 0;
-			buf->ui_pos->y += repeat;
+			win->ui_pos->x = 0;
+			win->ui_pos->y += repeat;
 		}
 
 		buf->modified = true;
-		buf->ui_mode = UI_NORMAL;
+		win->ui_mode = UI_NORMAL;
 	}
 	ui_redraw();
 	ui_cur_changed();
@@ -403,7 +409,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	motion_apply_buf(&a->motion.m, a->motion.repeat, buffers_cur());
+	motion_apply_win(&a->motion.m, a->motion.repeat, windows_cur());
 }
 
 struct around_motion
@@ -462,19 +468,19 @@ static bool around_motion(
 			repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
 		}
 
-		buffer_t *b = buffers_cur();
+		window *win = windows_cur();
 
 		region_t r;
-		if(!motion_to_region(m, repeat, always_linewise, b, &r))
+		if(!motion_to_region(m, repeat, always_linewise, win, &r))
 			return false;
 
 		if(used_region)
 			*used_region = r;
 
 		/* reset cursor to beginning, then allow adjustments */
-		*b->ui_pos = r.begin;
+		*win->ui_pos = r.begin;
 		if(action)
-			action->fn(b, &r, b->ui_pos, action);
+			action->fn(win->buf, &r, win->ui_pos, action);
 
 		ui_set_bufmode(UI_NORMAL);
 
@@ -507,14 +513,14 @@ static bool around_motion_bufaction(
 
 void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
 
 	/* if we're in visual-col and told to insert like that... */
-	if(buf->ui_mode == UI_VISUAL_COL && a->i == UI_INSERT_COL){
+	if(win->ui_mode == UI_VISUAL_COL && a->i == UI_INSERT_COL){
 		region_t r;
 
 		if(around_motion(repeat, from_ch, false, /*noop:*/NULL, &r)){
-			buf->col_insert_height = r.end.y - r.begin.y + 1;
+			win->buf->col_insert_height = r.end.y - r.begin.y + 1;
 			ui_set_bufmode(UI_INSERT_COL);
 		}
 	}else{
@@ -567,27 +573,29 @@ void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_togglev(buffers_cur(), a->i != 0);
+	window_togglev(windows_cur(), a->i != 0);
 	ui_cur_changed();
 }
 
 void k_go_visual(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
+	buffer_t *buf = win->buf;
 
 	ui_set_bufmode(buf->prev_visual.mode);
 
-	*buf->ui_pos = buf->prev_visual.npos;
-	*buffer_uipos_alt(buf) = buf->prev_visual.vpos;
+	*win->ui_pos = buf->prev_visual.npos;
+	*window_uipos_alt(win) = buf->prev_visual.vpos;
 
 	ui_cur_changed();
 }
 
 void k_go_insert(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
+	buffer_t *buf = win->buf;
 
-	*buf->ui_pos = buf->prev_insert;
+	*win->ui_pos = buf->prev_insert;
 	ui_set_bufmode(UI_INSERT);
 
 	ui_cur_changed();
@@ -600,18 +608,20 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 	if(!yank)
 		return;
 
-	buffer_t *buf = buffers_cur();
-	if(buf->ui_mode & UI_VISUAL_ANY){
+	window *win = windows_cur();
+	if(win->ui_mode & UI_VISUAL_ANY){
 		/* delete what we have, then paste */
 		region_t r;
 		unsigned mrepeat;
 		const motion *m = motion_read_or_visual(&mrepeat, false);
 
-		if(!motion_to_region(m, mrepeat, false, buf, &r))
+		if(!motion_to_region(m, mrepeat, false, win, &r))
 			return;
 
 		/* necessary so we insert at the right place later on */
-		point_sort_full(&buf->ui_npos, &buf->ui_vpos);
+		point_sort_full(&win->ui_npos, &win->ui_vpos);
+
+		buffer_t *buf = win->buf;
 
 		buffer_delregion.fn(buf, &r, &(point_t){0});
 
@@ -621,9 +631,9 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	repeat = DEFAULT_REPEAT(repeat);
 	while(repeat --> 0)
-		buffer_insyank(buffers_cur(), yank, prepend, /*modify:*/true);
+		buffer_insyank(buffers_cur(), yank, win->ui_pos, prepend, /*modify:*/true);
 
-	buf->ui_mode = UI_NORMAL; /* remove visual */
+	win->ui_mode = UI_NORMAL; /* remove visual */
 
 	ui_redraw();
 	ui_cur_changed();
@@ -697,21 +707,19 @@ void k_case(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *const buf = buffers_cur();
+	window *win = windows_cur();
 
-	list_t *line = buffer_current_line(buf, false);
+	list_t *line = window_current_line(win, false);
 	if(!line)
 		return;
 	line = a->i > 0 ? line->next : line->prev;
 	if(!line)
 		return;
 
-	if((unsigned)buf->ui_pos->x >= line->len_line)
+	if((unsigned)win->ui_pos->x >= line->len_line)
 		return;
 
-	buffer_inschar(
-			buf,
-			line->line[buf->ui_pos->x]);
+	window_inschar(win, line->line[win->ui_pos->x]);
 
 	ui_redraw();
 	ui_cur_changed();
@@ -719,12 +727,12 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *buf = buffers_cur();
+	window *win = windows_cur();
 
-	const enum buf_mode save = buf->ui_mode;
-	buf->ui_mode = UI_NORMAL;
+	const enum buf_mode save = win->ui_mode;
+	win->ui_mode = UI_NORMAL;
 
-	ui_normal_1(&repeat, IO_MAPRAW | bufmode_to_iomap( buf->ui_mode));
+	ui_normal_1(&repeat, IO_MAPRAW | bufmode_to_iomap(win->ui_mode));
 
-	buf->ui_mode = save;
+	win->ui_mode = save;
 }

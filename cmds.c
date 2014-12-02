@@ -20,6 +20,8 @@
 #include "mem.h"
 #include "parse_cmd.h"
 #include "str.h"
+#include "window.h"
+#include "windows.h"
 
 #define RANGE_NO()                       \
 	if(range){                             \
@@ -47,17 +49,6 @@
 		return false;               \
 	}
 
-static buffer_t *buffer_next(buffer_t *buf)
-{
-#define RET_IF(x) if(x) return x
-	RET_IF(buf->neighbours.below);
-	RET_IF(buf->neighbours.above);
-	RET_IF(buf->neighbours.right);
-	RET_IF(buf->neighbours.left);
-#undef RET_IF
-	return NULL;
-}
-
 static bool quit_common(
 		bool qall,
 		int argc, char **argv,
@@ -69,10 +60,10 @@ static bool quit_common(
 	if(!force){
 		bool modified = false;
 		if(qall){
-			buffer_t *buf;
+			window *win;
 
-			ITER_BUFFERS(buf){
-				if((modified = buf->modified))
+			ITER_WINDOWS(win){
+				if((modified = win->buf->modified))
 					goto out;
 			}
 out:;
@@ -90,19 +81,19 @@ out:;
 	if(qall){
 		ui_run = UI_EXIT_0;
 	}else{
-		buffer_t *buf = buffers_cur();
-		buffer_t *focus = buffer_next(buf);
+		window *win = windows_cur();
+		window *focus = window_next(win);
 
 		/* check remaining buffers */
-		if(!force && !focus && buffers_next_fname(false)){
+		if(!force && !focus && windows_next_fname(false)){
 			ui_err("more files to edit");
 			return false;
 		}
 
-		buffer_evict(buf);
-		buffer_free(buf), buf = NULL;
+		window_evict(win);
+		window_free(win), win = NULL;
 
-		buffers_set_cur(focus);
+		windows_set_cur(focus);
 		if(focus){
 			ui_redraw();
 			ui_cur_changed();
@@ -139,15 +130,19 @@ static bool edit_common(const char *fname, bool const force)
 {
 	bool ret = false;
 
-	buffer_t *const buf = buffers_cur();
+	window *win = windows_cur();
+	buffer_t *const buf = win->buf;
 	if(!force && buf->modified){
 		ui_err("buffer modified");
 		return false;
 	}
 
-	if(!buffer_replace_fname(buf, fname)){
-		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
-		buffers_set_cur(b);
+	if(!window_replace_fname(win, fname)){
+		buffer_t *buf = buffer_new();
+
+		window_replace_buffer(win, buf);
+		buffer_release(buf);
+
 		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
 	}else{
 		ui_status("%s: loaded", buffer_shortfname(fname));
@@ -173,7 +168,7 @@ bool c_n(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	char *fname = buffers_next_fname(true);
+	char *fname = windows_next_fname(true);
 	if(!fname){
 		ui_err("no more files");
 		return false;
@@ -259,9 +254,11 @@ bool c_wa(int argc, char **argv, bool force, struct range *range)
 	RANGE_NO();
 	ARGV_NO();
 
-	buffer_t *buf;
+	window *win;
 
-	ITER_BUFFERS(buf){
+	ITER_WINDOWS(win){
+		buffer_t *buf = win->buf;
+
 		if(!force && !buf->modified)
 			continue;
 
@@ -295,8 +292,9 @@ bool c_xa(int argc, char **argv, bool force, struct range *range)
 	RANGE_NO();
 	ARGV_NO();
 
-	buffer_t *buf;
-	ITER_BUFFERS(buf){
+	window *win;
+	ITER_WINDOWS(win){
+		buffer_t *buf = win->buf;
 		if(!buf->modified)
 			continue;
 
@@ -333,12 +331,13 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 
 bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 {
-	buffer_t *const b = buffers_cur();
+	window *const win = windows_cur();
+	buffer_t *const b = win->buf;
 
 	struct range rng;
-	RANGE_DEFAULT(range, rng, b->ui_pos->y);
+	RANGE_DEFAULT(range, rng, win->ui_pos->y);
 
-	*b->ui_pos = (point_t){ .y = range->start };
+	*win->ui_pos = (point_t){ .y = range->start };
 
 	int streamerr;
 	FILE *stream;
@@ -371,10 +370,10 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	list_t *lines = list_new_file(stream, /*eol:*/&(bool){ false });
 	(*stream_close)(stream);
 
-	b->head = list_append(b->head, buffer_current_line(b, true), lines);
+	b->head = list_append(b->head, window_current_line(win, true), lines);
 
 	if(lines)
-		b->ui_pos->y++;
+		win->ui_pos->y++;
 
 	b->modified = true;
 
@@ -409,8 +408,11 @@ bool c_split(bool const splitright, int argc, char **argv, bool force, struct ra
 		b = buffer_new();
 	}
 
-	buffer_add_neighbour(buffers_cur(), splitright, b);
-	buffers_set_cur(b);
+	window *w = window_new(b);
+	buffer_release(b);
+
+	window_add_neighbour(windows_cur(), splitright, w);
+	windows_set_cur(w);
 
 	ui_redraw();
 	ui_cur_changed();
@@ -446,10 +448,12 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 {
 	ARGV_NO();
 
-	buffer_t *const b = buffers_cur();
+	window *win = windows_cur();
 
 	struct range rng;
-	RANGE_DEFAULT(range, rng, b->ui_pos->y);
+	RANGE_DEFAULT(range, rng, win->ui_pos->y);
+
+	buffer_t *const b = win->buf;
 
 	list_t *l = list_seek(b->head, range->start, false);
 	for(int i = range->start; i <= range->end; i++){
@@ -466,12 +470,14 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 static void command_bufaction(
 		struct range *range, buffer_action_f *buf_fn, int end_add)
 {
-	buffer_t *const b = buffers_cur();
+	window *win = windows_cur();
 
 	struct range range_store;
-	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
+	RANGE_DEFAULT(range, range_store, win->ui_pos->y);
 
 	range->end += end_add;
+
+	buffer_t *const b = win->buf;
 
 	buf_fn(
 			b,
@@ -482,7 +488,7 @@ static void command_bufaction(
 			},
 			&(point_t){});
 
-	*b->ui_pos = (point_t){ .y = range->end - end_add };
+	*win->ui_pos = (point_t){ .y = range->end - end_add };
 
 	ui_redraw();
 	ui_cur_changed();
@@ -507,15 +513,17 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	buffer_t *b = buffers_cur();
+	window *win = windows_cur();
 
 	struct range range_store;
-	RANGE_DEFAULT(range, range_store, b->ui_pos->y);
+	RANGE_DEFAULT(range, range_store, win->ui_pos->y);
 
 	if(range->start <= lno && lno <= range->end){
 		ui_err("can't move lines into themselves");
 		return false;
 	}
+
+	buffer_t *const b = win->buf;
 
 	list_t *landing = list_seek(b->head, lno, false);
 	if(!landing)
@@ -605,7 +613,7 @@ struct g_ctx
 {
 	bool g_inverse;
 	char *match;
-	buffer_t *buf;
+	window *win;
 
 	const cmd_t *cmd;
 	char *str_range;
@@ -622,7 +630,7 @@ static bool g_exec(list_t *l, int y, struct g_ctx *ctx)
 		return true;
 	}
 
-	*ctx->buf->ui_pos = (point_t){ .y = y };
+	*ctx->win->ui_pos = (point_t){ .y = y };
 
 	struct range range, *prange = &range;
 	if(ctx->str_range){
@@ -673,12 +681,12 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 	}
 	/* else, no terminating character */
 
-	buffer_t *const b = buffers_cur();
+	window *const win = windows_cur();
 
 	struct g_ctx ctx = {
 		.g_inverse = inverse,
 		.match = regex.start,
-		.buf = b,
+		.win = win,
 	};
 
 	struct cmd_t c_p_fallback = {
@@ -711,6 +719,8 @@ bool c_g(char *cmd, char *gcmd, bool inverse, struct range *range)
 	}else{
 		ctx.str_range = subcmd;
 	}
+
+	buffer_t *const b = win->buf;
 
 	struct range rng_all;
 	if(!range){
@@ -750,10 +760,10 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 	if(force)
 		mode = IO_NOMAP;
 
-	buffer_t *b = buffers_cur();
+	window *win = windows_cur();
 
 	struct range rng;
-	RANGE_DEFAULT(range, rng, b->ui_pos->y);
+	RANGE_DEFAULT(range, rng, win->ui_pos->y);
 
 	size_t normcmdlen = strlen(normcmd);
 
@@ -761,7 +771,7 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 			n <= range->end;
 			n++)
 	{
-		*b->ui_pos = (point_t){ .y = n };
+		*win->ui_pos = (point_t){ .y = n };
 
 		size_t const io_empty = io_bufsz();
 

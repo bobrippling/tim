@@ -7,19 +7,20 @@
 #include "list.h"
 #include "buffer.h"
 #include "ui.h"
-#include "buffers.h"
+#include "window.h"
+#include "windows.h"
 
 int main(int argc, char **argv)
 {
 	int i;
 	unsigned offset = 0;
-	enum buffer_init_args initargs = BUF_NONE;
+	enum windows_init_args initargs = WIN_NONE;
 
 	for(i = 1; i < argc; i++){
 		if(!strcmp(argv[i], "-O")){
-			initargs = BUF_VALL;
+			initargs = WIN_VALL;
 		}else if(!strcmp(argv[i], "-o")){
-			initargs = BUF_HALL;
+			initargs = WIN_HALL;
 		}else if(*argv[i] == '+'){
 			char *p = argv[i] + 1;
 
@@ -40,12 +41,12 @@ int main(int argc, char **argv)
 
 	ui_init(); /* must be before buffers_init() */
 
-	buffers_init(argc - i, argv + i, initargs, offset);
+	windows_init(argc - i, argv + i, initargs, offset);
 
 	int r = ui_main();
 	ui_term();
 
-	buffers_term();
+	windows_term();
 
 	return r;
 }

@@ -16,6 +16,8 @@
 #include "region.h"
 #include "range.h"
 #include "cmds.h"
+#include "window.h"
+#include "windows.h"
 
 #include "parse_cmd.h"
 
