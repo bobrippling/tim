@@ -11,14 +11,16 @@
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+#include "io.h"
 #include "ui.h"
 #include "motion.h"
 #include "io.h"
 #include "word.h"
+#include "cmds.h"
 #include "keys.h"
 #include "buffers.h"
-
-#define UI_MODE() buffers_cur()->ui_mode
+#include "mem.h"
+#include "str.h"
 
 enum ui_ec ui_run = UI_RUNNING;
 
@@ -58,9 +60,9 @@ bool ui_replace_curbuf(const char *fname)
 	if(!buffer_replace_fname(buf, fname)){
 		buffer_t *b = buffer_new(); /* FIXME: use buffer_new_fname() instead? */
 		buffers_set_cur(b);
-		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
+		ui_err("%s: %s", fname, strerror(errno));
 	}else{
-		ui_status("%s: loaded", buffer_shortfname(fname));
+		ui_status("%s: loaded", fname);
 		buffers_cur()->modified = false;
 		ret = true;
 	}
@@ -83,12 +85,32 @@ void ui_vstatus(bool err, const char *fmt, va_list l, int right)
 	nc_get_yx(&y, &x);
 
 	if(err)
-		nc_style(COL_RED);
-	nc_vstatus(fmt, l, right);
+		nc_style(COL_BG_RED);
+
+	char *message = ustrvprintf(fmt, l);
+	/* just truncate in the middle if too long */
+	const size_t msglen = strlen(message);
+	const int cols = nc_COLS();
+
+	if(msglen >= (unsigned)cols){
+		const int dotslen = 3;
+		int half = (cols - dotslen) / 2;
+		char *replace = umalloc(msglen + 1);
+
+		snprintf(replace, msglen + 1, "%.*s...%s",
+				half, message, message + msglen - half);
+
+		free(message);
+		message = replace;
+	}
+
+	nc_status(message, right);
 	if(err)
 		nc_style(0);
 
 	nc_set_yx(y, x);
+
+	free(message);
 }
 
 void ui_status(const char *fmt, ...)
@@ -116,18 +138,113 @@ void ui_rstatus(const char *fmt, ...)
 	va_end(l);
 }
 
-int ui_main()
+static void ui_match_paren(buffer_t *buf)
+{
+	list_t *l = buffer_current_line(buf, false);
+	int x = buf->ui_pos->x;
+	bool redraw = false;
+
+	if(buf->ui_paren.x != -1)
+		redraw = true;
+
+	buf->ui_paren = (point_t){ -1, -1 };
+
+	if(!l || (size_t)x >= l->len_line)
+		goto out;
+
+	char ch = l->line[x];
+	char other;
+	if(!paren_match(ch, &other))
+		goto out;
+
+	motion opposite = {
+		.func = m_paren,
+		.arg.i = other,
+		.how = M_EXCLUSIVE
+	};
+	point_t loc;
+	if(!motion_apply_buf_dry(&opposite, 0, buf, &loc))
+		goto out;
+
+	buf->ui_paren = loc;
+	redraw = true;
+
+out:
+	if(redraw)
+		ui_redraw();
+}
+
+static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 {
 	extern nkey_t nkeys[];
 	extern const size_t nkeys_cnt;
 
+	int i = keys_filter(
+			io_mode, (char *)nkeys, nkeys_cnt,
+			offsetof(nkey_t, str), sizeof(nkey_t),
+			offsetof(nkey_t, mode));
+
+	if(i != -1){
+		nkeys[i].func(&nkeys[i].arg, repeat, nkeys[i].str[0]);
+		/* found and handled */
+	}else{
+		/* not found/handled */
+		bool raw;
+		int ch = io_getch(0, &raw, true); /* pop it back */
+		(void)raw; /* straight out inserted */
+
+		if(ch == 0 || (char)ch == -1) /* eof */
+			ui_run = UI_EXIT_1;
+
+		buffer_t *const buf = buffers_cur();
+
+		if(buf->ui_mode & UI_INSERT_ANY){
+			buffer_inschar(buf, ch);
+			ui_redraw(); // TODO: queue these
+			ui_cur_changed();
+		}else if(ch != K_ESC){
+			ui_err("unknown key %c", ch); // TODO: queue?
+		}
+	}
+}
+
+void ui_normal_1(unsigned *repeat, enum io io_mode)
+{
+	buffer_t *buf = buffers_cur();
+	const bool ins = buf->ui_mode & UI_INSERT_ANY;
+
+	if(!ins){
+		const motion *m = motion_read(repeat, /*map:*/true);
+		if(m){
+			motion_apply_buf(m, *repeat, buf);
+
+			/* check if we're now on a paren */
+			ui_match_paren(buf);
+
+			return;
+		} /* else no motion */
+	} /* else insert */
+
+	ui_handle_next_ch(io_mode, *repeat);
+}
+
+int ui_main()
+{
 	ui_redraw(); /* this first, to frame buf_sel */
 	ui_cur_changed(); /* this, in case there's an initial buf offset */
 
 	while(1){
+		ui_wait_return();
+
+		switch(ui_run){
+			case UI_RUNNING: break;
+			case UI_EXIT_0: return 0;
+			case UI_EXIT_1: return 1;
+		}
+
 		buffer_t *buf = buffers_cur();
 
-		if(UI_MODE() & UI_VISUAL_ANY){
+		if(buf->ui_mode & UI_VISUAL_ANY){
 			point_t *alt = buffer_uipos_alt(buf);
 
 			ui_rstatus("%d,%d - %d,%d",
@@ -135,57 +252,10 @@ int ui_main()
 					alt->y, alt->x);
 		}
 
-		const bool ins = UI_MODE() & UI_INSERT_ANY;
-		unsigned repeat = 0;
-
-		if(!ins){
-			const motion *m = motion_read(&repeat, /*map:*/true);
-
-			if(m){
-				motion_apply_buf(m, repeat, buf);
-				continue;
-			}
-		}
-
 		const enum io io_mode = bufmode_to_iomap(buf->ui_mode);
-		bool wasraw;
-		int ch = io_getch(io_mode | IO_MAPRAW, &wasraw);
 
-		if(ch == -1) /* eof */
-			ui_run = UI_EXIT_1;
-
-		bool found = false;
-		if(!wasraw){
-			io_ungetch(ch);
-
-			int i = keys_filter(
-					io_mode, (char *)nkeys, nkeys_cnt,
-					offsetof(nkey_t, str), sizeof(nkey_t),
-					offsetof(nkey_t, mode));
-
-			if(i != -1){
-				nkeys[i].func(&nkeys[i].arg, repeat, nkeys[i].str[0]);
-				found = true;
-			}else{
-				ch = io_getch(0, NULL); /* pop it back */
-			}
-		}
-
-		if(!found){
-			if(UI_MODE() & UI_INSERT_ANY){
-				buffer_inschar(buf, ch);
-				ui_redraw();
-				ui_cur_changed();
-			}else if(ch != K_ESC){
-				ui_err("unknown key %c", ch);
-			}
-		}
-
-		switch(ui_run){
-			case UI_RUNNING: continue;
-			case UI_EXIT_0: return 0;
-			case UI_EXIT_1: return 1;
-		}
+		unsigned repeat = 0;
+		ui_normal_1(&repeat, io_mode | IO_MAPRAW);
 	}
 }
 
@@ -280,11 +350,22 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		nc_clrtoeol();
 
 		for(int x = 0; x < lim; x++){
+			int offhl = 0;
+			const int real_y = buf->ui_start.y + y;
+
 			if(buf->ui_mode & UI_VISUAL_ANY)
 				nc_highlight(region_contains(
-							&hlregion, x, buf->ui_start.y + y));
+							&hlregion, x, real_y));
+
+			if(point_eq(&buf->ui_paren, (&(point_t){ .x=x, .y=real_y }))){
+				nc_highlight(1);
+				offhl = 1;
+			}
 
 			nc_addch(l->line[x]);
+
+			if(offhl)
+				nc_highlight(0);
 		}
 
 		nc_highlight(0);
@@ -380,4 +461,36 @@ void ui_printf(const char *fmt, ...)
 	va_start(l, fmt);
 	nc_vprintf(fmt, l);
 	va_end(l);
+}
+
+void ui_print(const char *s, size_t n)
+{
+	nc_set_yx(nc_LINES() - 1, 0);
+	while(n --> 0)
+		nc_addch(*s++);
+	nc_addch('\n');
+}
+
+static bool want_return;
+
+void ui_want_return(void)
+{
+	want_return = true;
+}
+
+void ui_wait_return(void)
+{
+	if(!want_return)
+		return;
+
+	want_return = false;
+
+	bool raw;
+	int ch = io_getch(IO_NOMAP, &raw, true);
+	(void)raw; /* pushed straight back */
+	if(!isnewline(ch))
+		io_ungetch(ch, false);
+
+	ui_redraw();
+	ui_cur_changed();
 }

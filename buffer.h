@@ -32,6 +32,7 @@ struct buffer
 	point_t ui_npos;  /* cursor pos in buffer */
 	point_t ui_vpos;  /* when in visual mode - other point */
 	point_t *ui_pos; /* which one is in use? */
+	point_t ui_paren; /* paren matching - { -1, -1 } if none */
 
 	/* used for `gv' */
 	struct
@@ -97,7 +98,8 @@ int buffer_filter(
 
 void buffer_insline(buffer_t *, int dir);
 
-list_t *buffer_current_line(const buffer_t *);
+list_t *buffer_current_line(const buffer_t *, bool create);
+
 char *buffer_current_word(const buffer_t *);
 
 unsigned buffer_nlines(const buffer_t *);
@@ -109,8 +111,6 @@ void buffer_caseregion(
 /* positioning */
 buffer_t *buffer_topleftmost(buffer_t *b);
 void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour, buffer_t *new);
-
-const char *buffer_shortfname(const char *); /* internal fname buffer */
 
 bool buffer_findat(const buffer_t *, const char *, point_t *, int dir);
 

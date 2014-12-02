@@ -1,0 +1,12 @@
+:v/A/d:g!/B/d
+__IN__
+abc
+def A B
+ghi B
+klm
+opq A
+rst
+uvw A B
+__OUT__
+def A B
+uvw A B

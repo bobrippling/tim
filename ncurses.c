@@ -63,7 +63,7 @@ void nc_highlight(int on)
 	(on ? attron : attroff)(A_REVERSE);
 }
 
-void nc_vstatus(const char *fmt, va_list l, int right)
+void nc_status(const char *fmt, int right)
 {
 	scrollok(stdscr, 0);
 
@@ -73,7 +73,7 @@ void nc_vstatus(const char *fmt, va_list l, int right)
 
 	move(LINES - 1, x);
 	clrtoeol();
-	vwprintw(stdscr, fmt, l);
+	addstr(fmt);
 
 	scrollok(stdscr, 1);
 }
@@ -123,11 +123,13 @@ restart:
 		if(ch == '\r'){
 			ch = '\n';
 		}else if(ch == CTRL_AND('v')){
-			*wasraw = true;
+			if(wasraw)
+				*wasraw = true;
 			ctrl_v = true;
 			goto restart;
 		}
-		*wasraw = false;
+		if(wasraw)
+			*wasraw = false;
 	}
 	return ch;
 }
@@ -155,11 +157,12 @@ void nc_style(enum nc_style s)
 		col = COLOR_BLUE;
 	else if(s & COL_BROWN)
 		col = COLOR_YELLOW;
-	else if(s & COL_RED)
-		col = COLOR_RED;
 
 	if(col != -1)
 		to_set |= COLOR_PAIR(1 + col);
+
+	if(s & COL_BG_RED)
+		to_set |= COLOR_PAIR(9 + COLOR_RED);
 
 	if(s & ATTR_BOLD)
 		to_set |= A_BOLD;

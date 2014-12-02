@@ -1,0 +1,17 @@
+:g/1/norm dj
+__IN__
+a1
+b
+c
+d1
+e
+f
+g
+h
+i
+__OUT__
+c
+f
+g
+h
+i

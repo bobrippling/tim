@@ -20,12 +20,15 @@ const motionkey_t motion_keys[] = {
 	{ "h",            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },
 	{ "l",            { m_move, { .pos = {  1,  0 } }, M_EXCLUSIVE } },
 
-	{ "{",            { m_para,     { -1 }, M_LINEWISE } },
-	{ "}",            { m_para,     { +1 }, M_LINEWISE } },
+	{ "{", { m_para, { .dir = -1 }, M_LINEWISE } },
+	{ "}", { m_para, { .dir = +1 }, M_LINEWISE } },
 	{ "%",            { m_paren,    { '%' }, M_NONE } },
 
-	{ "[[", { m_func, { -1 }, M_LINEWISE } },
-	{ "]]", { m_func, { +1 }, M_LINEWISE } },
+	{ "[[", { m_func, { .dir = -1, .scan_ch = '{' }, M_LINEWISE } },
+	{ "]]", { m_func, { .dir = +1, .scan_ch = '{' }, M_LINEWISE } },
+
+	{ "[#", { m_func, { .dir = -1, .scan_ch = '#' }, M_LINEWISE } },
+	{ "]#", { m_func, { .dir = +1, .scan_ch = '#' }, M_LINEWISE } },
 
 	{ "[{", { m_paren, { '{' }, M_LINEWISE } },
 	{ "[(", { m_paren, { '(' }, M_LINEWISE } },
@@ -41,9 +44,10 @@ const motionkey_t motion_keys[] = {
 
 	{ "0",            { m_goto, { .pos = { 0, -1 } }, M_EXCLUSIVE } },
 	{ "^",            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },
-	{ "$",            { m_eol,  MOTION_ARG_NONE,      M_NONE      } },
+	{ "$",            { m_eol,  { 0 }, M_NONE } },
+	{ "g_",           { m_eol,  { 1 }, M_NONE } },
 
-	{ "gg",           { m_sof,  MOTION_ARG_NONE, M_LINEWISE } }, // FIXME: goto
+	{ "gg",           { m_sof,  MOTION_ARG_NONE, M_LINEWISE } },
 	{ "G",            { m_eof,  MOTION_ARG_NONE, M_LINEWISE } },
 
 	{ "H",            { m_sos,  MOTION_ARG_NONE, M_LINEWISE } },
@@ -90,7 +94,7 @@ const nkey_t nkeys[] = {
 	{ "r",            k_replace,    { 0 },         UI_NORMAL | UI_VISUAL_ANY },
 	{ "R", /* TODO */ k_replace,    { 1 },         UI_NORMAL },
 
-	{ ":",            k_cmd,        KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
+	{ ":", k_prompt_cmd, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY }, /* k_set_mode instead? */
 
 	{ "!",            k_filter,     { .filter = { FILTER_CMD, NULL }}, UI_NORMAL | UI_VISUAL_ANY },
 	{ "g!",           k_filter,     { .filter.type = FILTER_SELF }, UI_NORMAL | UI_VISUAL_ANY },
@@ -131,6 +135,19 @@ const nkey_t nkeys[] = {
 	{ K_STR(CTRL_AND('e')), k_ins_colcopy, { +1 }, UI_INSERT_ANY },
 
 	{ "I", k_set_mode, { UI_INSERT_COL }, UI_VISUAL_COL },
+
+	{ K_STR(CTRL_AND('o')), k_normal1, KEY_ARG_NONE, UI_INSERT /* !INSERT_ANY */ },
+
+	{ "ZZ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZZ", NULL }, .fn = { .arg0 = "ZZ", .f_argv = c_x,                 } } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "ZQ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZQ", NULL }, .fn = { .arg0 = "ZQ", .f_argv = c_q, .inverse = true } } }, UI_NORMAL | UI_VISUAL_ANY },
+
+	{ K_STR(CTRL_AND('a')), k_inc_dec, { +1 }, UI_NORMAL },
+	{ K_STR(CTRL_AND('x')), k_inc_dec, { -1 }, UI_NORMAL },
+
+	{ "ga", k_showch, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY },
+
+	/* leaders: */
+	{ "\\x", k_docmd, { .cmd = { .argv = (const char *[]){ "r", "xselo", NULL }, .fn = { .f_arg1 = c_r, .single_arg = true, .inverse = true } } }, UI_NORMAL },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 
@@ -138,6 +155,8 @@ const keymap_t maps[] = {
 	{ IO_MAP, 'I', "^i" },
 	{ IO_MAP, 'a', "li" },
 	{ IO_MAP, 'A', "$li" }, /* remap not allowed, hence "$a" wouldn't work */
+
+	{ IO_MAP, '\r', "j^" },
 
 	{ IO_MAP, 'C', "c$" },
 	{ IO_MAP, 'D', "d$" },
@@ -156,9 +175,9 @@ const keymap_t maps[] = {
 	{ IO_MAPV, 's', "c" },
 
 	/* insert mode keys - ^U, ^K and ^W */
-	{ IO_MAPI, CTRL_AND('U'), (char[]){ K_ESC, 'l', 'd', '0', 'i', 0 } },
-	{ IO_MAPI, CTRL_AND('K'), (char[]){ K_ESC, 'l', 'd', '$', 'i', 0 } },
-	{ IO_MAPI, CTRL_AND('W'), (char[]){ K_ESC, 'l', 'd', 'b', 'i', 0 } },
+	{ IO_MAPI, CTRL_AND('U'), (char[]){ CTRL_AND('o'), 'd', '0', 0 } },
+	{ IO_MAPI, CTRL_AND('K'), (char[]){ CTRL_AND('o'), 'd', '$', 0 } },
+	{ IO_MAPI, CTRL_AND('W'), (char[]){ CTRL_AND('o'), 'd', 'b', 0 } },
 
 	{ IO_MAP, 'Y', "y$" },
 	{ IO_MAPV, 'Y', "y" },
@@ -166,23 +185,6 @@ const keymap_t maps[] = {
 	{ IO_MAPV, 'R', "c" },
 
 	{ 0 }
-};
-
-const cmd_t cmds[] = {
-	{ "q",   c_q     },
-	{ "cq",  c_cq    },
-	{ "w",   c_w     },
-	{ "e",   c_e     },
-
-	{ "x",   c_x     },
-	{ "wq",  c_x     },
-
-	{ "vs",  c_vs    },
-	{ "sp",  c_sp    },
-
-	{ "!",   c_run   },
-
-	{ NULL }
 };
 
 #endif

@@ -1,0 +1,17 @@
+:2,3m$:1m2:3m2
+:3m2 is a no-op
+:3m1:2m0
+__IN__
+abc
+def
+ghi
+klm
+
+eof
+__OUT__
+
+klm
+abc
+eof
+def
+ghi

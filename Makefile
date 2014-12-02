@@ -3,12 +3,17 @@ CFLAGS_WARN = -Wmissing-prototypes -Wno-unused-parameter -Wno-char-subscripts \
 
 CFLAGS_DEF = -D_XOPEN_SOURCE
 
-CFLAGS = -Wall -Wextra -pedantic -g -std=c11 -fms-extensions -fno-common \
+CFLAGS = -Wall -Wextra -g -std=c11 -fms-extensions -fno-common \
          ${CFLAGS_WARN} ${CFLAGS_DEF}
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o buffers.o motion.o external.o str.o prompt.o io.o \
-	yank.o pos.o region.o retain.o word.o ctags.o
+	yank.o pos.o region.o retain.o range.o parse_cmd.o word.o \
+	ctags.o
+
+.PHONY: deps clean check checkmem
+
+SRC = ${OBJ:.o=.c}
 
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
@@ -23,6 +28,10 @@ clean:
 	rm -f ${OBJ} tim
 
 deps:
-	cc -MM ${OBJ:.o=.c} > Makefile.dep
+	cc -MM ${SRC} > Makefile.dep
+
+tags:
+	ctags ${SRC}
 
 include Makefile.dep
+.PHONY: check checkmem clean deps tags

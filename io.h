@@ -15,10 +15,14 @@ enum io
 
 enum io bufmode_to_iomap(enum buf_mode);
 
-int io_getch(enum io, bool *wasraw);
-void io_ungetch(int);
-void io_ungetstrr(const char *s, size_t n);
+int io_getch(enum io, bool *wasraw, bool domaps)
+	__attribute__((nonnull));
+
 unsigned io_read_repeat(enum io);
+
+void io_ungetch(int ch, bool allow_map_on_out);
+
+size_t io_bufsz(void);
 
 #define K_ESC '\033'
 

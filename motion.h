@@ -38,6 +38,11 @@ union motion_arg
 	point_t pos;
 	enum case_tog case_type;
 	enum motion_wise *phow;
+	struct
+	{
+		signed char dir;
+		char scan_ch;
+	};
 };
 
 motion_func m_eof, m_eol, m_eos, m_goto, m_mos, m_move, m_sof, m_sol, m_sos;

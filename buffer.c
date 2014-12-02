@@ -17,8 +17,6 @@
 #include "str.h"
 #include "retain.h"
 
-#define TODO() fprintf(stderr, "TODO! %s\n", __func__)
-
 static
 int buffer_replace_file(buffer_t *b, FILE *f);
 
@@ -35,6 +33,8 @@ buffer_t *buffer_new()
 	b->head = list_new(NULL);
 	b->ui_pos = &b->ui_npos;
 	b->ui_mode = UI_NORMAL;
+	b->eol = true; /* default to nice eol */
+	b->ui_paren = (point_t){ -1, -1 };
 	return b;
 }
 
@@ -99,6 +99,7 @@ void buffer_new_fname(buffer_t **pb, const char *fname, int *err)
 got_err:
 		*err = 1;
 		b = buffer_new();
+		b->modified = true; /* editing a non-existant file, etc */
 		goto fin;
 	}
 
@@ -297,7 +298,7 @@ void buffer_indent2(
 		? list_seek(buf->head, buf->ui_pos->y, 0)
 		: NULL;
 
-	for(int y = region->begin.y; y < region->end.y; y++){
+	for(int y = region->begin.y; y <= region->end.y; y++){
 		int x = 0;
 
 		switch(region->type){
@@ -360,9 +361,11 @@ static int ctoggle(int c)
 	return islower(c) ? toupper(c) : tolower(c);
 }
 
-static void buffer_case_cb(char *s, void *ctx)
+static bool buffer_case_cb(char *s, list_t *l, int y, void *ctx)
 {
 	*s = (*(int (**)(int))ctx)(*s);
+
+	return true;
 }
 
 void buffer_caseregion(
@@ -379,7 +382,7 @@ void buffer_caseregion(
 	}
 	assert(f);
 
-	list_iter_region(buf->head, r, false, buffer_case_cb, &f);
+	list_iter_region(buf->head, r, 0, buffer_case_cb, &f);
 	buf->modified = true;
 }
 
@@ -421,9 +424,9 @@ void buffer_add_neighbour(buffer_t *to, enum buffer_neighbour loc, buffer_t *new
 	new->neighbours[rloc] = to;
 }
 
-list_t *buffer_current_line(const buffer_t *b)
+list_t *buffer_current_line(const buffer_t *b, bool create)
 {
-	return list_seek(b->head, b->ui_pos->y, 0);
+	return list_seek(b->head, b->ui_pos->y, create);
 }
 
 char *buffer_current_word(const buffer_t *b)
@@ -434,27 +437,6 @@ char *buffer_current_word(const buffer_t *b)
 unsigned buffer_nlines(const buffer_t *b)
 {
 	return list_count(b->head);
-}
-
-const char *buffer_shortfname(const char *s)
-{
-#define SHORT_LEN_HALF 14
-	static char buf[(SHORT_LEN_HALF + 2) * 2];
-	size_t l = strlen(s);
-
-	if(l > sizeof(buf)){
-		const char *fin = s + l - SHORT_LEN_HALF;
-
-		strncpy(buf, s, SHORT_LEN_HALF);
-		buf[SHORT_LEN_HALF] = 0;
-
-		snprintf(buf + SHORT_LEN_HALF - 1, sizeof(buf) - SHORT_LEN_HALF,
-				"...%s", fin);
-
-		return buf;
-	}
-
-	return s;
 }
 
 static char *buffer_find2(

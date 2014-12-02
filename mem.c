@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "mem.h"
 
@@ -36,22 +37,42 @@ char *ustrdup_len(const char *s, size_t len)
 	return r;
 }
 
-char *join(const char *sep, const char **vec, int n)
+char *join(const char *sep, char **vec, int n)
 {
 	const int len_sep = strlen(sep);
-	const char *sep_actual = "";
-	char *r = NULL, *p;
-	int i, len = 1;
+	int len = 1;
 
-	for(i = 0; i < n; i++)
+	for(int i = 0; i < n; i++)
 		len += len_sep + strlen(vec[i]);
 
-	p = r = umalloc(len);
+	char *p, *r = p = umalloc(len);
+	const char *sep_actual = "";
 
-	for(i = 0; i < n; i++){
+	for(int i = 0; i < n; i++){
 		p += sprintf(p, "%s%s", sep_actual, vec[i]);
 		sep_actual = sep;
 	}
 
 	return r;
+}
+
+char *ustrvprintf(const char *fmt, va_list l)
+{
+	char *buf = NULL;
+	int len = 8, ret;
+
+	do{
+		va_list lcp;
+
+		len *= 2;
+		buf = urealloc(buf, len);
+
+		va_copy(lcp, l);
+		ret = vsnprintf(buf, len, fmt, lcp);
+		va_end(lcp);
+
+	}while(ret >= len);
+
+	return buf;
+
 }

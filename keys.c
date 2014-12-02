@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <stddef.h> /* offsetof() */
-
 #include <ctype.h>
-#include <wordexp.h>
 #include <errno.h>
 
 #include "pos.h"
@@ -13,20 +10,23 @@
 #include "list.h"
 #include "buffer.h"
 #include "yank.h"
+#include "range.h"
 
+#include "io.h"
 #include "ui.h"
 #include "motion.h"
 #include "io.h"
 #include "word.h"
+#include "cmds.h"
 #include "keys.h"
 #include "ncurses.h"
 #include "mem.h"
-#include "cmds.h"
 #include "prompt.h"
 #include "map.h"
 #include "str.h"
 #include "external.h"
 #include "ctags.h"
+#include "parse_cmd.h"
 
 #include "buffers.h"
 
@@ -62,7 +62,12 @@ int keys_filter(
 	char *sofar = NULL;
 	size_t nsofar = 0;
 	for(;; ch_idx++){
-		int ch = io_getch(io_m, NULL);
+		bool raw;
+		int ch = io_getch(io_m, &raw, /*map:*/ch_idx == 0); /* dl shouldn't map l */
+		if(raw){
+			/* raw char, doesn't match any, get out */
+			memset(potential, 0, sizeof potential);
+		}
 
 		sofar = urealloc(sofar, ++nsofar);
 		sofar[nsofar-1] = ch;
@@ -96,9 +101,8 @@ int keys_filter(
 				break;
 			}
 			case 0:
-				/* this is currently fine
-				 * motions don't clash with other maps in config.h */
-				io_ungetstrr(sofar, nsofar);
+				for(size_t i = nsofar; i > 0; i--)
+					io_ungetch(sofar[i - 1], false);
 				goto out;
 		}
 	}
@@ -144,141 +148,56 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 	return motion_read(repeat, apply_maps);
 }
 
-static
-char *parse_arg(const char *arg)
+void k_prompt_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	/* TODO: ~ substitution */
-	wordexp_t wexp;
-	memset(&wexp, 0, sizeof wexp);
-
-	int r = wordexp(arg, &wexp, WRDE_NOCMD);
-
-	char *ret = r
-		? ustrdup(arg)
-		: join(" ", (const char **)wexp.we_wordv, wexp.we_wordc);
-
-	wordfree(&wexp);
-
-	return ret;
-}
-
-static
-void parse_cmd(char *cmd, int *pargc, char ***pargv, bool *force)
-{
-	int argc = *pargc;
-	char **argv = *pargv;
-	char *p;
-	bool had_punct;
-
-	/* special case */
-	if((had_punct = ispunct(cmd[0]))){
-		argv = urealloc(argv, (argc + 2) * sizeof *argv);
-
-		snprintf(
-				argv[argc++] = umalloc(2),
-				2, "%s", cmd);
-
-		cmd++;
-	}
-
-	for(p = strtok(cmd, " "); p; p = strtok(NULL, " ")){
-		argv = urealloc(argv, (argc + 2) * sizeof *argv);
-		argv[argc++] = parse_arg(p);
-	}
-	if(argv)
-		argv[argc] = NULL;
-
-	/* special case: check for '!' in the first cmd */
-	if(!had_punct && argc >= 1 && (p = strchr(argv[0], '!'))){
-		*force = true;
-		*p = '\0';
-		if(p[1]){
-			/* split, e.g. "w!hello" -> "w", "hello" */
-			argv = urealloc(argv, (++argc + 1) * sizeof *argv);
-			for(int i = argc - 1; i > 1; i--)
-				argv[i] = argv[i - 1];
-
-			argv[1] = ustrdup(p + 1);
-		}
-	}
-
-	*pargv = argv;
-	*pargc = argc;
-}
-
-static
-void filter_cmd(int *pargc, char ***pargv)
-{
-	/* check for '%' */
-	int argc = *pargc;
-	char **argv = *pargv;
-	int i;
-	const char *const fnam = buffer_fname(buffers_cur());
-
-
-	for(i = 0; i < argc; i++){
-		char *p;
-
-		for(p = argv[i]; *p; p++){
-			if(*p == '\\')
-				continue;
-
-			switch(*p){
-				/* TODO: '#' */
-				case '%':
-					if(fnam){
-						const int di = p - argv[i];
-						char *new;
-
-						*p = '\0';
-
-						new = join("", (const char *[]){
-								argv[i],
-								fnam,
-								p + 1 }, 3);
-
-						free(argv[i]);
-						argv[i] = new;
-						p = argv[i] + di;
-					}
-					break;
-			}
-		}
-	}
-}
-
-void k_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
-{
-	char *cmd = prompt(':');
+	char *const cmd = prompt(from_ch);
 
 	if(!cmd)
-		goto cancel;
+		goto cancel_cmd;
 
-	char **argv = NULL;
-	int argc = 0;
-	bool force = false;
-	parse_cmd(cmd, &argc, &argv, &force);
+	const cmd_t *cmd_f;
+	char **argv;
+	int argc;
+	bool force;
+	struct range rstore, *range = &rstore;
 
-	if(!argc)
-		goto cancel;
+	if(parse_ranged_cmd(
+			cmd,
+			&cmd_f,
+			&argv, &argc,
+			&force, &range))
+	{
+		cmd_dispatch(cmd_f, argc, argv, force, range);
+	}
+	else
+	{
+		ui_err("unknown command %s", cmd);
+	}
 
-	filter_cmd(&argc, &argv);
-
-	int i;
-	for(i = 0; cmds[i].cmd; i++)
-		if(!strcmp(cmds[i].cmd, argv[0])){
-			cmds[i].func(argc, argv, force);
-			break;
-		}
-
-	if(!cmds[i].cmd)
-		ui_err("unknown command %s", argv[0]);
-
-	for(i = 0; i < argc; i++)
-		free(argv[i]);
-	free(argv);
-cancel:
+	free_argv(argv, argc);
+cancel_cmd:
 	free(cmd);
+}
+
+void k_docmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
+{
+	const char **i;
+	char **argv;
+	size_t l;
+
+	for(l = 0, i = arg->cmd.argv; i && *i; i++, l++);
+
+	argv = umalloc((l + 1) * sizeof *argv);
+
+	for(l = 0, i = arg->cmd.argv; i && *i; i++, l++)
+		argv[l] = ustrdup(*i);
+
+	cmd_dispatch(&arg->cmd.fn, 1, argv, arg->cmd.force, /*range:*/NULL);
+
+	if(arg->cmd.argv[0])
+		for(l = 0; argv[l]; l++)
+			free(argv[l]);
+	free(argv);
 }
 
 void k_redraw(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -350,7 +269,9 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 	(void)a;
 
 	buf = buffers_cur();
-	dir = io_getch(IO_NOMAP, NULL);
+	bool raw;
+	dir = io_getch(IO_NOMAP, &raw, true);
+	(void)raw;
 
 	switch(dir){
 #define DIRECT(c, n) case c: buf = buf->neighbours[n]; break
@@ -380,10 +301,28 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 	(void)a;
 	ui_status("%s%s%s, x=%d y=%d eol=%c",
 			buf->fname ? "\"" : "",
-			buf->fname ? buffer_shortfname(buf->fname) : "<no name>",
+			buf->fname ? buf->fname : "<no name>",
 			buf->fname ? "\"" : "",
 			buf->ui_pos->x, buf->ui_pos->y,
 			"ny"[buf->eol]);
+}
+
+void k_showch(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+	list_t *l = buffer_current_line(buf, false);
+	if(l){
+		if((unsigned)buf->ui_pos->x < l->len_line){
+			const int ch = l->line[buf->ui_pos->x];
+
+			ui_status("<%s> %d Hex %x Octal %o",
+					ch ? (char[]){ ch, 0 } : "^@",
+					ch, ch, ch);
+			return;
+		}
+	}
+
+	ui_status("NUL");
 }
 
 void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -394,9 +333,10 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-static void replace_iter(char *ch, void *ctx)
+static bool replace_iter(char *ch, list_t *l, int y, void *ctx)
 {
 	*ch = *(int *)ctx;
+	return true;
 }
 
 void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -405,9 +345,10 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		// TODO: repeated
 	}else{
 		/* single char */
-		int ch = io_getch(IO_NOMAP, NULL);
+		bool raw;
+		int ch = io_getch(IO_NOMAP, &raw, true);
 
-		if(ch == K_ESC)
+		if(!raw && ch == K_ESC)
 			return;
 
 		repeat = DEFAULT_REPEAT(repeat);
@@ -435,12 +376,12 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		 */
 		const bool ins_nl = r.type == REGION_CHAR
 			&& r.begin.y == r.end.y
-			&& ch == '\r';
+			&& (!raw && ch == '\r');
 
 		if(ins_nl)
 			ch = '\n';
 
-		list_iter_region(buf->head, &r, /*evalnl:*/true, replace_iter, &ch);
+		list_iter_region(buf->head, &r, LIST_ITER_EVAL_NL, replace_iter, &ch);
 
 		if(ins_nl){
 			buf->ui_pos->x = 0;
@@ -489,10 +430,13 @@ static bool around_motion(
 
 	if(!m){
 		/* check for dd, etc */
-		int ch = io_getch(IO_NOMAP, NULL);
+		bool raw;
+		int ch = io_getch(IO_NOMAP, &raw, true);
+		(void)raw;
+
 		if(ch == from_ch){
 			/* dd - stay where we are, +the repeat */
-			m_doubletap.arg.pos.y = repeat - 1;
+			m_doubletap.arg.pos.y = DEFAULT_REPEAT(repeat) - 1;
 			repeat = 0;
 			m = &m_doubletap;
 		}else{
@@ -503,7 +447,14 @@ static bool around_motion(
 	}
 
 	if(m){
-		repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
+		if(!repeat && !repeat_motion){
+			/* leave repeat as zero
+			 * e.g. dG will not set any repeats, telling 'G' / m_eof
+			 * to go to the default, end of file.
+			 */
+		}else{
+			repeat = DEFAULT_REPEAT(repeat) * DEFAULT_REPEAT(repeat_motion);
+		}
 
 		buffer_t *b = buffers_cur();
 
@@ -711,8 +662,12 @@ void k_filter(const keyarg_u *a, unsigned repeat, const int from_ch)
 		.fn = filter,
 		.filter = &a->filter
 	};
+	region_t r;
 
-	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);
+	if(around_motion(repeat, from_ch, /*always_linewise:*/true, &around, &r)){
+		size_t n = r.end.y - r.begin.y;
+		ui_status("filtered %lu line%s", n, n == 1 ? "" : "s");
+	}
 }
 
 static void case_cb(
@@ -738,7 +693,7 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *const buf = buffers_cur();
 
-	list_t *line = buffer_current_line(buf);
+	list_t *line = buffer_current_line(buf, false);
 	if(!line)
 		return;
 	line = a->i > 0 ? line->next : line->prev;
@@ -853,9 +808,83 @@ void word_man(const char *word, bool flag)
 		}
 	}
 
-	char *cmd = join(" ", (const char *[]){ hex ? "git show" : "man", word }, 2);
+	char *cmd = join(" ",
+			(char *[]){ hex ? "git show" : "man", (char *)word },
+			2);
 
 	shellout(cmd);
 
 	free(cmd);
+}
+
+void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+
+	const enum buf_mode save = buf->ui_mode;
+	buf->ui_mode = UI_NORMAL;
+
+	ui_normal_1(&repeat, IO_MAPRAW | bufmode_to_iomap( buf->ui_mode));
+
+	buf->ui_mode = save;
+}
+
+void k_inc_dec(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *const buf = buffers_cur();
+	list_t *line = buffer_current_line(buf, false);
+
+	if(!line)
+		return;
+	if((unsigned)buf->ui_pos->x >= line->len_line)
+		return;
+
+	size_t pos = buf->ui_pos->x;
+	for(; pos < line->len_line; pos++)
+		if(isdigit(line->line[pos]) || line->line[pos] == '-')
+			break;
+	if(pos == line->len_line)
+		return;
+
+	char *end;
+	long long num = strtoll(&line->line[pos], &end, 0);
+	if(end == &line->line[pos])
+		return;
+
+	repeat = DEFAULT_REPEAT(repeat);
+
+	num += (signed)repeat * a->i;
+
+	char numbuf[64];
+	snprintf(numbuf, sizeof numbuf, "%lld", num);
+	const size_t numbuflen_new = strlen(numbuf);
+	const size_t numbuflen_old = end - &line->line[pos];
+
+	const long change = numbuflen_new - numbuflen_old;
+
+	if(change > 0){
+		if(line->len_line + change > line->len_malloc)
+			line->line = urealloc(line->line, line->len_malloc += change);
+
+		/* make way */
+		memmove(
+				&line->line[pos] + numbuflen_new,
+				&line->line[pos] + numbuflen_old,
+				line->len_line - pos - numbuflen_old);
+	}
+
+	memcpy(&line->line[pos], numbuf, numbuflen_new);
+
+	if(change < 0){
+		/* fill back */
+		memmove(
+				&line->line[pos] + numbuflen_new,
+				&line->line[pos] + numbuflen_old,
+				line->len_line - pos - numbuflen_old);
+	}
+
+	line->len_line += change;
+	buf->modified = true;
+
+	ui_redraw();
 }
