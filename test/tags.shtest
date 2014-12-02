@@ -1,0 +1,21 @@
+cat >$tmp <<!
+hello
+
+
+change_me
+!
+
+cat >tags <<!
+hello	$tmp	/^change_me$/
+!
+
+$tim $tmp <<!
+A CHANGED:wq
+!
+
+diff -u - $tmp <<!
+hello
+
+
+change_me CHANGED
+!

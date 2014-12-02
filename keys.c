@@ -16,12 +16,16 @@
 #include "ui.h"
 #include "motion.h"
 #include "io.h"
+#include "word.h"
 #include "cmds.h"
 #include "keys.h"
 #include "ncurses.h"
 #include "mem.h"
 #include "prompt.h"
 #include "map.h"
+#include "str.h"
+#include "external.h"
+#include "ctags.h"
 #include "parse_cmd.h"
 
 #include "buffers.h"
@@ -705,6 +709,118 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	ui_redraw();
 	ui_cur_changed();
+}
+
+void k_on_word(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	buffer_t *buf = buffers_cur();
+	char *word = buffer_current_word(buf);
+
+	if(!word){
+		ui_err("no word under cursor");
+		return;
+	}
+
+	a->word_action.fn(word, a->word_action.flag);
+
+	free(word);
+}
+
+void word_search(const char *word, bool flag)
+{
+	m_setlastsearch(ustrdup(word), /*forward:*/true);
+
+	motion m_search = {
+		.func = m_searchnext,
+		.arg = { flag ? -1 : +1 },
+		.how = M_EXCLUSIVE
+	};
+
+	buffer_t *buf = buffers_cur();
+	motion_apply_buf(&m_search, /*repeat:*/1, buf);
+}
+
+void word_list(const char *word, bool flag)
+{
+	buffer_t *b = buffers_cur();
+
+	int hit = 0, n = 0;
+	for(list_t *i = b->head; i; i = i->next, n++)
+		if(tim_strstr(i->line, i->len_line, word))
+			ui_printf("%d: %d %s", ++hit, n, i->line);
+
+	ui_want_return();
+}
+
+void word_tag(const char *word, bool flag)
+{
+	struct ctag_result tag;
+
+	if(buffers_cur()->modified){
+		ui_err("buffer modified");
+		return;
+	}
+
+	if(!ctag_search(word, &tag)){
+		ui_err("couldn't find tag \"%s\"", word);
+		return;
+	}
+
+	char *search = tag.line;
+
+	{
+		if(strncmp(search, "/^", 2))
+			goto out_badtag;
+		char *end = strchr(search, '\0');
+		if(end - search < 5)
+			goto out_badtag;
+		if(!strcmp(end - 2, "$/"))
+			end[-2] = '\0';
+		search += 2;
+	}
+
+	const char *current = buffer_fname(buffers_cur());
+	if(current && !strcmp(tag.fname, current)){
+		/* we're the same file, don't need to replace/do modification check */
+	}else if(!ui_replace_curbuf(tag.fname)){
+		goto out;
+	}
+
+	{
+		*buffers_cur()->ui_pos = (point_t){ 0 };
+		word_search(search, false);
+	}
+
+	ui_redraw();
+	ui_cur_changed();
+
+out:
+	ctag_free(&tag);
+	return;
+out_badtag:
+	ui_err("bad tag '%s'", tag.line);
+	goto out;
+}
+
+void word_man(const char *word, bool flag)
+{
+	/* if the word is all hexadecimal, try git show */
+	bool hex = true;
+
+	for(const char *p = word; *p; p++){
+		if(!isxdigit(*p)){
+			hex = false;
+			break;
+		}
+	}
+
+	char *cmd = join(" ",
+			(char *[]){ hex ? "git show" : "man", (char *)word },
+			2);
+
+	shellout(cmd);
+
+	free(cmd);
 }
 
 void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)

@@ -5,6 +5,8 @@ typedef union keyarg_u keyarg_u;
 
 typedef void key_func(const keyarg_u *, unsigned repeat, const int ch);
 
+typedef void word_func(const char *word, bool flag);
+
 union keyarg_u
 {
 	int i;
@@ -23,6 +25,11 @@ union keyarg_u
 		char *s;
 	} filter;
 	point_t pos;
+	struct
+	{
+		word_func *fn;
+		bool flag;
+	} word_action;
 	struct
 	{
 		cmd_t fn;
@@ -70,11 +77,17 @@ key_func k_put;
 key_func k_case;
 key_func k_filter;
 key_func k_ins_colcopy;
+key_func k_on_word;
 key_func k_normal1;
 key_func k_inc_dec;
 
 key_func k_vtoggle;
 key_func k_go_visual;
 key_func k_go_insert;
+
+word_func word_search;
+word_func word_list;
+word_func word_tag;
+word_func word_man;
 
 #endif

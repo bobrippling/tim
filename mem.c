@@ -46,11 +46,12 @@ char *join(const char *sep, char **vec, int n)
 		len += len_sep + strlen(vec[i]);
 
 	char *p, *r = p = umalloc(len);
+	const char *sep_actual = "";
 
-	for(int i = 0; i < n; i++)
-		p += sprintf(p, "%s%s", vec[i], sep);
-	if(n > 0)
-		p[-len_sep] = '\0';
+	for(int i = 0; i < n; i++){
+		p += sprintf(p, "%s%s", sep_actual, vec[i]);
+		sep_actual = sep;
+	}
 
 	return r;
 }

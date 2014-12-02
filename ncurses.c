@@ -175,6 +175,11 @@ void nc_addstr(char *s)
 	addstr(s);
 }
 
+void nc_vprintf(const char *fmt, va_list l)
+{
+	vwprintw(stdscr, fmt, l);
+}
+
 int nc_LINES(void)
 {
 	return LINES;

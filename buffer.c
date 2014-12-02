@@ -429,6 +429,11 @@ list_t *buffer_current_line(const buffer_t *b, bool create)
 	return list_seek(b->head, b->ui_pos->y, create);
 }
 
+char *buffer_current_word(const buffer_t *b)
+{
+	return list_word_at(b->head, b->ui_pos);
+}
+
 unsigned buffer_nlines(const buffer_t *b)
 {
 	return list_count(b->head);
