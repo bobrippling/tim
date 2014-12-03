@@ -299,10 +299,11 @@ void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	buffer_t *buf = buffers_cur();
 	(void)a;
-	ui_status("%s%s%s, x=%d y=%d eol=%c",
+	ui_status("%s%s%s, %sx=%d y=%d eol=%c",
 			buf->fname ? "\"" : "",
 			buf->fname ? buf->fname : "<no name>",
 			buf->fname ? "\"" : "",
+			buf->modified ? "[+] " : "",
 			buf->ui_pos->x, buf->ui_pos->y,
 			"ny"[buf->eol]);
 }
