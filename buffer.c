@@ -51,6 +51,28 @@ static int buffer_replace_file(buffer_t *b, FILE *f)
 	return 1;
 }
 
+void buffer_replace_fname(
+		buffer_t *const b, const char *fname,
+		const char **const err)
+{
+	*err = NULL;
+
+	FILE *f = fopen(fname, "r");
+	if(!f){
+err:
+		*err = strerror(errno);
+		return;
+	}
+
+	if(!buffer_replace_file(b, f)){
+		fclose(f);
+		goto err;
+	}
+	fclose(f);
+
+	buffer_set_fname(b, fname);
+}
+
 static
 buffer_t *buffer_new_file(FILE *f)
 {
@@ -61,8 +83,12 @@ buffer_t *buffer_new_file(FILE *f)
 	return b;
 }
 
-void buffer_new_fname(buffer_t **pb, const char *fname, int *err)
+void buffer_new_fname(
+		buffer_t **pb, const char *fname,
+		const char **const err)
 {
+	*err = NULL;
+
 	/* look for an existing buffer first */
 	buffer_t *b = buffers_find(fname);
 
@@ -74,7 +100,7 @@ void buffer_new_fname(buffer_t **pb, const char *fname, int *err)
 	FILE *f = fopen(fname, "r");
 	if(!f){
 got_err:
-		*err = 1;
+		*err = strerror(errno);
 		b = buffer_new();
 		b->modified = true; /* editing a non-existant file, etc */
 		goto fin;
@@ -85,8 +111,6 @@ got_err:
 
 	if(!b)
 		goto got_err;
-
-	*err = 0;
 
 fin:
 	buffer_set_fname(b, fname);

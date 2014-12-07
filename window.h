@@ -29,7 +29,11 @@ void window_add_neighbour(window *, bool splitright, window *);
 void window_evict(window *evictee);
 
 void window_replace_buffer(window *, buffer_t *);
-bool window_replace_fname(window *win, const char *fname);
+
+bool window_replace_fname(
+		window *win, const char *fname, const char **err);
+
+bool window_reload_buffer(window *win, const char **const err);
 
 void window_inschar(window *win, char ch);
 

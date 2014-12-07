@@ -126,27 +126,42 @@ bool c_cq(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
+/* if !fname, edit_common() reloads current file */
 static bool edit_common(const char *fname, bool const force)
 {
-	bool ret = false;
-
 	window *win = windows_cur();
-	if(!force && buffers_modified_single(win->buf)){
+
+	const bool reload = !fname;
+	if(reload)
+		fname = buffer_fname(win->buf);
+
+	if(!fname){ /* shouldn't be the case */
+		ui_err("no filename");
+		return false;
+	}
+
+	/* if it's a reload, we care about whether the buffer is modified, no matter
+	 * how many times it's open. otherwise we are loading another file, which is
+	 * fine as long as it's not the only instance of the modified-buffer
+	 */
+	if(!force && (reload ? win->buf->modified : buffers_modified_single(win->buf))){
 		ui_err("buffer modified");
 		return false;
 	}
 
-	if(!window_replace_fname(win, fname)){
-		buffer_t *buf = buffer_new();
+	bool ret = false;
 
-		window_replace_buffer(win, buf);
-		buffer_release(buf);
+	const char *err;
+	bool loaded = reload
+		? window_reload_buffer(win, &err)
+		: window_replace_fname(win, fname, &err);
 
-		ui_err("%s: %s", buffer_shortfname(fname), strerror(errno));
-	}else{
+	if(loaded){
 		ui_status("%s: loaded", buffer_shortfname(fname));
 		buffers_cur()->modified = false;
 		ret = true;
+	}else{
+		ui_err("%s: %s", buffer_shortfname(fname), err);
 	}
 
 	buffer_set_fname(buffers_cur(), fname);
@@ -313,8 +328,8 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 	const char *fname;
 
 	if(argc == 1){
-		fname = buffer_fname(buffers_cur());
-		if(!fname){
+		fname = NULL;
+		if(!buffer_fname(buffers_cur())){
 			ui_err("no filename");
 			return false;
 		}
@@ -422,11 +437,11 @@ bool c_split(
 	buffer_t *b;
 
 	if(argc > 1){
-		int err;
+		const char *err;
 		buffer_new_fname(&b, argv[1], &err);
 
 		if(err)
-			ui_err("%s: %s", buffer_shortfname(argv[1]), strerror(errno));
+			ui_err("%s: %s", buffer_shortfname(argv[1]), err);
 	}else if(withcurrent){
 		b = retain(buffers_cur());
 	}else{

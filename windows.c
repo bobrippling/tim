@@ -51,7 +51,7 @@ static void load_argv(
 
 	for(int i = 1; i < argc; i++){
 		buffer_t *buf;
-		int err;
+		const char *err;
 
 		buffer_new_fname(&buf, argv[i], &err);
 
@@ -70,13 +70,13 @@ void windows_init(
 		enum windows_init_args init_args, unsigned off)
 {
 	if(argc){
-		int err;
+		const char *err;
 		buffer_t *buf;
 
 		buffer_new_fname(&buf, argv[0], &err);
 
 		if(err)
-			ui_err("\"%s\": %s", buffer_shortfname(argv[0]), strerror(errno));
+			ui_err("\"%s\": %s", buffer_shortfname(argv[0]), err);
 
 		win_sel = window_new(buf);
 		buffer_release(buf);

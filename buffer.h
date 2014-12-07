@@ -43,7 +43,14 @@ struct buffer
 };
 
 buffer_t *buffer_new(void);
-void buffer_new_fname(buffer_t **, const char *, int *err);
+
+void buffer_new_fname(
+		buffer_t **, const char *fname,
+		const char **const err);
+
+void buffer_replace_fname(
+		buffer_t *, const char *fname,
+		const char **const err);
 
 int buffer_opencount(const buffer_t *);
 

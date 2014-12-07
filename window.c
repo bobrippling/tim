@@ -287,21 +287,31 @@ void window_replace_buffer(window *win, buffer_t *buf)
 {
 	buffer_release(win->buf);
 	win->buf = retain(buf);
+	win->ui_pos->y = MIN(win->ui_pos->y, list_count(buf->head));
 }
 
-bool window_replace_fname(window *win, const char *fname)
+bool window_replace_fname(window *win, const char *fname, const char **const err)
 {
 	buffer_t *buf = NULL;
-	int err = 0;
+	buffer_new_fname(&buf, fname, err);
 
-	buffer_new_fname(&buf, fname, &err);
-
-	if(!err){
+	if(!*err){
 		window_replace_buffer(win, buf);
 		buffer_release(buf);
-
-		win->ui_pos->y = MIN(win->ui_pos->y, list_count(buf->head));
 	}
 
-	return err ? false : true;
+	return !*err;
+}
+
+bool window_reload_buffer(window *win, const char **const err)
+{
+	const char *fname = buffer_fname(win->buf);
+	if(!fname)
+		return false;
+
+	/* need to update the buffer's list, not the window,
+	 * since there may be multiple windows with the old buffer */
+	buffer_replace_fname(win->buf, fname, err);
+
+	return !*err;
 }
