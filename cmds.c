@@ -328,6 +328,26 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 	return edit_common(fname, force);
 }
 
+bool c_ene(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_NO();
+	ARGV_NO();
+
+	if(!force && buffers_modified_single(buffers_cur())){
+		ui_err("buffer modified");
+		return false;
+	}
+
+	buffer_t *new = buffer_new();
+	window_replace_buffer(windows_cur(), new);
+	buffer_release(new);
+
+	ui_cur_changed();
+	ui_redraw();
+
+	return true;
+}
+
 bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 {
 	window *const win = windows_cur();

@@ -9,6 +9,7 @@ const cmd_t cmds[] = {
 	{ "wa",  .f_argv = c_wa  },
 	{ "e",   .f_argv = c_e   },
 	{ "r",   .f_arg1 = c_r, .single_arg = true },
+	{ "ene", .f_argv = c_ene },
 
 	{ "x",   .f_argv = c_x   },
 	{ "xa",  .f_argv = c_xa  },
