@@ -58,7 +58,7 @@ key_func k_prompt_cmd, k_docmd, k_set_mode;
 key_func k_escape;
 key_func k_redraw;
 key_func k_scroll;
-key_func k_winsel;
+key_func k_winsel, k_winmove;
 key_func k_show;
 key_func k_open;
 key_func k_del, k_change, k_yank;

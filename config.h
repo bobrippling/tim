@@ -121,6 +121,11 @@ const nkey_t nkeys[] = {
 	{ (char[]){ CTRL_AND('w'), 'j', 0 }, k_winsel, { .pos.y = +1 }, UI_NORMAL | UI_VISUAL_ANY },
 	{ (char[]){ CTRL_AND('w'), 'k', 0 }, k_winsel, { .pos.y = -1 }, UI_NORMAL | UI_VISUAL_ANY },
 
+	{ (char[]){ CTRL_AND('w'), 'H', 0 }, k_winmove, { .pos.x = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'L', 0 }, k_winmove, { .pos.x = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'J', 0 }, k_winmove, { .pos.y = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'K', 0 }, k_winmove, { .pos.y = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ K_STR(CTRL_AND('g')),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('y')), k_ins_colcopy, { -1 }, UI_INSERT_ANY },

@@ -259,32 +259,40 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
+enum dir
+{
+	dir_up, dir_down, dir_left, dir_right
+};
+
+static enum dir pos2dir(const point_t *pos)
+{
+	/**/ if(pos->x > 0) return dir_right;
+	else if(pos->x < 0) return dir_left;
+	else if(pos->y > 0) return dir_down;
+	else if(pos->y < 0) return dir_up;
+	else return 0;
+}
+
 void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	enum { up, down, left, right } dir;
-
-	/**/ if(a->pos.x > 0) dir = right;
-	else if(a->pos.x < 0) dir = left;
-	else if(a->pos.y > 0) dir = down;
-	else if(a->pos.y < 0) dir = up;
-	else return;
+	enum dir dir = pos2dir(&a->pos);
 
 	window *const curwin = windows_cur();
 	window *found = NULL;
 
 	switch(dir){
-		case up:
+		case dir_up:
 			found = curwin->neighbours.above;
 			break;
 
-		case down:
+		case dir_down:
 			found = curwin->neighbours.below;
 			break;
 
-		case left:
-		case right:
+		case dir_left:
+		case dir_right:
 			for(found = curwin; found->neighbours.above; found = found->neighbours.above);
-			found = (dir == left ? found->neighbours.left : found->neighbours.right);
+			found = (dir == dir_left ? found->neighbours.left : found->neighbours.right);
 			if(!found)
 				break;
 
@@ -308,6 +316,53 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 	}else{
 		ui_err("no buffers in that direction");
 	}
+}
+
+void k_winmove(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	enum dir dir = pos2dir(&a->pos);
+	int count = 0;
+
+	window *w;
+	ITER_WINDOWS(w){
+		count++;
+		if(count == 2){
+			/* now have >1 */
+			break;
+		}
+	}
+	if(count < 2)
+		return;
+
+	w = windows_cur();
+	window *target = window_next(w);
+
+	window_evict(w);
+
+	switch(dir){
+		case dir_down:
+			for(; target->neighbours.below;
+					target = target->neighbours.below);
+			break;
+
+		case dir_right:
+			for(; target->neighbours.above;
+					target = target->neighbours.above);
+			for(; target->neighbours.right;
+					target = target->neighbours.right);
+			break;
+
+		default:
+			ui_err("TODO");
+			return;
+	}
+
+	/* TODO: split left/down */
+	window_add_neighbour(target,
+			dir == dir_right || dir == dir_left, w);
+
+	ui_redraw();
+	ui_cur_changed();
 }
 
 void k_show(const keyarg_u *a, unsigned repeat, const int from_ch)
