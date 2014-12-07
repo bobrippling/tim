@@ -298,6 +298,7 @@ bool window_replace_fname(window *win, const char *fname)
 
 	if(!err){
 		window_replace_buffer(win, buf);
+		buffer_release(buf);
 
 		win->ui_pos->y = MIN(win->ui_pos->y, list_count(buf->head));
 	}
