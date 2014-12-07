@@ -422,7 +422,7 @@ usage:
 
 static
 bool c_split(
-		bool const splitright,
+		const enum neighbour dir,
 		bool const withcurrent,
 		int argc, char **argv,
 		bool force, struct range *range)
@@ -451,7 +451,7 @@ bool c_split(
 	window *w = window_new(b);
 	buffer_release(b);
 
-	window_add_neighbour(windows_cur(), splitright, w);
+	window_add_neighbour(windows_cur(), dir, w);
 	windows_set_cur(w);
 
 	ui_redraw();
@@ -462,22 +462,22 @@ bool c_split(
 
 bool c_vs(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(true, true, argc, argv, force, range);
+	return c_split(neighbour_left, true, argc, argv, force, range);
 }
 
 bool c_vnew(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(true, false, argc, argv, force, range);
+	return c_split(neighbour_left, false, argc, argv, force, range);
 }
 
 bool c_sp(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(false, true, argc, argv, force, range);
+	return c_split(neighbour_up, true, argc, argv, force, range);
 }
 
 bool c_new(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(false, false, argc, argv, force, range);
+	return c_split(neighbour_up, false, argc, argv, force, range);
 }
 
 bool c_run(char *cmd, char *rest, bool force, struct range *range)

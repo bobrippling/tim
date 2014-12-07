@@ -108,7 +108,6 @@ void window_evict(window *const evictee)
 	 * if we have a child below, it takes our place.
 	 */
 	window *const child = evictee->neighbours.below;
-	const bool hadleft = evictee->neighbours.left;
 
 	if(evictee->neighbours.left){
 		window *left = evictee->neighbours.left;
@@ -124,8 +123,6 @@ void window_evict(window *const evictee)
 	if(evictee->neighbours.right){
 		window *right = evictee->neighbours.right;
 
-		assert(right->neighbours.left == (hadleft ? evictee->neighbours.left : evictee));
-
 		window *target = child ? child : evictee->neighbours.left;
 		right->neighbours.left = target;
 		if(target)
@@ -140,45 +137,86 @@ void window_evict(window *const evictee)
 	}
 }
 
-void window_add_neighbour(window *to, bool const splitright, window *new)
+void window_add_neighbour(window *to, enum neighbour dir, window *new)
 {
 	window_evict(new);
 
-	if(splitright){
-		window *topmost;
-		for(topmost = to; topmost->neighbours.above; topmost = topmost->neighbours.above);
+	switch(dir){
+		case neighbour_left:
+		case neighbour_right:
+		{
+			window *topmost;
+			for(topmost = to; topmost->neighbours.above; topmost = topmost->neighbours.above);
 
-		window *right = topmost->neighbours.right;
+			window **pdest = (dir == neighbour_right
+					? &topmost->neighbours.right
+					: &topmost->neighbours.left);
 
-		if(!right){
-			topmost->neighbours.right = new;
-			new->neighbours.left = topmost;
-		}else{
-			/* walk down until we find an entry where we left */
-			while(right->neighbours.below
-			&& right->ui_start.y <= new->ui_start.y)
-			{
-				right = right->neighbours.below;
+			window *dest = *pdest;
+
+			if(!dest){
+				*pdest = new;
+				if(dir == neighbour_right)
+					new->neighbours.left = topmost;
+				else
+					new->neighbours.right = topmost;
+			}else{
+				/* walk down until we find an entry where we left */
+				while(dest->neighbours.below
+				&& dest->ui_start.y <= new->ui_start.y)
+				{
+					dest = dest->neighbours.below;
+				}
+
+				window *replace = dest->neighbours.below;
+				dest->neighbours.below = new;
+				if(replace)
+					replace->neighbours.above = new;
+
+				new->neighbours.above = dest;
+				new->neighbours.below = replace;
 			}
-
-			window *replace = right->neighbours.below;
-			right->neighbours.below = new;
-			if(replace)
-				replace->neighbours.above = new;
-
-			new->neighbours.above = right;
-			new->neighbours.below = replace;
+			break;
 		}
+		case neighbour_down:
+		{
+			window *evicted = to->neighbours.below;
 
-	}else{
-		window *evicted = to->neighbours.below;
+			to->neighbours.below = new;
+			new->neighbours.above = to;
 
-		to->neighbours.below = new;
-		new->neighbours.above = to;
+			new->neighbours.below = evicted;
+			if(evicted)
+				evicted->neighbours.above = new;
+			break;
+		}
+		case neighbour_up:
+		{
+			window *up = to->neighbours.above;
+			if(up){
+				/* insert in the chain */
+				new->neighbours.above = up;
+				up->neighbours.below = new;
 
-		new->neighbours.below = evicted;
-		if(evicted)
-			evicted->neighbours.above = new;
+				to->neighbours.above = new;
+				new->neighbours.below = to;
+			}else{
+				/* rewrite left and right pointers */
+				new->neighbours.left = to->neighbours.left;
+				to->neighbours.left = NULL;
+				new->neighbours.right = to->neighbours.right;
+				to->neighbours.right = NULL;
+
+				if(new->neighbours.right)
+					new->neighbours.right->neighbours.left = new;
+				if(new->neighbours.left)
+					new->neighbours.left->neighbours.right = new;
+
+				new->neighbours.below = to;
+				to->neighbours.above = new;
+			}
+			break;
+		}
 	}
 }
 

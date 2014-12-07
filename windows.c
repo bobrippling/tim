@@ -35,12 +35,12 @@ void windows_set_cur(window *new)
 
 static void win_add_splitright(window *cur, window *new)
 {
-	window_add_neighbour(cur, true, new);
+	window_add_neighbour(cur, neighbour_right, new);
 }
 
 static void win_add_splittop(window *cur, window *new)
 {
-	window_add_neighbour(cur, false, new);
+	window_add_neighbour(cur, neighbour_down, new);
 }
 
 static void load_argv(

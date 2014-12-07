@@ -259,40 +259,35 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-enum dir
+static enum neighbour pos2dir(const point_t *pos)
 {
-	dir_up, dir_down, dir_left, dir_right
-};
-
-static enum dir pos2dir(const point_t *pos)
-{
-	/**/ if(pos->x > 0) return dir_right;
-	else if(pos->x < 0) return dir_left;
-	else if(pos->y > 0) return dir_down;
-	else if(pos->y < 0) return dir_up;
+	/**/ if(pos->x > 0) return neighbour_right;
+	else if(pos->x < 0) return neighbour_left;
+	else if(pos->y > 0) return neighbour_down;
+	else if(pos->y < 0) return neighbour_up;
 	else return 0;
 }
 
 void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	enum dir dir = pos2dir(&a->pos);
+	enum neighbour dir = pos2dir(&a->pos);
 
 	window *const curwin = windows_cur();
 	window *found = NULL;
 
 	switch(dir){
-		case dir_up:
+		case neighbour_up:
 			found = curwin->neighbours.above;
 			break;
 
-		case dir_down:
+		case neighbour_down:
 			found = curwin->neighbours.below;
 			break;
 
-		case dir_left:
-		case dir_right:
+		case neighbour_left:
+		case neighbour_right:
 			for(found = curwin; found->neighbours.above; found = found->neighbours.above);
-			found = (dir == dir_left ? found->neighbours.left : found->neighbours.right);
+			found = (dir == neighbour_left ? found->neighbours.left : found->neighbours.right);
 			if(!found)
 				break;
 
@@ -320,7 +315,7 @@ void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_winmove(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	enum dir dir = pos2dir(&a->pos);
+	enum neighbour dir = pos2dir(&a->pos);
 	int count = 0;
 
 	window *w;
@@ -340,26 +335,32 @@ void k_winmove(const keyarg_u *a, unsigned repeat, const int from_ch)
 	window_evict(w);
 
 	switch(dir){
-		case dir_down:
+		case neighbour_up:
+			for(; target->neighbours.above;
+					target = target->neighbours.above);
+			break;
+
+		case neighbour_down:
 			for(; target->neighbours.below;
 					target = target->neighbours.below);
 			break;
 
-		case dir_right:
+		case neighbour_right:
 			for(; target->neighbours.above;
 					target = target->neighbours.above);
 			for(; target->neighbours.right;
 					target = target->neighbours.right);
 			break;
 
-		default:
-			ui_err("TODO");
-			return;
+		case neighbour_left:
+			for(; target->neighbours.above;
+					target = target->neighbours.above);
+			for(; target->neighbours.left;
+					target = target->neighbours.left);
+			break;
 	}
 
-	/* TODO: split left/down */
-	window_add_neighbour(target,
-			dir == dir_right || dir == dir_left, w);
+	window_add_neighbour(target, dir, w);
 
 	ui_redraw();
 	ui_cur_changed();

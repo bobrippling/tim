@@ -22,10 +22,15 @@ struct window
 	} neighbours;
 };
 
+enum neighbour
+{
+	neighbour_up, neighbour_down, neighbour_left, neighbour_right
+};
+
 window *window_topleftmost(window *b);
 window *window_next(window *);
 
-void window_add_neighbour(window *, bool splitright, window *);
+void window_add_neighbour(window *, enum neighbour dir, window *);
 void window_evict(window *evictee);
 
 void window_replace_buffer(window *, buffer_t *);
