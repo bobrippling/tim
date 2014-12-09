@@ -507,18 +507,20 @@ unsigned buffer_linewrap(
 	unsigned n_wrapped_lines = 0;
 	unsigned n_total_lines = 0;
 
-	for(; begin && begin != end; begin = list_seek(begin, 1, 0)){
-		int to_add = begin->len_line / cols;
+	for(; begin && begin != end; begin = list_seek(begin, 1, false)){
+		if(begin->len_line <= cols + 1){
+			/* less than, or end of line - not wrapped */
+			if(n_total_lines + 1 == line_limit)
+				break;
+			n_total_lines++;
+		}else{
+			int to_add = begin->len_line / cols;
+			/* to_add > 0 */
 
-		if(to_add > 0){
 			n_wrapped_lines += to_add; /* we're on this line, count it */
 			if(n_total_lines + 1 + to_add >= line_limit)
 				break;
 			n_total_lines += 1 + to_add;
-		}else{
-			if(n_total_lines + 1 == line_limit)
-				break;
-			n_total_lines++;
 		}
 	}
 
