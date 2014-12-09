@@ -265,7 +265,7 @@ void ui_draw_buf_1(buffer_t *buf, const rect_t *r)
 		unsigned nwrapped = 0;
 		for(; i < l->len_line; i++, x++){
 			if(buf->ui_mode & UI_VISUAL_ANY){
-				bool hl = region_contains(&hlregion, i, buf_y);
+				bool hl = region_contains(&hlregion, &(point_t){ i, buf_y });
 				nc_highlight(hl);
 			}
 

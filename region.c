@@ -3,7 +3,7 @@
 #include "pos.h"
 #include "region.h"
 
-bool region_contains(const region_t *re, int x, int y)
+bool region_contains(const region_t *re, point_t const *pt)
 {
 	region_t sorted = *re;
 	point_sort_full(&sorted.begin, &sorted.end);
@@ -12,8 +12,8 @@ bool region_contains(const region_t *re, int x, int y)
 	{
 		bool x, y;
 	} in = {
-		sorted.begin.x <= x && x <= sorted.end.x,
-		sorted.begin.y <= y && y <= sorted.end.y
+		sorted.begin.x <= pt->x && pt->x <= sorted.end.x,
+		sorted.begin.y <= pt->y && pt->y <= sorted.end.y
 	};
 
 	switch(re->type){
@@ -33,10 +33,10 @@ bool region_contains(const region_t *re, int x, int y)
 			sorted = *re;
 			point_sort_y(&sorted.begin, &sorted.end);
 
-			if(y == sorted.begin.y)
-				return x >= sorted.begin.x;
-			if(y == sorted.end.y)
-				return x <= sorted.end.x;
+			if(pt->y == sorted.begin.y)
+				return pt->x >= sorted.begin.x;
+			if(pt->y == sorted.end.y)
+				return pt->x <= sorted.end.x;
 
 			return true;
 	}

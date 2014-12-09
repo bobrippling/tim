@@ -15,6 +15,6 @@ typedef struct region
 } region_t;
 
 
-bool region_contains(const region_t *, int x, int y);
+bool region_contains(const region_t *, point_t const *);
 
 #endif
