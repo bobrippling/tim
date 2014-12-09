@@ -440,8 +440,13 @@ bool c_split(
 		const char *err;
 		buffer_new_fname(&b, argv[1], &err);
 
-		if(err)
+		if(err){
 			ui_err("%s: %s", buffer_shortfname(argv[1]), err);
+
+			/* edit new file */
+			b = buffer_new();
+			buffer_set_fname(b, argv[1]);
+		}
 	}else if(withcurrent){
 		b = retain(buffers_cur());
 	}else{
