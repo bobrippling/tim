@@ -570,7 +570,7 @@ point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 	 * we limit the cursor on-screen to the rightmost edge */
 	if(cursorl && (unsigned)pt->x >= cursorl->len_line){
 		int wrapped_y = naive_coord.y
-			+ cursorl->len_line / (buf->screen_coord.w + 1);
+			+ (cursorl->len_line - 1) / (buf->screen_coord.w + 1);
 
 		if(coord.y > wrapped_y){
 			point_t clamped = {
