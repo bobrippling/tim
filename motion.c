@@ -13,6 +13,7 @@
 #include "io.h"
 #include "str.h"
 #include "prompt.h"
+#include "macros.h"
 
 #define UI_TOP(buf) buf->ui_start.y
 
@@ -83,14 +84,15 @@ int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-int m_dispmove(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+static int m_dispmove_y(
+		const int move_y, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	const unsigned ncols = buf->screen_coord.w;
 
 	list_t *curline = buffer_current_line(buf);
 
-	const int direction = (m->pos.y > 0 ? 1 : -1);
-	int counter = abs(m->pos.y) * DEFAULT_REPEAT(repeat);
+	const int direction = (move_y > 0 ? 1 : -1);
+	int counter = abs(move_y) * DEFAULT_REPEAT(repeat);
 
 	*to = *buf->ui_pos;
 
@@ -124,6 +126,36 @@ int m_dispmove(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	}
 
 	return MOTION_SUCCESS;
+}
+
+static int m_dispmove_x(
+		const int move_x, unsigned repeat, buffer_t *buf, point_t *to)
+{
+	const unsigned ncols = buf->screen_coord.w;
+
+	*to = *buf->ui_pos;
+
+	/* g0 */
+	to->x = to->x - (to->x % (ncols + 1));
+
+	if(move_x > 0){
+		/* g$ */
+		list_t *curline = buffer_current_line(buf);
+
+		if(curline)
+			to->x += MIN(ncols, curline->len_line - 1 - to->x);
+		else
+			to->x += ncols;
+	}
+
+	return MOTION_SUCCESS;
+}
+
+int m_dispmove(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+{
+	if(m->pos.y)
+		return m_dispmove_y(m->pos.y, repeat, buf, to);
+	return m_dispmove_x(m->pos.x, repeat, buf, to);
 }
 
 int m_sof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)

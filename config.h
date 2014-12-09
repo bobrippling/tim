@@ -22,6 +22,8 @@ const motionkey_t motion_keys[] = {
 
 	{ "gj", { m_dispmove, { .pos.y =  1 }, M_LINEWISE } },
 	{ "gk", { m_dispmove, { .pos.y = -1 }, M_LINEWISE } },
+	{ "g0", { m_dispmove, { .pos.x = -1 }, M_LINEWISE } },
+	{ "g$", { m_dispmove, { .pos.x =  1 }, M_LINEWISE } },
 
 	{ "{", { m_para, { .dir = -1 }, M_LINEWISE } },
 	{ "}", { m_para, { .dir = +1 }, M_LINEWISE } },
