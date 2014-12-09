@@ -570,7 +570,7 @@ point_t buffer_toscreen(const buffer_t *buf, point_t const *pt)
 	/* if the cursor is past the end of the line, but there's no
 	 * physical line actually there (i.e. virtual edit space), then
 	 * we limit the cursor on-screen to the rightmost edge */
-	if(cursorl && (unsigned)pt->x >= cursorl->len_line){
+	if(cursorl && cursorl->len_line && (unsigned)pt->x >= cursorl->len_line){
 		int wrapped_y = naive_coord.y
 			+ (cursorl->len_line - 1) / (buf->screen_coord.w + 1);
 
