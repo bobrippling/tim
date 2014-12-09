@@ -51,6 +51,7 @@ motion_func m_word;
 motion_func m_para, m_paren, m_func;
 motion_func m_search, m_searchnext;
 motion_func m_visual;
+motion_func m_dispmove;
 
 typedef struct motion
 {

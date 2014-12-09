@@ -83,6 +83,49 @@ int m_move(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 	return MOTION_SUCCESS;
 }
 
+int m_dispmove(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
+{
+	const unsigned ncols = buf->screen_coord.w;
+
+	list_t *curline = buffer_current_line(buf);
+
+	const int direction = (m->pos.y > 0 ? 1 : -1);
+	int counter = abs(m->pos.y) * DEFAULT_REPEAT(repeat);
+
+	*to = *buf->ui_pos;
+
+	for(; curline && counter > 0; counter--){
+		const int line_folds = buffer_linewrap(buf, curline, NULL, 1);
+
+		if(line_folds > 0){
+			const int current_fold = to->x / ncols;
+
+			if(direction > 0 ? current_fold < line_folds : current_fold > 0){
+				/* wrapped line, increment keeps us inside */
+				to->x += direction * (ncols + 1);
+
+			}else{
+				/* end of wrapped line - overflow to next/prev logical line */
+				to->y += direction;
+				to->x %= (ncols + 1);
+			}
+		}else{
+			to->y += direction;
+			curline = list_advance_y(curline, direction, &(int){0}, NULL);
+
+			if(direction < 0){
+				const int new_folds = buffer_linewrap(buf, curline, NULL, 1);
+				if(new_folds){
+					/* going back into a folded line */
+					to->x += (ncols + 1) * new_folds;
+				}
+			}
+		}
+	}
+
+	return MOTION_SUCCESS;
+}
+
 int m_sof(motion_arg const *m, unsigned repeat, buffer_t *buf, point_t *to)
 {
 	return m_line_goto(&to->y, repeat, false, buf);

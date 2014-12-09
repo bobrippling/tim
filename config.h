@@ -20,6 +20,9 @@ const motionkey_t motion_keys[] = {
 	{ "h",            { m_move, { .pos = { -1,  0 } }, M_EXCLUSIVE } },
 	{ "l",            { m_move, { .pos = {  1,  0 } }, M_EXCLUSIVE } },
 
+	{ "gj", { m_dispmove, { .pos.y =  1 }, M_LINEWISE } },
+	{ "gk", { m_dispmove, { .pos.y = -1 }, M_LINEWISE } },
+
 	{ "{", { m_para, { .dir = -1 }, M_LINEWISE } },
 	{ "}", { m_para, { .dir = +1 }, M_LINEWISE } },
 	{ "%",            { m_paren,    { '%' }, M_NONE } },
