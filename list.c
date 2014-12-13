@@ -189,14 +189,13 @@ int list_write_file(list_t *l, int n, FILE *f, bool eol)
 
 void list_free(list_t *l)
 {
-	if(l){
+	while(l){
 		list_t *next = l->next;
 
 		free(l->line);
 		free(l);
 
-		/* tco */
-		list_free(next);
+		l = next;
 	}
 }
 
