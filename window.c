@@ -264,6 +264,11 @@ char *window_current_word(const window *w)
 	return list_word_at(w->buf->head, w->ui_pos);
 }
 
+char *window_current_fname(const window *w)
+{
+	return list_fname_at(w->buf->head, w->ui_pos);
+}
+
 point_t window_toscreen(const window *win, point_t const *pt)
 {
 	list_t *l = list_seek(win->buf->head, win->ui_pos->y, 0);

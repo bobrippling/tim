@@ -793,18 +793,28 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
-void k_on_word(const keyarg_u *a, unsigned repeat, const int from_ch)
+static void k_on_wordfile(const keyarg_u *a, char *fn(const window *), const char *desc)
 {
-	char *word = window_current_word(windows_cur());
+	char *word = fn(windows_cur());
 
 	if(!word){
-		ui_err("no word under cursor");
+		ui_err("no %s under cursor", desc);
 		return;
 	}
 
 	a->word_action.fn(word, a->word_action.flag);
 
 	free(word);
+}
+
+void k_on_word(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	k_on_wordfile(a, window_current_word, "word");
+}
+
+void k_on_fname(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	k_on_wordfile(a, window_current_fname, "filename");
 }
 
 void word_search(const char *word, bool flag)
@@ -901,6 +911,19 @@ void word_man(const char *word, bool flag)
 	shellout(cmd);
 
 	free(cmd);
+}
+
+void word_gofile(const char *fname, bool flag)
+{
+	if(buffers_cur()->modified){
+		ui_err("buffer modified");
+		return;
+	}
+
+	if(edit_common(fname, false)){
+		ui_redraw();
+		ui_cur_changed();
+	}
 }
 
 void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)

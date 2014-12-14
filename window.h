@@ -45,6 +45,8 @@ void window_inschar(window *win, char ch);
 
 list_t *window_current_line(const window *w, bool create);
 char *window_current_word(const window *);
+char *window_current_fname(const window *);
+
 point_t window_toscreen(const window *, point_t const *);
 
 void window_togglev(window *, bool corner_toggle);

@@ -77,7 +77,7 @@ key_func k_put;
 key_func k_case;
 key_func k_filter;
 key_func k_ins_colcopy;
-key_func k_on_word;
+key_func k_on_word, k_on_fname;
 key_func k_normal1;
 key_func k_inc_dec;
 
@@ -89,5 +89,6 @@ word_func word_search;
 word_func word_list;
 word_func word_tag;
 word_func word_man;
+word_func word_gofile;
 
 #endif
