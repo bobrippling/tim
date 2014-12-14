@@ -1,7 +1,7 @@
 CFLAGS_WARN = -Wmissing-prototypes -Wno-unused-parameter -Wno-char-subscripts \
               -Wno-missing-field-initializers -Wno-format-zero-length
 
-CFLAGS_DEF = -D_XOPEN_SOURCE
+CFLAGS_DEF = -D_XOPEN_SOURCE=700
 
 CFLAGS = -Wall -Wextra -g -std=c11 -fms-extensions -fno-common \
          ${CFLAGS_WARN} ${CFLAGS_DEF}

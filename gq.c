@@ -1,5 +1,7 @@
 /* wrap text to 80 columns
  *
+ * TODO:
+ *
  * also if text begins with a - and following lines don't,
  * indent like so:
  *
@@ -23,6 +25,21 @@
 
 static const char *argv0;
 
+enum
+{
+	WIDTH = 80
+};
+
+struct charbuf
+{
+	char *p;
+	size_t len;
+
+	char *anchor;
+	size_t alloc;
+};
+
+
 static noreturn void usage(void)
 {
 	fprintf(stderr, "Usage: %s\n  stdin -> stdout\n", argv0);
@@ -39,21 +56,27 @@ static noreturn void die(const char *emsg)
 	exit(1);
 }
 
-static void remove_nl(char buf[], size_t *n)
+static void charbuf_out_n(struct charbuf *cb, FILE *stream, size_t n)
 {
-	char *nl = buf;
-	size_t total = 0;
+	fwrite(cb->p, 1, n, stream);
+}
 
-	for(;;){
-		nl = memchr(nl, '\n', *n);
-		if(!nl)
-			break;
+static void charbuf_out(struct charbuf *cb, FILE *stream)
+{
+	charbuf_out_n(cb, stream, cb->len);
+}
 
-		memmove(nl, nl + 1, *n - (nl - buf));
-		total++;
+static void handle_line(struct charbuf *const in)
+{
+	while(in->len > WIDTH - 1){
+		charbuf_out_n(in, stdout, WIDTH - 1);
+		fputc('\n', stdout);
+		in->len -= WIDTH - 1;
+		in->p += WIDTH - 1;
+
 	}
 
-	*n -= total;
+	charbuf_out(in, stdout);
 }
 
 int main(int argc, const char *argv[])
@@ -63,25 +86,21 @@ int main(int argc, const char *argv[])
 	if(argc > 1)
 		usage();
 
-	char *accum = NULL, buf[256];
-	size_t nacc = 0;
+	struct charbuf buf = { 0 };
 
 	for(;;){
-		size_t n = fread(buf, 1, sizeof buf, stdin);
-		if(n == 0){
+		ssize_t n = getline(&buf.anchor, &buf.alloc, stdin);
+		if(n < 0){
 			if(ferror(stdin))
 				die("read():");
 			break;
 		}
 
-		remove_nl(buf, &n);
+		buf.p = buf.anchor;
+		buf.len = n;
 
-		char *tmp = realloc(accum, nacc += n);
-		if(!tmp)
-			die("malloc():");
-		accum = tmp;
-		memcpy(accum + nacc - n, buf, n);
+		handle_line(&buf);
 	}
 
-	fprintf(stderr, "acc = '%s'\n", accum);
+	return 0;
 }
