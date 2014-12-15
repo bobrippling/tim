@@ -23,7 +23,7 @@ char *prompt(char promp)
 
 	while(reading){
 		bool wasraw;
-		int ch = io_getch(IO_NOMAP | IO_MAPRAW, &wasraw);
+		int ch = io_getch(IO_NOMAP | IO_MAPRAW, &wasraw, true);
 
 		switch(ch){
 			case CTRL_AND('?'):

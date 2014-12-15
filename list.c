@@ -20,6 +20,7 @@
 #include "str.h"
 #include "mem.h"
 #include "macros.h"
+#include "word.h"
 
 list_t *list_new(list_t *prev)
 {
@@ -42,14 +43,21 @@ list_t *list_copy_deep(const list_t *const l, list_t *prev)
 
 static void mmap_new_line(list_t **pcur, char *p, char **panchor)
 {
-	char *data = umalloc(p - *panchor + 1);
+	const size_t nchars = p - *panchor;
+	char *data = umalloc(nchars + 1);
 
-	memcpy(data, *panchor, p - *panchor);
+	memcpy(data, *panchor, nchars);
+	data[nchars] = '\0';
 
 	list_t *cur = *pcur;
+	if(cur->line){
+		cur->next = list_new(cur);
+		cur = cur->next;
+	}
 	cur->line = data;
-	cur->next = list_new(cur);
-	*pcur = cur->next;
+	cur->len_malloc = nchars + 1;
+	cur->len_line = nchars;
+	*pcur = cur;
 
 	*panchor = p + 1;
 }
@@ -60,7 +68,7 @@ static list_t *mmap_to_lines(char *mem, size_t len, bool *eol)
 	char *const last = mem + len;
 
 	char *p, *begin;
-	for(p = begin = mem; p < last; p++)
+	for(p = begin = mem; p != last; p++)
 		if(*p == '\n')
 			mmap_new_line(&cur, p, &begin);
 
@@ -154,7 +162,7 @@ list_t *list_new_file(FILE *f, bool *eol)
 
 	return l;
 #else
-	return list_new_fd_read(fileno(f), eol);
+	return list_new_fd(fileno(f), eol);
 #endif
 }
 
@@ -322,22 +330,14 @@ list_t *list_dellines(list_t **pl, list_t *prev, unsigned n)
 		return NULL;
 	l->prev = NULL;
 
-	if(n == 1){
-		list_t *adv = l->next;
-		l->next = NULL;
+	list_t *end_m1 = list_seek(l, n - 1, false);
 
-		*pl = adv;
-
+	if(end_m1){
+		*pl = end_m1->next;
+		end_m1->next = NULL;
 	}else{
-		list_t *end_m1 = list_seek(l, n - 2, false);
-
-		if(end_m1){
-			*pl = end_m1->next;
-			end_m1->next = NULL;
-		}else{
-			/* delete everything */
-			*pl = NULL;
-		}
+		/* delete everything */
+		*pl = NULL;
 	}
 
 	if(*pl)
@@ -374,10 +374,15 @@ list_t *list_append(list_t *accum, list_t *at, list_t *new)
 
 list_t *list_delregion(list_t **pl, const region_t *region)
 {
-	if(!(region->begin.y <= region->end.y))
+	if(region->begin.y > region->end.y)
 		return NULL;
-	if(!(region->begin.y < region->end.y || region->begin.x < region->end.x))
+
+	if(region->type != REGION_LINE
+	&& region->begin.y == region->end.y
+	&& region->begin.x >= region->end.x)
+	{
 		return NULL;
+	}
 
 	list_t **seeked = list_seekp(pl, region->begin.y, false);
 
@@ -423,7 +428,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 						list_tail(deleted),
 						list_dellines(
 							&l->next, l->prev,
-							line_change));
+							line_change - 1));
 			}
 
 
@@ -550,7 +555,6 @@ void list_joinregion(list_t **pl, const region_t *region)
 	assert(region->begin.y < region->end.y);
 
 	list_t *l, *start = list_seek(*pl, region->begin.y, false);
-	int i;
 
 	if(!start)
 		return;
@@ -558,8 +562,10 @@ void list_joinregion(list_t **pl, const region_t *region)
 	if(start->line)
 		str_rtrim(start->line, &start->len_line);
 
+	size_t i;
+
 	for(l = start->next, i = region->begin.y + 1;
-			l && i < region->end.y;
+			l && i <= (unsigned)region->end.y;
 			l = l->next, i++)
 	{
 		if(!l->line)
@@ -586,8 +592,9 @@ void list_joinregion(list_t **pl, const region_t *region)
 		start->len_line += l->len_line;
 	}
 
-	if(i > region->begin.y)
-		list_dellines(&start->next, start, i - region->begin.y);
+	size_t ndelete = i - (region->begin.y + 1);
+	if(ndelete)
+		list_dellines(&start->next, start, ndelete);
 }
 
 void list_insline(list_t **pl, int *x, int *y, int dir)
@@ -608,7 +615,9 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	if(dir < 0)
 		--*y;
 
-	l = list_seek(*pl, *y, true);
+	/* list_seekp() to create if necessary,
+	 * and make that creation available in *pl */
+	l = *list_seekp(pl, *y, true);
 
 	save = l->next;
 	l->next = list_new(l);
@@ -670,9 +679,7 @@ int list_filter(
 	/* parent */
 	close(child_in[0]), close(child_out[1]);
 
-	unsigned region_height = region->end.y - region->begin.y;
-	if(region->type != REGION_LINE)
-		region_height++;
+	const unsigned region_height = region->end.y - region->begin.y + 1;
 
 	list_t **phead = pl;
 	list_t *tail = list_seek(*phead, region_height, false);
@@ -736,10 +743,7 @@ void list_iter_region(
 		list_iter_f fn, void *ctx)
 {
 	size_t i = 0;
-	size_t end = r->end.y - r->begin.y;
-
-	if(r->type != REGION_LINE)
-		end++;
+	size_t end = r->end.y - r->begin.y + 1;
 
 	for(l = list_seek(l, r->begin.y, false);
 			l && i < end; l = l->next, i++)
@@ -819,6 +823,30 @@ list_t *list_last(list_t *l, int *py)
 		return NULL;
 	for(; l->next; l = l->next, ++*py);
 	return l;
+}
+
+char *list_word_at(list_t *l, point_t const *pt)
+{
+	l = list_seek(l, pt->y, false);
+	if(!l)
+		return NULL;
+
+	const bool bigwords = false;
+
+	/* forwards until we hit a word */
+	point_t found = *pt;
+	l = word_seek(l, +1, &found, W_KEYWORD, bigwords);
+	if(!l || found.y != pt->y)
+		return NULL;
+
+	/* back until the start of the word */
+	word_seek_to_end(l, -1, &found, bigwords);
+
+	/* forwards until the end of the word */
+	point_t end = found;
+	word_seek_to_end(l, +1, &end, bigwords);
+
+	return ustrdup_len(l->line + found.x, end.x - found.x + 1);
 }
 
 void list_clear_flag(list_t *l)

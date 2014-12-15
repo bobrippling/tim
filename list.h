@@ -32,6 +32,8 @@ void list_delchar(list_t *, int *x, int *y);
 
 list_t *list_delregion(list_t **pl, const region_t *);
 
+char *list_word_at(list_t *l, point_t const *);
+
 /* *pl isn't changed - ABI compat with list_delregion */
 void list_joinregion(list_t **pl, const region_t *);
 

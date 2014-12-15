@@ -7,18 +7,18 @@ CFLAGS = -Wall -Wextra -g -std=c11 -fms-extensions -fno-common \
          ${CFLAGS_WARN} ${CFLAGS_DEF}
 
 OBJ_MOST = main.o ui.o mem.o keys.o cmds.o buffer.o \
-	list.o buffers.o motion.o external.o str.o prompt.o io.o \
-	yank.o pos.o region.o retain.o range.o parse_cmd.o ncurses_shared.o
+	list.o motion.o external.o str.o prompt.o io.o \
+	yank.o pos.o region.o retain.o range.o parse_cmd.o word.o \
+	ncurses_shared.o buffers.o window.o windows.o ctags.o
 
 OBJ = ${OBJ_MOST} ncurses.o
 OBJ_PLAIN = ${OBJ_MOST} ncurses_plain.o
 
-.PHONY: deps clean check checkmem
 .PHONY: deps clean all check checkmem
 
-all: tim gq
+all: tim gq plain
 
-all: tim plain
+SRC = ${OBJ:.o=.c}
 
 tim: ${OBJ}
 	cc -o $@ ${OBJ} -lncurses
@@ -36,7 +36,10 @@ clean:
 	rm -f ${OBJ} tim
 
 deps:
-	cc -MM ${OBJ:.o=.c} > Makefile.dep
+	cc -MM ${SRC} > Makefile.dep
+
+tags:
+	ctags ${SRC}
 
 include Makefile.dep
-.PHONY: check checkmem clean deps
+.PHONY: check checkmem clean deps tags

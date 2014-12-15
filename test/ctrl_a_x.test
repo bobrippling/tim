@@ -1,0 +1,13 @@
+jjjj
+__IN__
+123
+abc 99 xyz
+99 xyz
+xyz 99
+3
+__OUT__
+124
+abc 100 xyz
+100 xyz
+xyz 100
+-1

@@ -27,13 +27,16 @@ void nc_highlight(int on)
 	(void)on;
 }
 
-void nc_vstatus(const char *fmt, va_list l, int right)
+void nc_status(const char *fmt, int right)
 {
-	printf("status %s: ", right ? "right" : "left");
+	printf("status %s: %s\n", right ? "right" : "left", fmt);
+}
 
+void nc_vprintf(const char *fmt, va_list l)
+{
+	printf("nc_vprintf: ");
 	vprintf(fmt, l);
-
-	putchar('\n');
+	printf("\n");
 }
 
 void nc_get_yx(int *y, int *x)

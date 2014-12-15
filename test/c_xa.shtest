@@ -1,0 +1,6 @@
+$tim $tmp <<!
+ihello:sp $tmp.2iyo:xa
+!
+
+grep '^hello$' $tmp
+grep '^yo$' $tmp.2

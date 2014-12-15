@@ -49,7 +49,8 @@ const motionkey_t motion_keys[] = {
 
 	{ "0",            { m_goto, { .pos = { 0, -1 } }, M_EXCLUSIVE } },
 	{ "^",            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },
-	{ "$",            { m_eol,  MOTION_ARG_NONE,      M_NONE      } },
+	{ "$",            { m_eol,  { 0 }, M_NONE } },
+	{ "g_",           { m_eol,  { 1 }, M_NONE } },
 
 	{ "gg",           { m_sof,  MOTION_ARG_NONE, M_LINEWISE } },
 	{ "G",            { m_eof,  MOTION_ARG_NONE, M_LINEWISE } },
@@ -112,6 +113,16 @@ const nkey_t nkeys[] = {
 
 	{ "gv", k_go_visual, KEY_ARG_NONE, UI_NORMAL },
 
+	{ "*", k_on_word, { .word_action = { word_search, false } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "#", k_on_word, { .word_action = { word_search, true  } }, UI_NORMAL | UI_VISUAL_ANY },
+
+	{ "[i", k_on_word, { .word_action = { word_list, false } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "[I", k_on_word, { .word_action = { word_list, true  } }, UI_NORMAL | UI_VISUAL_ANY },
+
+	{ K_STR(CTRL_AND(']')), k_on_word, { .word_action = { word_tag } }, UI_NORMAL },
+
+	{ "K", k_on_word, { .word_action = { word_man } }, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ K_STR(CTRL_AND('l')),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('e')),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL | UI_VISUAL_ANY },
@@ -121,7 +132,15 @@ const nkey_t nkeys[] = {
 	{ "zt",  k_scroll,     { .pos = { 1, -1 } },     UI_NORMAL | UI_VISUAL_ANY },
 	{ "zb",  k_scroll,     { .pos = { 1, +1 } },     UI_NORMAL | UI_VISUAL_ANY },
 
-	{ K_STR(CTRL_AND('w')),  k_winsel,     KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'h', 0 }, k_winsel, { .pos.x = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'l', 0 }, k_winsel, { .pos.x = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'j', 0 }, k_winsel, { .pos.y = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'k', 0 }, k_winsel, { .pos.y = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+
+	{ (char[]){ CTRL_AND('w'), 'H', 0 }, k_winmove, { .pos.x = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'L', 0 }, k_winmove, { .pos.x = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'J', 0 }, k_winmove, { .pos.y = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'K', 0 }, k_winmove, { .pos.y = -1 }, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('g')),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
@@ -132,8 +151,16 @@ const nkey_t nkeys[] = {
 
 	{ K_STR(CTRL_AND('o')), k_normal1, KEY_ARG_NONE, UI_INSERT /* !INSERT_ANY */ },
 
-	{ "ZZ", k_docmd, { .cmd = { c_x, .arg = "ZZ" } }, UI_NORMAL | UI_VISUAL_ANY },
-	{ "ZQ", k_docmd, { .cmd = { c_q, .arg = "ZQ", .force = true } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "ZZ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZZ", NULL }, .fn = { .arg0 = "ZZ", .f_argv = c_x,                 } } }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "ZQ", k_docmd, { .cmd = { .argv = (const char *[]){ "ZQ", NULL }, .fn = { .arg0 = "ZQ", .f_argv = c_q, .inverse = true } } }, UI_NORMAL | UI_VISUAL_ANY },
+
+	{ K_STR(CTRL_AND('a')), k_inc_dec, { +1 }, UI_NORMAL },
+	{ K_STR(CTRL_AND('x')), k_inc_dec, { -1 }, UI_NORMAL },
+
+	{ "ga", k_showch, KEY_ARG_NONE, UI_NORMAL | UI_VISUAL_ANY },
+
+	/* leaders: */
+	{ "\\x", k_docmd, { .cmd = { .argv = (const char *[]){ "r", "xselo", NULL }, .fn = { .f_arg1 = c_r, .single_arg = true, .inverse = true } } }, UI_NORMAL },
 };
 const size_t nkeys_cnt = sizeof nkeys / sizeof *nkeys;
 

@@ -6,7 +6,7 @@ typedef union motion_arg motion_arg;
 typedef int motion_func(
 		motion_arg const *,
 		unsigned repeat,
-		buffer_t *,
+		window *,
 		/*point_t *current, * both changeable */
 		point_t *to);
 
@@ -53,6 +53,8 @@ motion_func m_search, m_searchnext;
 motion_func m_visual;
 motion_func m_dispmove;
 
+void m_setlastsearch(char *, bool forward);
+
 typedef struct motion
 {
 	motion_func *func;
@@ -63,16 +65,16 @@ typedef struct motion
 #define MOTION_REPEAT() { NULL, 0U }
 #define DEFAULT_REPEAT(r) (r ? r : 1)
 
-int motion_apply_buf(
+int motion_apply_win(
 		const motion *, unsigned rep,
-		buffer_t *);
+		window *);
 
-int motion_apply_buf_dry(
+int motion_apply_win_dry(
 		const motion *, unsigned rep,
-		buffer_t *, point_t *to);
+		window *, point_t *to);
 
 bool motion_to_region(
 		const motion *m, unsigned repeat, bool always_linewise,
-		buffer_t *buf, region_t *out);
+		window *, region_t *out);
 
 #endif

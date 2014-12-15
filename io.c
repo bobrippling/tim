@@ -82,7 +82,7 @@ enum io bufmode_to_iomap(enum buf_mode bufmode)
 	return IO_MAP;
 }
 
-int io_getch(enum io ty, bool *wasraw)
+int io_getch(enum io ty, bool *wasraw, bool domaps)
 {
 	if(wasraw)
 		*wasraw = false;
@@ -95,7 +95,7 @@ int io_getch(enum io ty, bool *wasraw)
 		ch = nc_getch(ty & IO_MAPRAW, wasraw);
 
 	/* don't run maps for raw keys */
-	if(!wasraw || !*wasraw || need_map){
+	if(domaps && (!wasraw || !*wasraw || need_map)){
 		const keymap_t *map = io_findmap(ch, ty & ~IO_MAPRAW);
 
 		if(map){
@@ -121,14 +121,14 @@ unsigned io_read_repeat(enum io io_mode)
 	unsigned repeat = 0;
 
 	bool raw;
-	int ch = io_getch(io_mode, &raw);
+	int ch = io_getch(io_mode, &raw, true);
 	(void)raw;
 
 	if(isdigit(ch) && ch != '0'){
 		repeat = ch - '0';
 		/* more repeats */
 		for(;;){
-			ch = io_getch(io_mode, &raw);
+			ch = io_getch(io_mode, &raw, true);
 			if('0' <= ch && ch <= '9')
 				repeat = repeat * 10 + ch - '0';
 			else
