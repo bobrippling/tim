@@ -409,8 +409,8 @@ unsigned window_linewrap(
 	unsigned n_total_lines = 0;
 
 	for(; begin && begin != end; begin = list_seek(begin, 1, false)){
-		if(begin->len_line <= cols + 1){
-			/* less than, or end of line - not wrapped */
+		if(begin->len_line <= cols){
+			/* not wrapped */
 			if(n_total_lines + 1 == line_limit)
 				break;
 			n_total_lines++;
