@@ -299,6 +299,8 @@ point_t window_toscreen(const window *win, point_t const *pt)
 		 * to make room for the '\' */
 		screen_w--;
 	}
+	if(screen_w <= 0)
+		screen_w = 1;
 
 	const point_t coord = {
 		naive_coord.x % screen_w,
