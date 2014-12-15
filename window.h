@@ -61,10 +61,10 @@ void window_calc_rects(
 window *window_new(buffer_t *);
 void window_free(window *);
 
-unsigned window_linewrap(
-		const window *win,
-		list_t *begin, list_t *end,
-		unsigned line_limit);
+unsigned window_line_wraps(const window *, list_t *line);
+
+unsigned window_linewrap_between(
+		const window *win, list_t *begin, list_t *end);
 
 unsigned window_visible_linewrap(const window *win);
 unsigned window_nscreenlines(const window *win);

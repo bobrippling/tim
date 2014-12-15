@@ -270,13 +270,12 @@ point_t window_toscreen(const window *win, point_t const *pt)
 	list_t *visible = list_seek(buf->head, win->ui_start.y, false);
 	list_t *cursorl = list_seek(buf->head, pt->y, false);
 
-	const unsigned n_wrapped_lines_this
-		= window_linewrap(win, cursorl, NULL, 1);
+	const unsigned n_wrapped_lines_this = window_line_wraps(win, cursorl);
 
 	const unsigned n_wrapped_lines_before
 		= visible == cursorl
 		? 0
-		: window_linewrap(win, visible, cursorl, -1);
+		: window_linewrap_between(win, visible, cursorl);
 
 	int xoff = 0;
 
@@ -411,10 +410,10 @@ bool window_reload_buffer(window *win, const char **const err)
 	return !*err;
 }
 
-unsigned window_linewrap(
+static unsigned window_linewrap(
 		const window *win,
 		list_t *begin, list_t *end,
-		unsigned line_limit)
+		unsigned wrapped_line_limit)
 {
 	/* count the number of lines between ui_start and pt */
 	const unsigned cols = win->screen_coord.w;
@@ -424,7 +423,7 @@ unsigned window_linewrap(
 	for(; begin && begin != end; begin = list_seek(begin, 1, false)){
 		if(begin->len_line <= cols){
 			/* not wrapped */
-			if(n_total_lines + 1 == line_limit)
+			if(n_total_lines + 1 == wrapped_line_limit)
 				break;
 			n_total_lines++;
 		}else{
@@ -432,7 +431,7 @@ unsigned window_linewrap(
 			/* to_add > 0 */
 
 			n_wrapped_lines += to_add; /* we're on this line, count it */
-			if(n_total_lines + 1 + to_add >= line_limit)
+			if(n_total_lines + 1 + to_add >= wrapped_line_limit)
 				break;
 			n_total_lines += 1 + to_add;
 		}
@@ -447,6 +446,17 @@ unsigned window_visible_linewrap(const window *win)
 	list_t *begin = list_seek(buf->head, win->ui_start.y, false);
 
 	return window_linewrap(win, begin, NULL, win->screen_coord.h);
+}
+
+unsigned window_linewrap_between(
+		const window *win, list_t *begin, list_t *end)
+{
+	return window_linewrap(win, begin, end, -1u);
+}
+
+unsigned window_line_wraps(const window *win, list_t *line)
+{
+	return window_linewrap_between(win, line, list_seek(line, 1, false));
 }
 
 unsigned window_nscreenlines(const window *win)

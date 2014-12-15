@@ -105,7 +105,7 @@ static int m_dispmove_y(
 	*to = *win->ui_pos;
 
 	for(; curline && counter > 0; counter--){
-		const int line_folds = window_linewrap(win, curline, NULL, 1);
+		const int line_folds = window_line_wraps(win, curline);
 
 		if(line_folds > 0){
 			const int current_fold = to->x / ncols;
@@ -124,7 +124,7 @@ static int m_dispmove_y(
 			curline = list_advance_y(curline, direction, &(int){0}, NULL);
 
 			if(direction < 0){
-				const int new_folds = window_linewrap(win, curline, NULL, 1);
+				const int new_folds = window_line_wraps(win, curline);
 				if(new_folds){
 					/* going back into a folded line */
 					to->x += (ncols + 1) * new_folds;
