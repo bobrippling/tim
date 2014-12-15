@@ -270,8 +270,13 @@ point_t window_toscreen(const window *win, point_t const *pt)
 	list_t *visible = list_seek(buf->head, win->ui_start.y, false);
 	list_t *cursorl = list_seek(buf->head, pt->y, false);
 
-	const unsigned n_wrapped_lines
-		= window_linewrap(win, visible, cursorl, -1u);
+	const unsigned n_wrapped_lines_this
+		= window_linewrap(win, cursorl, NULL, 1);
+
+	const unsigned n_wrapped_lines_before
+		= visible == cursorl
+		? 0
+		: window_linewrap(win, visible, NULL, pt->y - win->ui_start.y);
 
 	int xoff = 0;
 
@@ -285,12 +290,19 @@ point_t window_toscreen(const window *win, point_t const *pt)
 
 	const point_t naive_coord = {
 		pt->x - win->ui_start.x + xoff,
-		pt->y - win->ui_start.y + n_wrapped_lines
+		pt->y - win->ui_start.y + n_wrapped_lines_before
 	};
 
+	unsigned screen_w = win->screen_coord.w;
+	if(n_wrapped_lines_this){
+		/* we're on a line wrap, subtract one from the screen width,
+		 * to make room for the '\' */
+		screen_w--;
+	}
+
 	const point_t coord = {
-		naive_coord.x % (win->screen_coord.w),
-		naive_coord.y + naive_coord.x / (win->screen_coord.w),
+		naive_coord.x % screen_w,
+		naive_coord.y + naive_coord.x / screen_w,
 	};
 
 	point_t ret = coord;
@@ -299,14 +311,13 @@ point_t window_toscreen(const window *win, point_t const *pt)
 	 * physical line actually there (i.e. virtual edit space), then
 	 * we limit the cursor on-screen to the rightmost edge */
 	if(cursorl && cursorl->len_line && (unsigned)pt->x >= cursorl->len_line){
-		int wrapped_y = naive_coord.y
-			+ (cursorl->len_line - 1) / (win->screen_coord.w + 1);
+		int wrapped_y = naive_coord.y + (cursorl->len_line - 1) / screen_w;
 
 		if(coord.y > wrapped_y){
 			point_t clamped = {
 				/* add one to x - this puts it in the '\\' zone, making it more
 				 * obvious that it's not actually on the screen */
-				.x = win->screen_coord.w + 1,
+				.x = screen_w,
 				.y = wrapped_y,
 			};
 
