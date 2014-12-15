@@ -420,6 +420,27 @@ void ui_print(const char *s, size_t n)
 	nc_addch('\n');
 }
 
+void ui_update_pending(void)
+{
+	size_t len = io_pending(NULL, 0);
+
+	char *buf = umalloc(len + 1);
+	io_pending(buf, len);
+	buf[len] = '\0';
+
+	point_t save;
+	nc_get_yx(&save.y, &save.x);
+	{
+		nc_set_yx(nc_LINES() - 1, 0);
+		nc_addstr(buf);
+		nc_clrtoeol();
+	}
+	nc_set_yx(save.y, save.x);
+
+	free(buf);
+	nc_init(); /* refresh */
+}
+
 static bool want_return;
 
 void ui_want_return(void)

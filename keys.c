@@ -111,6 +111,7 @@ int keys_filter(
 
 out:
 	free(sofar);
+	ui_update_pending();
 	return ret;
 }
 
@@ -120,6 +121,8 @@ const motion *motion_read(unsigned *repeat, bool apply_maps)
 		apply_maps ? bufmode_to_iomap(windows_cur()->ui_mode) : IO_NOMAP;
 
 	*repeat = io_read_repeat(io_m);
+
+	ui_update_pending();
 
 	int i = keys_filter(
 			io_m,

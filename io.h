@@ -24,6 +24,8 @@ void io_ungetch(int ch, bool allow_map_on_out);
 
 size_t io_bufsz(void);
 
+size_t io_pending(char buf[], size_t len);
+
 #define K_ESC '\033'
 
 #endif

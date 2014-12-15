@@ -25,6 +25,15 @@ static struct fifo_ent
 
 static size_t io_fifoused, io_fifosz;
 
+size_t io_pending(char buf[], size_t len)
+{
+	if(buf)
+		for(size_t i = 0; i < len; i++)
+			buf[i] = io_fifo[i].ch;
+
+	return io_fifoused;
+}
+
 static void io_fifo_realloc(size_t len)
 {
 	if(io_fifoused + len > io_fifosz){

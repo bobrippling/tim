@@ -29,6 +29,8 @@ void ui_print(const char *, size_t);
 void ui_want_return(void);
 void ui_wait_return(void);
 
+void ui_update_pending(void);
+
 #ifdef BUFFER_H
 void ui_set_bufmode(enum buf_mode m);
 #endif
