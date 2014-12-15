@@ -330,6 +330,16 @@ void ui_draw_win_1(window *win)
 		unsigned x = 0, i = 0;
 		unsigned nwrapped = 0;
 		for(; i < l->len_line; i++, x++){
+			if(x == (unsigned)win->screen_coord.w - 1 && i + 1 < l->len_line){
+				nc_addch('\\');
+				x = -1; /* ready for ++ */
+				y++;
+				nwrapped++;
+				if(y == win->screen_coord.h)
+					break;
+				nc_set_yx(win->screen_coord.y + y, win->screen_coord.x);
+			}
+
 			if(win->ui_mode & UI_VISUAL_ANY){
 				bool hl = region_contains(&hlregion, &(point_t){ i, buf_y });
 				nc_highlight(hl);
@@ -346,16 +356,6 @@ void ui_draw_win_1(window *win)
 
 			if(offhl)
 				nc_highlight(0);
-
-			if(x == (unsigned)win->screen_coord.w - 1 && i + 1 < l->len_line){
-				nc_addch('\\');
-				x = -1; /* ready for ++ */
-				y++;
-				nwrapped++;
-				if(y == win->screen_coord.h)
-					break;
-				nc_set_yx(win->screen_coord.y + y, win->screen_coord.x);
-			}
 		}
 		if(nwrapped)
 			nc_clrtoeol();
