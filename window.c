@@ -276,7 +276,7 @@ point_t window_toscreen(const window *win, point_t const *pt)
 	const unsigned n_wrapped_lines_before
 		= visible == cursorl
 		? 0
-		: window_linewrap(win, visible, NULL, pt->y - win->ui_start.y);
+		: window_linewrap(win, visible, cursorl, -1);
 
 	int xoff = 0;
 
