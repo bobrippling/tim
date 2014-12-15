@@ -23,7 +23,7 @@ void window_calc_rects(
 	window *win_h;
 	for(win_h = topleft; win_h; win_h = win_h->neighbours.right, nwins_h++);
 
-	const unsigned nvlines = nwins_h + 1;
+	const unsigned nvlines = nwins_h - 1;
 	const unsigned winspace_v = screenwidth - nvlines;
 	unsigned winwidth = winspace_v / nwins_h;
 
