@@ -21,6 +21,8 @@ void nc_init()
 		nonl();
 		intrflush(stdscr, 0);
 
+		set_escdelay(0);
+
 		if(has_colors()){
 			start_color();
 			use_default_colors();
