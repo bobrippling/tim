@@ -152,7 +152,7 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 
 void k_prompt_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	char *const cmd = prompt(from_ch);
+	char *const cmd = prompt(from_ch, PROMPT_FILENAME);
 
 	if(!cmd)
 		goto cancel_cmd;
@@ -723,7 +723,7 @@ static void filter(
 		case FILTER_CMD:
 			cmd = pf->s;
 			if(!cmd){
-				cmd = prompt('!');
+				cmd = prompt('!', PROMPT_EXEC);
 				if(!cmd)
 					return;
 				free_cmd = true;

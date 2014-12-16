@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "prompt.h"
 
@@ -7,7 +9,77 @@
 #include "io.h"
 #include "mem.h"
 
-char *prompt(char promp)
+#include "parse_cmd.h"
+
+static void expand_filename(
+		int *const pi,
+		char **const pbuf,
+		int *const plen,
+		enum prompt_expansion expand_mode)
+{
+	char *buf = *pbuf;
+	buf[*pi] = '\0';
+
+	int argc = 0;
+	char **argv = NULL;
+
+	/* TODO: add '*' on the end of buf */
+	parse_cmd(buf, &argc, &argv, true);
+
+	char *joined = join(" ", argv, argc);
+
+	free_argv(argv, argc);
+
+	free(*pbuf);
+	*pbuf = joined;
+	*pi = *plen = strlen(joined);
+}
+
+static void expand_exec(
+		int *const pi,
+		char **const pbuf,
+		int *const plen,
+		enum prompt_expansion expand_mode)
+{
+	/* TODO */
+}
+
+static bool expand(
+		int *const pi,
+		char **const pbuf,
+		int *const plen,
+		enum prompt_expansion expand_mode)
+{
+	switch(expand_mode){
+		case PROMPT_NONE:
+			return false;
+
+		case PROMPT_EXEC:
+		{
+			/* very simple - no space, do something from $PATH.
+			 * otherwise fall through to filename */
+			char *buf = *pbuf;
+
+			for(int i = 0; i < *pi; i++){
+				if(isspace(buf[i])){
+					expand_filename(pi, pbuf, plen, expand_mode);
+					return true;
+				}
+			}
+
+			expand_exec(pi, pbuf, plen, expand_mode);
+			break;
+		}
+
+		case PROMPT_FILENAME:
+			expand_filename(pi, pbuf, plen, expand_mode);
+			break;
+	}
+
+	return true;
+}
+
+char *prompt(char promp, enum prompt_expansion expand_mode)
 {
 	int reading = 1;
 	int len = 10;
@@ -42,6 +114,18 @@ char *prompt(char promp)
 				reading = 0;
 				break;
 
+			case '\t':
+				if(expand(&i, &buf, &len, expand_mode)){
+					/* redraw */
+					nc_set_yx(nc_LINES() - 1, 0);
+					nc_addch(promp);
+					nc_addstr(buf);
+					nc_clrtoeol();
+				}else{
+					goto def;
+				}
+				break;
+
 			case CTRL_AND('u'):
 				buf[i = 0] = '\0';
 				nc_set_yx(nc_LINES() - 1, i + 1);
@@ -52,6 +136,7 @@ char *prompt(char promp)
 					goto cancel;
 				/* fall */
 
+def:
 			default:
 				buf[i++] = ch;
 				nc_addch(ch);

@@ -368,7 +368,7 @@ int m_search(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	const bool forward = m->i > 0;
 
-	char *target = prompt(forward ? '/' : '?');
+	char *target = prompt(forward ? '/' : '?', PROMPT_NONE);
 	if(!target)
 		return MOTION_FAILURE;
 

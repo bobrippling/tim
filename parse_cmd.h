@@ -3,12 +3,14 @@
 
 void parse_cmd(char *cmd, int *pargc, char ***pargv, bool shellglob);
 
+#ifdef CMDS_H
 bool parse_ranged_cmd(
 		char *cmd,
 		const cmd_t **pcmd_f,
 		char ***pargv, int *pargc,
 		bool *pforce,
 		struct range **prange);
+#endif
 
 void free_argv(char **argv, int argc);
 
