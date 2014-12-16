@@ -311,8 +311,9 @@ point_t window_toscreen(const window *win, point_t const *pt)
 	/* if the cursor is past the end of the line, but there's no
 	 * physical line actually there (i.e. virtual edit space), then
 	 * we limit the cursor on-screen to the rightmost edge */
-	if(cursorl && cursorl->len_line && (unsigned)pt->x >= cursorl->len_line){
-		int wrapped_y = naive_coord.y + (cursorl->len_line - 1) / screen_w;
+	const size_t line_len = cursorl ? cursorl->len_line : 0;
+	if((unsigned)pt->x >= line_len){
+		int wrapped_y = naive_coord.y + (line_len > 0 ? line_len - 1 : 0) / screen_w;
 
 		if(coord.y > wrapped_y){
 			point_t clamped = {
