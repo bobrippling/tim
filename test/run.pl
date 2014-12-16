@@ -100,10 +100,12 @@ sub runwraptest
 	$ENV{COLUMNS} = 80;
 	$ENV{LINES} = 24;
 
-	runtest(shift());
+	my $r = runtest(shift());
 
 	delete $ENV{COLUMNS};
 	delete $ENV{LINES};
+
+	return $r;
 }
 
 sub rundisp
