@@ -116,6 +116,11 @@ static list_t *list_new_fd(int fd, bool *eol)
 	if(st.st_size == 0)
 		goto fallback; /* could be stdin */
 
+	if(S_ISDIR(st.st_mode)){
+		errno = EISDIR;
+		return NULL;
+	}
+
 	void *mem = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
 	if(mem == MAP_FAILED){
