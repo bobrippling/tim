@@ -37,7 +37,7 @@ static void add_argv(
 	int argc_inc;
 	char **argv_add;
 
-	if(0 == wordexp(anchor, &wexp, WRDE_NOCMD)){
+	if(shellglob && 0 == wordexp(anchor, &wexp, WRDE_NOCMD)){
 		argc_inc = wexp.we_wordc;
 		argv_add = wexp.we_wordv;
 	}else{
