@@ -92,13 +92,19 @@ int m_move(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 	return MOTION_SUCCESS;
 }
 
+static unsigned dispmove_cols(int screen_w)
+{
+	/* ncols -1, since we don't count the final '\\' col entry */
+	unsigned ncols = screen_w - 1;
+	if(screen_w <= 1)
+		ncols = 1;
+	return ncols;
+}
+
 static int m_dispmove_y(
 		const int move_y, unsigned repeat, window *win, point_t *to)
 {
-	/* ncols -1, since we don't count the final '\\' col entry */
-	unsigned ncols = win->screen_coord.w - 1;
-	if(win->screen_coord.w <= 1)
-		ncols = 1;
+	const unsigned ncols = dispmove_cols(win->screen_coord.w);
 
 	list_t *curline = window_current_line(win, false);
 
@@ -142,19 +148,19 @@ static int m_dispmove_y(
 static int m_dispmove_x(
 		const int move_x, unsigned repeat, window *win, point_t *to)
 {
-	const unsigned ncols = win->screen_coord.w;
+	const unsigned ncols = dispmove_cols(win->screen_coord.w);
 
 	*to = *win->ui_pos;
 
 	/* g0 */
-	to->x = to->x - (to->x % (ncols + 1));
+	to->x = to->x - to->x % ncols;
 
 	if(move_x > 0){
 		/* g$ */
 		list_t *curline = window_current_line(win, false);
 
 		if(curline)
-			to->x += MIN(ncols, curline->len_line - 1 - to->x);
+			to->x += MIN(ncols - 1, curline->len_line - 1 - to->x);
 		else
 			to->x += ncols;
 	}
