@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include <wordexp.h>
+#include <glob.h>
 
 #include "mem.h"
 
@@ -23,6 +23,14 @@
 
 #include "config_cmds.h"
 
+#ifndef GLOB_BRACE
+#  define GLOB_BRACE 0
+#endif
+
+#ifndef GLOB_TILDE
+#  define GLOB_TILDE 0
+#endif
+
 static void add_argv(
 		char ***pargv, int *pargc,
 		char **panchor, char *current,
@@ -33,13 +41,15 @@ static void add_argv(
 #define anchor (*panchor)
 	char *failbuf;
 
-	wordexp_t wexp = { 0 };
+	glob_t globbed = { 0 };
 	int argc_inc;
 	char **argv_add;
 
-	if(shellglob && 0 == wordexp(anchor, &wexp, WRDE_NOCMD)){
-		argc_inc = wexp.we_wordc;
-		argv_add = wexp.we_wordv;
+	int flags = GLOB_MARK | GLOB_BRACE | GLOB_TILDE;
+
+	if(shellglob && 0 == glob(anchor, flags, /*errfunc*/NULL, &globbed)){
+		argc_inc = globbed.gl_pathc;
+		argv_add = globbed.gl_pathv;
 	}else{
 		argc_inc = 1;
 		argv_add = &failbuf;
@@ -52,7 +62,7 @@ static void add_argv(
 
 	argc += argc_inc;
 
-	wordfree(&wexp);
+	globfree(&globbed);
 
 	anchor = current;
 #undef argv
