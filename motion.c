@@ -95,7 +95,10 @@ int m_move(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 static int m_dispmove_y(
 		const int move_y, unsigned repeat, window *win, point_t *to)
 {
-	const unsigned ncols = win->screen_coord.w;
+	/* ncols -1, since we don't count the final '\\' col entry */
+	unsigned ncols = win->screen_coord.w - 1;
+	if(win->screen_coord.w <= 1)
+		ncols = 1;
 
 	list_t *curline = window_current_line(win, false);
 
@@ -112,12 +115,12 @@ static int m_dispmove_y(
 
 			if(direction > 0 ? current_fold < line_folds : current_fold > 0){
 				/* wrapped line, increment keeps us inside */
-				to->x += direction * (ncols + 1);
+				to->x += direction * ncols;
 
 			}else{
 				/* end of wrapped line - overflow to next/prev logical line */
 				to->y += direction;
-				to->x %= (ncols + 1);
+				to->x %= ncols;
 			}
 		}else{
 			to->y += direction;
@@ -127,7 +130,7 @@ static int m_dispmove_y(
 				const int new_folds = window_line_wraps(win, curline);
 				if(new_folds){
 					/* going back into a folded line */
-					to->x += (ncols + 1) * new_folds;
+					to->x += ncols * new_folds;
 				}
 			}
 		}
