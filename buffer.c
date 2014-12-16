@@ -78,9 +78,13 @@ buffer_t *buffer_new_file(FILE *f)
 {
 	/* TODO: mmap() */
 	buffer_t *b = buffer_new();
-	buffer_replace_file(b, f);
 
-	return b;
+	if(buffer_replace_file(b, f))
+		return b;
+
+	buffer_free(b);
+
+	return NULL;
 }
 
 void buffer_new_fname(
