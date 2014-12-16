@@ -5,11 +5,7 @@ window *windows_cur(void);
 void windows_set_cur(window *);
 
 #define ITER_WINDOWS(win)                             \
-	for(win = windows_cur();                            \
-			win->neighbours.above;                          \
-			win = win->neighbours.above);                   \
-	for(; win->neighbours.left;                         \
-			win = win->neighbours.left);                    \
+	win = window_topleftmost(windows_cur());            \
 	for(window *h = win; h; h = h->neighbours.right)    \
 		for(win = h; win; win = win->neighbours.below)
 
