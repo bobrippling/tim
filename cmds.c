@@ -382,10 +382,12 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	if(!via_shell){
 		int argc = 0;
 		char **argv = NULL;
-		parse_cmd(rest, &argc, &argv);
+		parse_cmd(rest, &argc, &argv, /*shell glob*/true);
 
-		if(argc != 1)
-			goto usage;
+		if(argc != 1){
+			ui_err("%s: too many filenames", argv0);
+			return false;
+		}
 
 		stream = fopen(argv[0], "r");
 		streamerr = errno;
@@ -417,9 +419,6 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	ui_cur_changed();
 
 	return true;
-usage:
-	ui_err("usage: %s filename | %s!cmd...", argv0, argv0);
-	return false;
 }
 
 static

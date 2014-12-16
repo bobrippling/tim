@@ -21,6 +21,7 @@ typedef struct cmd_t
 	};
 	bool single_arg;
 	bool inverse; /* e.g. :v */
+	bool skipglob;
 } cmd_t;
 
 cmd_f_argv c_q, c_cq, c_qa;

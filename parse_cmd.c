@@ -23,41 +23,44 @@
 
 #include "config_cmds.h"
 
-static
-char *parse_arg(const char *arg)
-{
-	/* TODO: ~ substitution */
-	wordexp_t wexp;
-	memset(&wexp, 0, sizeof wexp);
-
-	int r = wordexp(arg, &wexp, WRDE_NOCMD);
-
-	char *ret = r
-		? ustrdup(arg)
-		: join(" ", wexp.we_wordv, wexp.we_wordc);
-
-	wordfree(&wexp);
-
-	return ret;
-}
-
 static void add_argv(
 		char ***pargv, int *pargc,
-		char **panchor, char *p)
+		char **panchor, char *current,
+		bool shellglob)
 {
 #define argv (*pargv)
 #define argc (*pargc)
 #define anchor (*panchor)
-	argv = urealloc(argv, (argc + 2) * sizeof *argv);
-	argv[argc++] = parse_arg(anchor);
+	char *failbuf;
 
-	anchor = p;
+	wordexp_t wexp = { 0 };
+	int argc_inc;
+	char **argv_add;
+
+	if(0 == wordexp(anchor, &wexp, WRDE_NOCMD)){
+		argc_inc = wexp.we_wordc;
+		argv_add = wexp.we_wordv;
+	}else{
+		argc_inc = 1;
+		argv_add = &failbuf;
+		failbuf = anchor;
+	}
+
+	argv = urealloc(argv, (argc + argc_inc + 1) * sizeof *argv);
+	for(int i = 0; i < argc_inc; i++)
+		argv[argc + i] = ustrdup(argv_add[i]);
+
+	argc += argc_inc;
+
+	wordfree(&wexp);
+
+	anchor = current;
 #undef argv
 #undef argc
 #undef anchor
 }
 
-void parse_cmd(char *cmd, int *pargc, char ***pargv)
+void parse_cmd(char *cmd, int *pargc, char ***pargv, bool shellglob)
 {
 	int argc = *pargc;
 	char **argv = *pargv;
@@ -76,11 +79,11 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv)
 
 		*p++ = '\0';
 
-		add_argv(&argv, &argc, &anchor, p);
+		add_argv(&argv, &argc, &anchor, p, shellglob);
 	}
 
 	if(anchor != p)
-		add_argv(&argv, &argc, &anchor, p);
+		add_argv(&argv, &argc, &anchor, p, shellglob);
 
 	*pargv = argv;
 	*pargc = argc;
@@ -194,7 +197,7 @@ bool parse_ranged_cmd(
 		argv[1] = ustrdup(cmd_i);
 
 	}else{
-		parse_cmd(cmd_i, &argc, &argv);
+		parse_cmd(cmd_i, &argc, &argv, !cmd_f->skipglob);
 	}
 	argv[argc] = NULL;
 

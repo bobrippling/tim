@@ -27,12 +27,12 @@ const cmd_t cmds[] = {
 	{ "d",   .f_argv = c_d   },
 	{ "m",   .f_argv = c_m   },
 
-	{ "g",   .f_arg1 = c_g, .single_arg = true },
-	{ "v",   .f_arg1 = c_g, .single_arg = true, .inverse = true },
+	{ "g",   .f_arg1 = c_g, .single_arg = true, .skipglob = true },
+	{ "v",   .f_arg1 = c_g, .single_arg = true, .inverse = true, .skipglob = true },
 
-	{ "!",   .f_arg1 = c_run, .single_arg = true },
+	{ "!",   .f_arg1 = c_run, .single_arg = true, .skipglob = true },
 
-	{ "norm", .f_arg1 = c_norm, .single_arg = true },
+	{ "norm", .f_arg1 = c_norm, .single_arg = true, .skipglob = true },
 
 	{ NULL }
 };
