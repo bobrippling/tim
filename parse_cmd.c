@@ -89,14 +89,13 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv, bool shellglob)
 	*pargc = argc;
 }
 
-void filter_cmd(int *pargc, char ***pargv)
+static void filter_argv(int *pargc, char ***pargv)
 {
-	/* check for '%' */
+	/* check for '%', '#' and * wildcard expansion */
 	int argc = *pargc;
 	char **argv = *pargv;
 	int i;
-	char *fnam = (char *)buffer_fname(buffers_cur());
-
+	const char *fnam = buffer_fname(buffers_cur());
 
 	for(i = 0; i < argc; i++){
 		char *p;
@@ -116,7 +115,7 @@ void filter_cmd(int *pargc, char ***pargv)
 
 						new = join("", (char *[]){
 								argv[i],
-								fnam,
+								(char *)fnam,
 								p + 1 }, 3);
 
 						free(argv[i]);
@@ -201,7 +200,7 @@ bool parse_ranged_cmd(
 	}
 	argv[argc] = NULL;
 
-	filter_cmd(&argc, &argv);
+	filter_argv(&argc, &argv);
 
 	return true;
 #undef cmd_f

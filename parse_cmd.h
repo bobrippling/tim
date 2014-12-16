@@ -3,8 +3,6 @@
 
 void parse_cmd(char *cmd, int *pargc, char ***pargv, bool shellglob);
 
-void filter_cmd(int *pargc, char ***pargv);
-
 bool parse_ranged_cmd(
 		char *cmd,
 		const cmd_t **pcmd_f,
