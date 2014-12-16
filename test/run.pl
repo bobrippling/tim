@@ -95,6 +95,17 @@ sub runshtest
 	return $r;
 }
 
+sub runwraptest
+{
+	$ENV{COLUMNS} = 80;
+	$ENV{LINES} = 24;
+
+	runtest(shift());
+
+	delete $ENV{COLUMNS};
+	delete $ENV{LINES};
+}
+
 sub rundisp
 {
 	my $f = shift;
@@ -168,6 +179,8 @@ for my $f (@tests){
 		$r = runtest $f;
 	}elsif($f =~ /\.disp$/){
 		$r = rundisp $f;
+	}elsif($f =~ /\.wraptest$/){
+		$r = runwraptest $f;
 	}else{
 		$r = runshtest $f;
 	}
