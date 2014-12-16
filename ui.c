@@ -332,7 +332,7 @@ void ui_draw_win_1(window *win)
 		for(; i < l->len_line; i++, x++){
 			if(x == (unsigned)win->screen_coord.w - 1 && i + 1 < l->len_line){
 				nc_addch('\\');
-				x = -1; /* ready for ++ */
+				x = 0; /* adding at 0 below */
 				y++;
 				nwrapped++;
 				if(y == win->screen_coord.h)
