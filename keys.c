@@ -281,6 +281,8 @@ void k_jumpscroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 	w->ui_pos->y += inc;
 	w->ui_start.y += inc;
 
+	start_of_line(NULL, w);
+
 	ui_cur_changed();
 	ui_redraw();
 }
@@ -620,7 +622,15 @@ void k_set_mode(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_del(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion_bufaction(repeat, from_ch, &buffer_delregion, NULL);
+	region_t region;
+
+	bool deleted = around_motion_bufaction(
+			repeat, from_ch, &buffer_delregion, &region);
+
+	if(deleted && region.type == REGION_LINE){
+		start_of_line(NULL, windows_cur());
+		ui_cur_changed();
+	}
 }
 
 void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
@@ -659,6 +669,8 @@ void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	around_motion_bufaction(repeat, from_ch,
 			a->i > 0 ? &buffer_indent : &buffer_unindent, NULL);
+
+	start_of_line(NULL, windows_cur());
 }
 
 void k_vtoggle(const keyarg_u *a, unsigned repeat, const int from_ch)

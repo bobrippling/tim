@@ -76,4 +76,6 @@ bool motion_to_region(
 		const motion *m, unsigned repeat, bool always_linewise,
 		window *, region_t *out);
 
+void start_of_line(point_t *, window *w);
+
 #endif

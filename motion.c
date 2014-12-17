@@ -25,19 +25,29 @@ enum
 	MOTION_SUCCESS = 1
 };
 
-static int m_line_goto(int *y, unsigned repeat, bool end, window *win)
+void start_of_line(point_t *pt, window *w)
+{
+	if(!pt)
+		pt = w->ui_pos;
+
+	m_sol(NULL, 0, w, pt);
+}
+
+static int m_line_goto(point_t *const pt, unsigned repeat, bool end, window *win)
 {
 	if(repeat == 0) /* default */
-		*y = end ? list_count(win->buf->head) : 0;
+		pt->y = end ? list_count(win->buf->head) : 0;
 	else
-		*y = repeat - 1;
+		pt->y = repeat - 1;
+
+	start_of_line(pt, win);
 
 	return MOTION_SUCCESS;
 }
 
 int m_eof(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	return m_line_goto(&to->y, repeat, true, win);
+	return m_line_goto(to, repeat, true, win);
 }
 
 int m_eol(motion_arg const *m, unsigned repeat, window *win, point_t *to)
@@ -57,6 +67,7 @@ int m_eol(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 int m_sos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	to->y = UI_TOP(win);
+	start_of_line(to, win);
 	return MOTION_SUCCESS;
 }
 
@@ -70,12 +81,14 @@ static int bottom_of_screen_or_buf(window *win)
 int m_eos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	to->y = bottom_of_screen_or_buf(win);
+	start_of_line(to, win);
 	return MOTION_SUCCESS;
 }
 
 int m_mos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	to->y = bottom_of_screen_or_buf(win) / 2;
+	start_of_line(to, win);
 	return MOTION_SUCCESS;
 }
 
@@ -101,7 +114,7 @@ int m_move(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 
 int m_sof(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	return m_line_goto(&to->y, repeat, false, win);
+	return m_line_goto(to, repeat, false, win);
 }
 
 int m_sol(motion_arg const *m, unsigned repeat, window *win, point_t *to)

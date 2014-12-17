@@ -1,0 +1,17 @@
+$Li1$Hi23j$djidel
+__IN__
+abc
+main()
+{
+	abc;
+	123;
+	456;
+}
+xyz
+__OUT__
+2abc
+main()
+{
+	del456;
+}
+1xyz
