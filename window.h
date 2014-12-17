@@ -28,6 +28,8 @@ enum neighbour
 	neighbour_up, neighbour_down, neighbour_left, neighbour_right
 };
 
+bool neighbour_is_vertical(enum neighbour);
+
 window *window_topleftmost(window *b);
 window *window_next(window *);
 

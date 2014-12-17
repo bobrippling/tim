@@ -137,6 +137,19 @@ void window_evict(window *const evictee)
 	}
 }
 
+bool neighbour_is_vertical(enum neighbour n)
+{
+	switch(n){
+		case neighbour_up:
+		case neighbour_down:
+			return true;
+		case neighbour_left:
+		case neighbour_right:
+			break;
+	}
+	return false;
+}
+
 void window_add_neighbour(window *to, enum neighbour dir, window *new)
 {
 	window_evict(new);

@@ -460,7 +460,7 @@ bool c_split(
 	}
 
 	buffer_t *b;
-	point_t *initial_ui_pos = NULL;
+	window *copy_pos_from = NULL;
 
 	if(argc > 1){
 		const char *err;
@@ -476,7 +476,7 @@ bool c_split(
 	}else if(withcurrent){
 		window *cur = windows_cur();
 		b = retain(cur->buf);
-		initial_ui_pos = cur->ui_pos;
+		copy_pos_from = cur;
 	}else{
 		b = buffer_new();
 	}
@@ -487,8 +487,17 @@ bool c_split(
 	window_add_neighbour(windows_cur(), dir, w);
 	windows_set_cur(w);
 
-	if(initial_ui_pos)
-		*w->ui_pos = *initial_ui_pos;
+	if(copy_pos_from){
+		*w->ui_pos = *copy_pos_from->ui_pos;
+
+		w->ui_start = copy_pos_from->ui_start;
+		if(neighbour_is_vertical(dir)){
+			int diff = (w->ui_pos->y - w->ui_start.y) / 2;
+
+			copy_pos_from->ui_start.y += diff;
+			w->ui_start.y += diff;
+		}
+	}
 
 	ui_redraw();
 	ui_cur_changed();
