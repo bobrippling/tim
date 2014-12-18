@@ -460,6 +460,7 @@ bool c_split(
 	}
 
 	buffer_t *b;
+	point_t *initial_ui_pos = NULL;
 
 	if(argc > 1){
 		const char *err;
@@ -473,7 +474,9 @@ bool c_split(
 			buffer_set_fname(b, argv[1]);
 		}
 	}else if(withcurrent){
-		b = retain(buffers_cur());
+		window *cur = windows_cur();
+		b = retain(cur->buf);
+		initial_ui_pos = cur->ui_pos;
 	}else{
 		b = buffer_new();
 	}
@@ -483,6 +486,9 @@ bool c_split(
 
 	window_add_neighbour(windows_cur(), dir, w);
 	windows_set_cur(w);
+
+	if(initial_ui_pos)
+		*w->ui_pos = *initial_ui_pos;
 
 	ui_redraw();
 	ui_cur_changed();
