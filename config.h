@@ -126,6 +126,11 @@ const nkey_t nkeys[] = {
 	{ K_STR(CTRL_AND('e')),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL | UI_VISUAL_ANY },
 	{ K_STR(CTRL_AND('y')),  k_scroll,     { .pos = { 0, -2 } },     UI_NORMAL | UI_VISUAL_ANY },
 
+	{ K_STR(CTRL_AND('f')), k_jumpscroll, { +2 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ K_STR(CTRL_AND('b')), k_jumpscroll, { -2 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ K_STR(CTRL_AND('d')), k_jumpscroll, { +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ K_STR(CTRL_AND('u')), k_jumpscroll, { -1 }, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ "zz",  k_scroll,     { .pos = { 1,  0 } },     UI_NORMAL | UI_VISUAL_ANY },
 	{ "zt",  k_scroll,     { .pos = { 1, -1 } },     UI_NORMAL | UI_VISUAL_ANY },
 	{ "zb",  k_scroll,     { .pos = { 1, +1 } },     UI_NORMAL | UI_VISUAL_ANY },

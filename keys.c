@@ -263,6 +263,28 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 }
 
+void k_jumpscroll(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	window *w = windows_cur();
+	const int height = w->screen_coord.h + 1;
+
+	int inc = 0;
+
+	switch(abs(a->i)){
+		case 2:  inc = height;     break;
+		case 1:  inc = height / 2; break;
+	}
+
+	if(a->i < 0)
+		inc = -inc;
+
+	w->ui_pos->y += inc;
+	w->ui_start.y += inc;
+
+	ui_cur_changed();
+	ui_redraw();
+}
+
 static enum neighbour pos2dir(const point_t *pos)
 {
 	/**/ if(pos->x > 0) return neighbour_right;

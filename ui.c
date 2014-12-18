@@ -252,6 +252,11 @@ void ui_cur_changed()
 	window *win = windows_cur();
 	const int nl = win->screen_coord.h;
 
+	if(win->ui_start.y < 0)
+		win->ui_start.y = 0;
+	if(win->ui_start.x < 0)
+		win->ui_start.x = 0;
+
 	if(win->ui_pos->x < 0)
 		win->ui_pos->x = 0;
 
