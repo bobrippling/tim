@@ -105,16 +105,12 @@ void str_ltrim(char *s, size_t *pl)
 
 void str_rtrim(char *s, size_t *pl)
 {
-	if(!*pl)
-		return;
+	size_t i = *pl;
 
-	size_t i = *pl - 1;
-	while(isspace(s[i]))
-		if(--i == 0)
-			break;
+	while(i > 0 && isspace(s[i - 1])){
+		s[i - 1] = '\0';
+		i--;
+	}
 
-	*pl = i + 1;
-
-	if(isspace(s[i + 1]))
-		s[i + 1] = '\0';
+	*pl = i;
 }
