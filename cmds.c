@@ -59,19 +59,9 @@ static bool quit_common(
 	ARGV_NO();
 
 	if(!force){
-		bool modified = false;
-		if(qall){
-			window *win;
-
-			ITER_WINDOWS(win){
-				if((modified = win->buf->modified))
-					goto out;
-			}
-out:;
-
-		}else{
-			modified = buffers_modified_single(buffers_cur());
-		}
+		bool modified = qall
+			? buffers_modified_excluding(NULL)
+			: buffers_modified_single(buffers_cur());
 
 		if(modified){
 			ui_err("buffer modified");

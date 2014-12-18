@@ -31,3 +31,14 @@ bool buffers_modified_single(const buffer_t *b)
 {
 	return b->modified && buffer_opencount(b) == 1;
 }
+
+bool buffers_modified_excluding(buffer_t *excluding)
+{
+	window *win;
+
+	ITER_WINDOWS(win)
+		if(win->buf != excluding && win->buf->modified)
+			return true;
+
+	return false;
+}

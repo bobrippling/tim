@@ -5,5 +5,6 @@
 buffer_t *buffers_find(const char *);
 
 bool buffers_modified_single(const buffer_t *);
+bool buffers_modified_excluding(buffer_t *excluding);
 
 #endif
