@@ -349,7 +349,8 @@ int m_searchnext(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 		return MOTION_FAILURE;
 	}
 
-	const int dir = ((m->i > 0) == lastsearch_forward) ? 1 : -1;
+	const bool forward = m->i > 0;
+	const int dir = (forward == lastsearch_forward) ? 1 : -1;
 
 	repeat = DEFAULT_REPEAT(repeat);
 	*to = *win->ui_pos;
@@ -374,7 +375,7 @@ int m_search(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 
 	m_setlastsearch(target, forward);
 
-	return m_searchnext(m, repeat, win, to);
+	return m_searchnext(&(motion_arg){ 1 }, repeat, win, to);
 }
 
 int m_visual(
