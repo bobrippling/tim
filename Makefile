@@ -16,7 +16,7 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 SRC = ${OBJ:.o=.c}
 
 tim: ${OBJ}
-	cc -o $@ ${OBJ} -lncurses
+	${CC} -o $@ ${OBJ} -lncurses
 
 check: tim
 	cd test && ./run.pl
@@ -28,7 +28,7 @@ clean:
 	rm -f ${OBJ} tim
 
 deps:
-	cc -MM ${SRC} > Makefile.dep
+	${CC} -MM ${SRC} > Makefile.dep
 
 tags:
 	ctags ${SRC}
