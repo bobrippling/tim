@@ -355,6 +355,39 @@ bool c_ene(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
+bool c_only(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_NO();
+	ARGV_NO();
+
+	if(!force && buffers_modified_excluding(buffers_cur())){
+		ui_err("another buffer has changes");
+		return false;
+	}
+
+	window *iter;
+	size_t count = 0;
+	ITER_WINDOWS(iter)
+		count++;
+
+	if(count == 1)
+		return true;
+
+	window *const anchor = windows_cur();
+	windows_set_cur(window_next(anchor));
+	window_evict(anchor);
+
+	ITER_WINDOWS(iter)
+		window_free(iter);
+
+	windows_set_cur(anchor);
+
+	ui_cur_changed();
+	ui_redraw();
+
+	return true;
+}
+
 bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 {
 	window *const win = windows_cur();
