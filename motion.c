@@ -15,6 +15,7 @@
 #include "str.h"
 #include "prompt.h"
 #include "word.h"
+#include "macros.h"
 
 #define UI_TOP(win) win->ui_start.y
 
@@ -59,15 +60,22 @@ int m_sos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 	return MOTION_SUCCESS;
 }
 
+static int bottom_of_screen_or_buf(window *win)
+{
+	int nlines = list_count(win->buf->head);
+
+	return MIN(nlines, UI_TOP(win) + win->screen_coord.h - 1);
+}
+
 int m_eos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	to->y = UI_TOP(win) + win->screen_coord.h - 1;
+	to->y = bottom_of_screen_or_buf(win);
 	return MOTION_SUCCESS;
 }
 
 int m_mos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	to->y = UI_TOP(win) + win->screen_coord.h / 2 - 1;
+	to->y = bottom_of_screen_or_buf(win) / 2;
 	return MOTION_SUCCESS;
 }
 
