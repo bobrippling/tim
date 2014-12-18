@@ -70,10 +70,22 @@ void windows_init(
 		enum windows_init_args init_args, unsigned off)
 {
 	if(argc){
-		const char *err;
+		const char *err = NULL;
 		buffer_t *buf;
 
-		buffer_new_fname(&buf, argv[0], &err);
+		if(!strcmp(argv[0], "-")){
+			buf = buffer_new_file_nofind(stdin);
+			/* no filename */
+
+			if(ferror(stdin))
+				err = strerror(errno);
+
+			freopen("/dev/tty", "r", stdin);
+			/* if we can't open it we'll exit soon anyway */
+
+		}else{
+			buffer_new_fname(&buf, argv[0], &err);
+		}
 
 		if(err)
 			ui_err("\"%s\": %s", argv[0], err);

@@ -73,8 +73,7 @@ err:
 	buffer_set_fname(b, fname);
 }
 
-static
-buffer_t *buffer_new_file(FILE *f)
+buffer_t *buffer_new_file_nofind(FILE *f)
 {
 	buffer_t *b = buffer_new();
 
@@ -109,7 +108,7 @@ got_err:
 		goto fin;
 	}
 
-	b = buffer_new_file(f);
+	b = buffer_new_file_nofind(f);
 	fclose(f);
 
 	if(!b)
