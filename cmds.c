@@ -386,6 +386,7 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 
 		if(argc != 1){
 			ui_err("%s: too many filenames", argv0);
+			free_argv(argv, argc);
 			return false;
 		}
 
