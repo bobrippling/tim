@@ -125,9 +125,12 @@ void yank_put_in_list(
 			list_t *const head = *phead;
 
 			if(prepend){
+				copy->prev = head->prev;
 				*phead = copy;
+
 				copy_tail->next = head;
 				head->prev = copy_tail;
+
 			}else{
 				list_t *const after = head->next;
 
