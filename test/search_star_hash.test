@@ -1,0 +1,17 @@
+*nA-2stark0#nAhash
+__IN__
+abc
+xyz
+xyz
+123
+abc
+xyz
+abc
+__OUT__
+abc
+xyzhash
+xyz
+123
+abc
+xyz
+abc-2star

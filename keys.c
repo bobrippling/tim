@@ -851,13 +851,13 @@ void k_on_fname(const keyarg_u *a, unsigned repeat, const int from_ch)
 	k_on_wordfile(a, window_current_fname, "filename");
 }
 
-void word_search(const char *word, bool flag)
+void word_search(const char *word, bool backwards)
 {
-	m_setlastsearch(ustrdup(word), /*forward:*/true);
+	m_setlastsearch(ustrdup(word), !backwards);
 
 	motion m_search = {
 		.func = m_searchnext,
-		.arg = { flag ? -1 : +1 },
+		.arg.i = +1,
 		.how = M_EXCLUSIVE
 	};
 
