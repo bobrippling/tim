@@ -153,9 +153,7 @@ bool parse_ranged_cmd(
 	argv = NULL;
 	argc = 0;
 
-	char *cmd_i = cmd;
-	while(isspace(*cmd_i))
-		cmd_i++;
+	char *cmd_i = skipspace(cmd);
 
 	if(!*cmd_i)
 		return false;
@@ -197,7 +195,7 @@ bool parse_ranged_cmd(
 		return false;
 
 	force = false;
-	for(; isspace(*cmd_i); cmd_i++);
+	cmd_i = skipspace(cmd_i);
 	if(*cmd_i == '!')
 		force = true, cmd_i++;
 

@@ -55,6 +55,12 @@ bool isallspace(const char *s)
 	return !*s;
 }
 
+char *skipspace(const char *in)
+{
+	for(; isspace(*in); in++);
+	return (char *)in;
+}
+
 static const struct paren
 {
 	char opp;
