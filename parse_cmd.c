@@ -18,6 +18,7 @@
 #include "cmds.h"
 #include "window.h"
 #include "windows.h"
+#include "str.h"
 
 #include "parse_cmd.h"
 
@@ -166,6 +167,8 @@ bool parse_ranged_cmd(
 		case RANGE_PARSE_PASS:
 			break;
 	}
+
+	cmd_i = skipspace(cmd_i);
 
 	/* alpha or single non-ascii for command */
 	argc = 1;
