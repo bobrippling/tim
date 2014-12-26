@@ -36,7 +36,6 @@ struct buffer
 	char *fname;
 	bool eol;
 	bool modified;
-	bool hidden;
 	time_t mtime;
 
 	unsigned col_insert_height;
