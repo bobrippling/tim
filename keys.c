@@ -152,7 +152,27 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 
 void k_prompt_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
-	char *const cmd = prompt(from_ch);
+	char *initial = NULL;
+	char initial_buf[32];
+
+	window *win = windows_cur();
+
+	if(win->ui_mode & UI_VISUAL_ANY){
+		int y1 = 1 + win->ui_pos->y;
+		int y2 = 1 + window_uipos_alt(win)->y;
+
+		if(y2 < y1){
+			int tmp = y1;
+			y1 = y2;
+			y2 = tmp;
+		}
+
+		snprintf(initial_buf, sizeof initial_buf, "%d,%d", y1, y2);
+
+		initial = initial_buf;
+	}
+
+	char *const cmd = prompt(from_ch, initial);
 
 	if(!cmd)
 		goto cancel_cmd;
@@ -757,7 +777,7 @@ static void filter(
 		case FILTER_CMD:
 			cmd = pf->s;
 			if(!cmd){
-				cmd = prompt('!');
+				cmd = prompt('!', NULL);
 				if(!cmd)
 					return;
 				free_cmd = true;

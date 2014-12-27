@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "prompt.h"
 
@@ -7,19 +8,37 @@
 #include "io.h"
 #include "mem.h"
 
-char *prompt(char promp)
+char *prompt(char promp, const char *initial)
 {
-	int reading = 1;
-	int len = 10;
-	char *buf = umalloc(len);
+	int len;
+	char *buf;
+	int i;
+
+	if(initial){
+		len = strlen(initial) + 1;
+
+		buf = umalloc(len);
+		i = len - 1;
+
+		strcpy(buf, initial);
+
+	}else{
+		len = 10;
+		buf = umalloc(len);
+		i = 0;
+	}
+
 	int y, x;
-	int i = 0;
-
 	nc_get_yx(&y, &x);
-
 	nc_set_yx(nc_LINES() - 1, 0);
 	nc_addch(promp);
+
+	for(int x = 0; x < i; x++)
+		nc_addch(buf[x]);
+
 	nc_clrtoeol();
+
+	bool reading = true;
 
 	while(reading){
 		bool wasraw;
@@ -39,7 +58,7 @@ char *prompt(char promp)
 
 			case '\n':
 			case '\r':
-				reading = 0;
+				reading = false;
 				break;
 
 			case CTRL_AND('u'):
