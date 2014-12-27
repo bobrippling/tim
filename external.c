@@ -27,24 +27,8 @@ static int term_canon(int on)
 }
 #endif
 
-int shellout(const char *cmd)
+static void shellout_wait_ret(void)
 {
-	const char *shcmd;
-	int r;
-
-	if(cmd){
-		shcmd = cmd;
-	}else{
-		const char *shell = getenv("SHELL");
-		if(!shell)
-			shell = "sh";
-		shcmd = shell;
-	}
-
-	ui_term();
-
-	r = system(shcmd);
-
 #ifdef FANCY_TERM
 	if(term_canon(0)){
 		int unget;
@@ -66,6 +50,27 @@ int shellout(const char *cmd)
 #ifdef FANCY_TERM
 	}
 #endif
+}
+
+int shellout(const char *cmd)
+{
+	const char *shcmd;
+	int r;
+
+	if(cmd){
+		shcmd = cmd;
+	}else{
+		const char *shell = getenv("SHELL");
+		if(!shell)
+			shell = "sh";
+		shcmd = shell;
+	}
+
+	ui_term();
+
+	r = system(shcmd);
+
+	shellout_wait_ret();
 
 	ui_init();
 
