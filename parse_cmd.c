@@ -198,9 +198,11 @@ bool parse_ranged_cmd(
 		return false;
 
 	force = false;
-	cmd_i = skipspace(cmd_i);
+	/* no whitespace - force must be directly after */
 	if(*cmd_i == '!')
 		force = true, cmd_i++;
+
+	cmd_i = skipspace(cmd_i);
 
 	if(cmd_f->single_arg){
 		argv = urealloc(argv, (++argc + 1) * sizeof *argv);
