@@ -31,12 +31,6 @@
 		return false;                        \
 	}
 
-#define RANGE_TODO(cmd)                    \
-	if(range){                               \
-		ui_err("TODO: range with :%s", cmd);   \
-		return false;                          \
-	}
-
 #define RANGE_DEFAULT(range, store, y) \
 	if(!range){                          \
 		store.start = store.end = y;       \
@@ -584,7 +578,30 @@ bool c_new(int argc, char **argv, bool force, struct range *range)
 
 bool c_run(char *cmd, char *rest, bool force, struct range *range)
 {
-	RANGE_TODO(cmd);
+	if(range){
+		/* filter */
+		buffer_t *buf = buffers_cur();
+
+		int err = list_filter(
+				&buf->head,
+				&(region_t){
+					.type = REGION_LINE,
+					.begin.y = range->start,
+					.end.y = range->end,
+				},
+				rest);
+
+		const int eno = errno;
+
+		ui_redraw();
+
+		if(err){
+			ui_err("filter: %s", strerror(eno));
+			return false;
+		}
+
+		return true;
+	}
 
 	int r = shellout(rest);
 
