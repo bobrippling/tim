@@ -230,22 +230,79 @@ got_err:
 	return true;
 }
 
-bool c_w(int argc, char **argv, bool force, struct range *range)
+static bool write_range(char *arg, bool force, struct range *range)
 {
-	RANGE_TODO(*argv);
+	arg = skipspace(arg);
+
+	buffer_t *const buf = buffers_cur();
+	const char *wfname;
+
+	list_t *seeked = list_seek(buf->head, range->start, false);
+
+	if(!seeked){
+		ui_err("out of range");
+		return false;
+	}
+
+	const int nlines = range->end - range->start + 1;
+
+	if(!*arg){
+		/* :a,b write <no arg here> */
+		if(!force){
+			ui_err("refusing to write partial buffer without force");
+			return false;
+		}
+
+		wfname = buffer_fname(buf);
+
+	}else{
+		if(*arg == '!')
+			return shellout_write(arg + 1, seeked, nlines);
+
+		char *fname = arg;
+
+		if(!strncmp(fname, "\\!", 2)){
+			/* change \! to ! */
+			memmove(fname, fname + 1, strlen(fname));
+		}
+
+		wfname = fname;
+	}
+
+	/* partial write to file */
+	FILE *f = fopen(wfname, "w");
+	if(!f){
+		ui_err("open %s: %s", wfname, strerror(errno));
+		return false;
+	}
+
+	int r = list_write_file(seeked, nlines, f, /*eol:*/true);
+	int eno = errno;
+
+	if(r){
+		ui_err("write %s: %s", wfname, strerror(eno));
+		return false;
+	}
+
+	return true;
+}
+
+bool c_w(char *cmd, char *arg, bool force, struct range *range)
+{
+	arg = skipspace(arg);
+
+	if(range)
+		return write_range(arg, force, range);
 
 	buffer_t *const buf = buffers_cur();
 
 	bool newfname = false;
-	if(argc == 2){
+	if(*arg){
 		const char *old = buffer_fname(buf);
 
-		newfname = !old || strcmp(old, argv[1]);
+		newfname = !old || strcmp(old, arg);
 
-		buffer_set_fname(buf, argv[1]);
-	}else if(argc != 1){
-		ui_err("usage: %s filename", *argv);
-		return false;
+		buffer_set_fname(buf, arg);
 	}
 
 	if(!write_buf(buf, force, newfname))
@@ -289,7 +346,7 @@ bool c_x(int argc, char **argv, bool force, struct range *range)
 	if(buf->fname && !buf->modified)
 		return c_q(argc, argv, false, range);
 
-	return c_w(argc, argv, false, range)
+	return c_w("w", (char []){ "" }, false, range)
 		&& c_q(1, (char *[]){ *argv, NULL }, false, NULL);
 }
 

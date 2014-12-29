@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include <ncurses.h>
 
 #include <termios.h>
@@ -8,6 +9,11 @@
 
 #include "mem.h"
 #include "ui.h"
+
+#include "pos.h"
+#include "region.h"
+#include "list.h"
+
 #include "external.h"
 
 #ifdef FANCY_TERM
@@ -27,7 +33,7 @@ static int term_canon(int on)
 }
 #endif
 
-static void shellout_wait_ret(void)
+void shellout_wait_ret(void)
 {
 #ifdef FANCY_TERM
 	if(term_canon(0)){
@@ -75,4 +81,46 @@ int shellout(const char *cmd)
 	ui_init();
 
 	return r;
+}
+
+bool shellout_write(const char *cmd, list_t *seeked, int nlines)
+{
+	ui_term();
+
+	FILE *subp = popen(cmd, "w");
+
+	if(!subp){
+		fprintf(stderr, "fork/exec: %s", strerror(errno));
+		return false;
+	}
+
+	int r = list_write_file(seeked, nlines, subp, /*eol*/true);
+	int errno_write = errno;
+
+	int waitret = pclose(subp);
+	int errno_wait = errno;
+
+	if(r){
+		fprintf(stderr, "write subprocess: %s", strerror(errno_write));
+		return false;
+	}
+
+	if(WIFEXITED(waitret)){
+		int ec = WEXITSTATUS(waitret);
+
+		if(ec)
+			fprintf(stderr, "command returned %d\n", ec);
+
+	}else if(WIFSIGNALED(waitret)){
+		fprintf(stderr, "command signalled with %d\n", WTERMSIG(waitret));
+	}else if(WIFSTOPPED(waitret)){
+		fprintf(stderr, "command stopped with %d\n", WSTOPSIG(waitret));
+	}else{
+		fprintf(stderr, "unknown state from wait()/pclose(): %d: %s",
+				waitret, strerror(errno_wait));
+	}
+
+	shellout_wait_ret();
+
+	return true;
 }

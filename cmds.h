@@ -25,7 +25,7 @@ typedef struct cmd_t
 } cmd_t;
 
 cmd_f_argv c_q, c_cq, c_qa;
-cmd_f_argv c_w, c_wa;
+cmd_f_argv c_wa;
 cmd_f_argv c_x, c_xa;
 cmd_f_argv c_e, c_ene;
 cmd_f_argv c_only;
@@ -38,7 +38,7 @@ cmd_f_argv c_n;
 
 cmd_f_arg1 c_g;
 cmd_f_arg1 c_norm;
-cmd_f_arg1 c_r;
+cmd_f_arg1 c_r, c_w;
 
 cmd_f_argv c_vs, c_vnew;
 cmd_f_argv c_sp, c_new;
