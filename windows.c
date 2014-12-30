@@ -75,6 +75,7 @@ void windows_init(
 
 		if(!strcmp(argv[0], "-")){
 			buf = buffer_new_file_nofind(stdin);
+			buf->modified = true; /* editing a stream */
 			/* no filename */
 
 			if(ferror(stdin))
