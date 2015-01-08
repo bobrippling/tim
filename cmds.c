@@ -311,8 +311,9 @@ bool c_wa(int argc, char **argv, bool force, struct range *range)
 	RANGE_NO();
 	ARGV_NO();
 
-	window *win;
+	bool success = true;
 
+	window *win;
 	ITER_WINDOWS(win){
 		buffer_t *buf = win->buf;
 
@@ -321,12 +322,14 @@ bool c_wa(int argc, char **argv, bool force, struct range *range)
 
 		bool subforce = false;
 		if(!write_buf(buf, subforce, /*newfname:*/false))
-			return false;
+			success = false;
 	}
 
-	ui_status("saved all%s buffers", force ? "" : " modified");
+	if(success)
+		ui_status("saved all%s buffers", force ? "" : " modified");
+	/* else leave the error message emitted by write_buf() */
 
-	return true;
+	return success;
 }
 
 bool c_x(int argc, char **argv, bool force, struct range *range)
