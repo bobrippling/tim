@@ -120,7 +120,7 @@ void ui_rstatus(const char *fmt, ...)
 	va_end(l);
 }
 
-static void ui_match_paren(window *win)
+static bool ui_match_paren(window *win)
 {
 	list_t *l = window_current_line(win, false);
 	int x = win->ui_pos->x;
@@ -152,8 +152,7 @@ static void ui_match_paren(window *win)
 	redraw = true;
 
 out:
-	if(redraw)
-		ui_redraw();
+	return redraw;
 }
 
 static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
@@ -201,7 +200,8 @@ void ui_normal_1(unsigned *repeat, enum io io_mode)
 			motion_apply_win(m, *repeat, win);
 
 			/* check if we're now on a paren */
-			ui_match_paren(win);
+			if(ui_match_paren(win))
+				ui_redraw();
 
 			return;
 		} /* else no motion */
@@ -272,6 +272,9 @@ void ui_cur_changed()
 	}
 
 	if(win->ui_mode & UI_VISUAL_ANY)
+		need_redraw = 1;
+
+	if(ui_match_paren(win))
 		need_redraw = 1;
 
 	if(need_redraw)
