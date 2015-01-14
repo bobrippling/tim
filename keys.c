@@ -970,15 +970,15 @@ void word_man(const char *word, bool flag)
 	free(cmd);
 }
 
-void word_gofile(const char *fname, bool flag)
+void word_gofile(const char *fname, const bool new_window)
 {
-	if(buffers_cur()->modified){
+	if(!new_window && buffers_cur()->modified){
 		ui_err("buffer modified");
 		return;
 	}
 
 	bool success = false;
-	if(flag){
+	if(new_window){
 		buffer_t *new;
 		const char *err;
 		buffer_new_fname(&new, fname, &err);
