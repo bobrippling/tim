@@ -71,23 +71,38 @@ int m_sos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 	return MOTION_SUCCESS;
 }
 
-static int bottom_of_screen_or_buf(window *win)
+static void screen_or_buf_dimensions(
+		window *win, int *const y, int *const height)
 {
 	int nlines = list_count(win->buf->head);
 
-	return MIN(nlines, UI_TOP(win) + win->screen_coord.h - 1);
+	*y = UI_TOP(win);
+
+	if(nlines < win->screen_coord.h)
+		*height = nlines - *y;
+	else
+		*height = win->screen_coord.h - 1;
+
+	if(*height < 0)
+		*height = 0;
 }
 
 int m_eos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	to->y = bottom_of_screen_or_buf(win);
+	int y, h;
+	screen_or_buf_dimensions(win, &y, &h);
+	to->y = y + h;
+
 	start_of_line(to, win);
 	return MOTION_SUCCESS;
 }
 
 int m_mos(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
-	to->y = bottom_of_screen_or_buf(win) / 2;
+	int y, h;
+	screen_or_buf_dimensions(win, &y, &h);
+	to->y = y + h / 2;
+
 	start_of_line(to, win);
 	return MOTION_SUCCESS;
 }
