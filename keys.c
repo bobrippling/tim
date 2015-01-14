@@ -972,7 +972,7 @@ void word_man(const char *word, bool flag)
 
 void word_gofile(const char *fname, const bool new_window)
 {
-	if(!new_window && buffers_cur()->modified){
+	if(!new_window && buffers_modified_single(buffers_cur())){
 		ui_err("buffer modified");
 		return;
 	}
