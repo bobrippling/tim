@@ -1,0 +1,6 @@
+:r!echo hi:r!echo yo
+__IN__
+__OUT__
+
+hi
+yo

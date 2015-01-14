@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include <wordexp.h>
+#include <glob.h>
 
 #include "mem.h"
 
@@ -16,46 +16,62 @@
 #include "region.h"
 #include "range.h"
 #include "cmds.h"
+#include "window.h"
+#include "windows.h"
+#include "str.h"
 
 #include "parse_cmd.h"
 
 #include "config_cmds.h"
 
-static
-char *parse_arg(const char *arg)
-{
-	/* TODO: ~ substitution */
-	wordexp_t wexp;
-	memset(&wexp, 0, sizeof wexp);
+#ifndef GLOB_BRACE
+#  define GLOB_BRACE 0
+#endif
 
-	int r = wordexp(arg, &wexp, WRDE_NOCMD);
-
-	char *ret = r
-		? ustrdup(arg)
-		: join(" ", wexp.we_wordv, wexp.we_wordc);
-
-	wordfree(&wexp);
-
-	return ret;
-}
+#ifndef GLOB_TILDE
+#  define GLOB_TILDE 0
+#endif
 
 static void add_argv(
 		char ***pargv, int *pargc,
-		char **panchor, char *p)
+		char **panchor, char *current,
+		bool shellglob)
 {
 #define argv (*pargv)
 #define argc (*pargc)
 #define anchor (*panchor)
-	argv = urealloc(argv, (argc + 2) * sizeof *argv);
-	argv[argc++] = parse_arg(anchor);
+	char *failbuf;
 
-	anchor = p;
+	glob_t globbed = { 0 };
+	int argc_inc;
+	char **argv_add;
+
+	int flags = GLOB_MARK | GLOB_BRACE | GLOB_TILDE;
+
+	if(shellglob && 0 == glob(anchor, flags, /*errfunc*/NULL, &globbed)){
+		argc_inc = globbed.gl_pathc;
+		argv_add = globbed.gl_pathv;
+	}else{
+		argc_inc = 1;
+		argv_add = &failbuf;
+		failbuf = anchor;
+	}
+
+	argv = urealloc(argv, (argc + argc_inc + 1) * sizeof *argv);
+	for(int i = 0; i < argc_inc; i++)
+		argv[argc + i] = ustrdup(argv_add[i]);
+
+	argc += argc_inc;
+
+	globfree(&globbed);
+
+	anchor = current;
 #undef argv
 #undef argc
 #undef anchor
 }
 
-void parse_cmd(char *cmd, int *pargc, char ***pargv)
+void parse_cmd(char *cmd, int *pargc, char ***pargv, bool shellglob)
 {
 	int argc = *pargc;
 	char **argv = *pargv;
@@ -74,24 +90,23 @@ void parse_cmd(char *cmd, int *pargc, char ***pargv)
 
 		*p++ = '\0';
 
-		add_argv(&argv, &argc, &anchor, p);
+		add_argv(&argv, &argc, &anchor, p, shellglob);
 	}
 
 	if(anchor != p)
-		add_argv(&argv, &argc, &anchor, p);
+		add_argv(&argv, &argc, &anchor, p, shellglob);
 
 	*pargv = argv;
 	*pargc = argc;
 }
 
-void filter_cmd(int *pargc, char ***pargv)
+static void filter_argv(int *pargc, char ***pargv)
 {
-	/* check for '%' */
+	/* check for '%', '#' and * wildcard expansion */
 	int argc = *pargc;
 	char **argv = *pargv;
 	int i;
-	char *fnam = (char *)buffer_fname(buffers_cur());
-
+	const char *fnam = buffer_fname(buffers_cur());
 
 	for(i = 0; i < argc; i++){
 		char *p;
@@ -111,7 +126,7 @@ void filter_cmd(int *pargc, char ***pargv)
 
 						new = join("", (char *[]){
 								argv[i],
-								fnam,
+								(char *)fnam,
 								p + 1 }, 3);
 
 						free(argv[i]);
@@ -139,9 +154,7 @@ bool parse_ranged_cmd(
 	argv = NULL;
 	argc = 0;
 
-	char *cmd_i = cmd;
-	while(isspace(*cmd_i))
-		cmd_i++;
+	char *cmd_i = skipspace(cmd);
 
 	if(!*cmd_i)
 		return false;
@@ -154,6 +167,8 @@ bool parse_ranged_cmd(
 		case RANGE_PARSE_PASS:
 			break;
 	}
+
+	cmd_i = skipspace(cmd_i);
 
 	/* alpha or single non-ascii for command */
 	argc = 1;
@@ -183,20 +198,22 @@ bool parse_ranged_cmd(
 		return false;
 
 	force = false;
-	for(; isspace(*cmd_i); cmd_i++);
+	/* no whitespace - force must be directly after */
 	if(*cmd_i == '!')
 		force = true, cmd_i++;
+
+	cmd_i = skipspace(cmd_i);
 
 	if(cmd_f->single_arg){
 		argv = urealloc(argv, (++argc + 1) * sizeof *argv);
 		argv[1] = ustrdup(cmd_i);
 
 	}else{
-		parse_cmd(cmd_i, &argc, &argv);
+		parse_cmd(cmd_i, &argc, &argv, !cmd_f->skipglob);
 	}
 	argv[argc] = NULL;
 
-	filter_cmd(&argc, &argv);
+	filter_argv(&argc, &argv);
 
 	return true;
 #undef cmd_f

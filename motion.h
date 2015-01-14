@@ -6,7 +6,7 @@ typedef union motion_arg motion_arg;
 typedef int motion_func(
 		motion_arg const *,
 		unsigned repeat,
-		buffer_t *,
+		window *,
 		const point_t *from, point_t *to);
 
 enum motion_wise
@@ -54,6 +54,8 @@ motion_func m_visual;
 
 motion_func m_aggregate;
 
+void m_setlastsearch(char *, bool forward);
+
 typedef struct motion
 {
 	motion_func *func;
@@ -64,17 +66,19 @@ typedef struct motion
 #define MOTION_REPEAT() { NULL, 0U }
 #define DEFAULT_REPEAT(r) (r ? r : 1)
 
-int motion_apply_buf(
+int motion_apply_win(
 		const motion *, unsigned rep,
-		buffer_t *);
+		window *);
 
-int motion_apply_buf_dry(
+int motion_apply_win_dry(
 		const motion *, unsigned rep,
-		buffer_t *,
+		window *,
 		point_t const *from, point_t *to);
 
 bool motion_to_region(
 		const motion *m, unsigned repeat, bool always_linewise,
-		buffer_t *buf, region_t *out);
+		window *, region_t *out);
+
+void start_of_line(point_t *, window *w);
 
 #endif

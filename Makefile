@@ -8,10 +8,13 @@ CFLAGS = -Wall -Wextra -g -std=c11 -fms-extensions -fno-common \
 
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o buffers.o motion.o external.o str.o prompt.o io.o \
-	yank.o pos.o region.o retain.o range.o parse_cmd.o surround.o
+	yank.o pos.o region.o retain.o range.o parse_cmd.o word.o \
+	window.o windows.o ctags.o surround.o
+
+SRC = ${OBJ:.o=.c}
 
 tim: ${OBJ}
-	cc -o $@ ${OBJ} -lncurses
+	${CC} -o $@ ${OBJ} -lncurses
 
 check: tim
 	cd test && ./run.pl
@@ -23,7 +26,10 @@ clean:
 	rm -f ${OBJ} tim
 
 deps:
-	cc -MM ${OBJ:.o=.c} > Makefile.dep
+	${CC} -MM ${SRC} > Makefile.dep
+
+tags:
+	ctags ${SRC}
 
 include Makefile.dep
-.PHONY: check checkmem clean deps
+.PHONY: check checkmem clean deps tags

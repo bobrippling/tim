@@ -21,23 +21,27 @@ typedef struct cmd_t
 	};
 	bool single_arg;
 	bool inverse; /* e.g. :v */
+	bool skipglob;
 } cmd_t;
 
-cmd_f_argv c_q, c_cq;
-cmd_f_argv c_w;
-cmd_f_argv c_x;
-cmd_f_argv c_e;
+cmd_f_argv c_q, c_cq, c_qa;
+cmd_f_argv c_wa;
+cmd_f_argv c_x, c_xa;
+cmd_f_argv c_e, c_ene;
+cmd_f_argv c_only;
 cmd_f_argv c_p;
 cmd_f_argv c_j;
 cmd_f_argv c_d;
 cmd_f_argv c_m;
 
+cmd_f_argv c_n;
+
 cmd_f_arg1 c_g;
 cmd_f_arg1 c_norm;
-cmd_f_arg1 c_r;
+cmd_f_arg1 c_r, c_w;
 
-cmd_f_argv c_vs;
-cmd_f_argv c_sp;
+cmd_f_argv c_vs, c_vnew;
+cmd_f_argv c_sp, c_new;
 
 cmd_f_arg1 c_run;
 
@@ -45,5 +49,7 @@ bool cmd_dispatch(
 		const cmd_t *cmd_f,
 		int argc, char **argv,
 		bool force, struct range *range);
+
+bool edit_common(const char *fname, bool const force);
 
 #endif

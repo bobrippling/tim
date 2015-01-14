@@ -3,7 +3,7 @@
 
 typedef bool surround_func(
 		char arg, unsigned repeat,
-		buffer_t *, region_t *);
+		window *, region_t *);
 
 typedef struct surround_key
 {
@@ -20,7 +20,7 @@ surround_func surround_word;
 
 bool surround_apply(const surround_key_t *k,
 		char in_around, char type, unsigned repeat,
-		buffer_t *buf, region_t *r);
+		window *win, region_t *r);
 
 #define surround_beginning_char(ch) ((ch) == 'a' || (ch) == 'i')
 #define SURROUND_IN_CHAR 'i'

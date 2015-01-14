@@ -6,6 +6,7 @@
 
 #include "list.h"
 #include "buffer.h"
+#include "window.h"
 
 #include "motion.h"
 
@@ -15,9 +16,9 @@
 
 bool surround_apply(const surround_key_t *k,
 		char in_around, char type, unsigned repeat,
-		buffer_t *buf, region_t *r)
+		window *win, region_t *r)
 {
-	if(!k->func(type, repeat, buf, r))
+	if(!k->func(type, repeat, win, r))
 		return false;
 
 	if(in_around == SURROUND_IN_CHAR){
@@ -35,12 +36,12 @@ bool surround_apply(const surround_key_t *k,
 				}
 
 				list_advance_x(
-						list_seek(buf->head, r->begin.y, false),
+						list_seek(win->buf->head, r->begin.y, false),
 						+1, &r->begin.y, &r->begin.x);
 
 				if(xdiff > 0){
 					list_advance_x(
-							list_seek(buf->head, r->end.y, false),
+							list_seek(win->buf->head, r->end.y, false),
 							-1, &r->end.y, &r->end.x);
 				}
 				break;
@@ -48,7 +49,7 @@ bool surround_apply(const surround_key_t *k,
 			case REGION_LINE:
 				if(r->end.y > r->begin.y){
 					list_advance_y(
-							list_seek(buf->head, r->end.y, false),
+							list_seek(win->buf->head, r->end.y, false),
 							-1, &r->end.y, &r->end.x);
 				}
 				break;
@@ -60,19 +61,19 @@ bool surround_apply(const surround_key_t *k,
 static bool surround_via_motions(
 		motion const *m1, unsigned repeat1,
 		motion const *m2, unsigned repeat2,
-		buffer_t *buf, region_t *surround)
+		window *win, region_t *surround)
 {
 	return
-		motion_apply_buf_dry(m1, repeat1, buf,
-				buf->ui_pos, &surround->begin)
+		motion_apply_win_dry(m1, repeat1, win,
+				win->ui_pos, &surround->begin)
 		&&
-		motion_apply_buf_dry(m2, repeat2, buf,
+		motion_apply_win_dry(m2, repeat2, win,
 				&surround->begin, &surround->end);
 }
 
 bool surround_paren(
 		char arg, unsigned repeat,
-		buffer_t *buf, region_t *surround)
+		window *win, region_t *surround)
 {
 	/* essentially: [{v% */
 
@@ -95,22 +96,22 @@ bool surround_paren(
 	return surround_via_motions(
 			&find_paren, repeat,
 			&match_paren, 0,
-			buf, surround);
+			win, surround);
 }
 
 bool surround_quote(
 		const char arg, unsigned repeat,
-		buffer_t *buf, region_t *surround)
+		window *win, region_t *surround)
 {
-	list_t *line = buffer_current_line(buf, false);
+	list_t *line = window_current_line(win, false);
 	if(!line)
 		return false;
 
-	if((unsigned)buf->ui_pos->x >= line->len_line)
+	if((unsigned)win->ui_pos->x >= line->len_line)
 		return false;
 
 	int i;
-	for(i = buf->ui_pos->x; i >= 0; i--)
+	for(i = win->ui_pos->x; i >= 0; i--)
 		if(line->line[i] == arg)
 			break;
 	if(i < 0)
@@ -130,8 +131,8 @@ bool surround_quote(
 
 	*surround = (region_t){
 		.type = REGION_CHAR,
-		.begin = { .y = buf->ui_pos->y, .x = start },
-		.end   = { .y = buf->ui_pos->y, .x = i },
+		.begin = { .y = win->ui_pos->y, .x = start },
+		.end   = { .y = win->ui_pos->y, .x = i },
 	};
 
 	return true;
@@ -139,16 +140,16 @@ bool surround_quote(
 
 bool surround_block(
 		char arg, unsigned repeat,
-		buffer_t *buf, region_t *surround)
+		window *win, region_t *surround)
 {
-	return surround_paren('(', repeat, buf, surround);
+	return surround_paren('(', repeat, win, surround);
 }
 
 bool surround_para(
 		char arg, unsigned repeat,
-		buffer_t *buf, region_t *surround)
+		window *win, region_t *surround)
 {
-	list_t *line = buffer_current_line(buf, false);
+	list_t *line = window_current_line(win, false);
 	if(!line)
 		return false;
 
@@ -180,12 +181,12 @@ bool surround_para(
 	return surround_via_motions(
 			&up_para, 0,
 			&down_para, repeat,
-			buf, surround);
+			win, surround);
 }
 
 bool surround_word(
 		char arg, unsigned repeat,
-		buffer_t *buf, region_t *surround)
+		window *win, region_t *surround)
 {
 	return false;
 }

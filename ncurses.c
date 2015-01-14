@@ -21,6 +21,8 @@ void nc_init()
 		nonl();
 		intrflush(stdscr, 0);
 
+		set_escdelay(0);
+
 		if(has_colors()){
 			start_color();
 			use_default_colors();
@@ -173,6 +175,11 @@ void nc_style(enum nc_style s)
 void nc_addstr(char *s)
 {
 	addstr(s);
+}
+
+void nc_vprintf(const char *fmt, va_list l)
+{
+	vwprintw(stdscr, fmt, l);
 }
 
 int nc_LINES(void)

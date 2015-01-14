@@ -1,76 +1,44 @@
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
+#include <stddef.h>
 
 #include "pos.h"
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
 #include "buffers.h"
-#include "mem.h"
-#include "ui.h"
+#include "window.h"
+#include "windows.h"
 
-static buffer_t   *buf_sel;
-
-static char      **buf_list;
-static int         buf_c;
-
-buffer_t *buffers_cur()
+buffer_t *buffers_find(const char *fname)
 {
-	return buf_sel;
-}
+	if(!windows_cur()) /* called on startup */
+		return NULL;
 
-void buffers_set_cur(buffer_t *b)
-{
-	/* FIXME: free old */
-	buf_sel = b;
-}
+	window *w;
+	ITER_WINDOWS(w){
+		buffer_t *b = w->buf;
+		const char *thisfname = buffer_fname(b);
 
-void buffers_init(int argc, char **argv, enum buffer_init_args a, unsigned off)
-{
-	int i;
-
-	if(argc){
-		buf_c = argc;
-		buf_list = umalloc(argc * sizeof *buf_list);
-		for(i = 0; i < argc; i++)
-			buf_list[i] = ustrdup(argv[i]);
-
-		int err;
-		buffer_new_fname(&buf_sel, argv[0], &err);
-		if(err)
-			ui_err("\"%s\": %s", argv[0], strerror(errno));
-
-		enum buffer_neighbour dir;
-		switch(a){
-			case BUF_VALL: dir = BUF_RIGHT; break;
-			case BUF_HALL: dir = BUF_DOWN;  break;
-			default:
-				goto fin;
-		}
-
-		buffer_t *prev_buf = buf_sel;
-		for(i = 1; i < argc; i++){
-			buffer_t *b;
-
-			buffer_new_fname(&b, argv[i], &err);
-			/* FIXME: ignore errors? */
-
-			buffer_add_neighbour(prev_buf, dir, b);
-
-			prev_buf = b;
-		}
-	}else{
-		buf_sel = buffer_new();
+		if(thisfname && !strcmp(thisfname, fname))
+			return b;
 	}
 
-fin:
-	if(off)
-		buf_sel->ui_pos->y = off;
+	return NULL;
 }
 
-void buffers_term(void)
+bool buffers_modified_single(const buffer_t *b)
 {
-	if(buf_sel)
-		buffer_free(buf_sel), buf_sel = NULL;
+	return b->modified && buffer_opencount(b) == 1;
+}
+
+bool buffers_modified_excluding(buffer_t *excluding)
+{
+	window *win;
+
+	ITER_WINDOWS(win)
+		if(win->buf != excluding && win->buf->modified)
+			return true;
+
+	return false;
 }

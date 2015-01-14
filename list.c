@@ -20,6 +20,7 @@
 #include "str.h"
 #include "mem.h"
 #include "macros.h"
+#include "word.h"
 
 list_t *list_new(list_t *prev)
 {
@@ -115,6 +116,11 @@ static list_t *list_new_fd(int fd, bool *eol)
 	if(st.st_size == 0)
 		goto fallback; /* could be stdin */
 
+	if(S_ISDIR(st.st_mode)){
+		errno = EISDIR;
+		return NULL;
+	}
+
 	void *mem = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
 	if(mem == MAP_FAILED){
@@ -188,14 +194,13 @@ int list_write_file(list_t *l, int n, FILE *f, bool eol)
 
 void list_free(list_t *l)
 {
-	if(l){
+	while(l){
 		list_t *next = l->next;
 
 		free(l->line);
 		free(l);
 
-		/* tco */
-		list_free(next);
+		l = next;
 	}
 }
 
@@ -626,7 +631,9 @@ void list_insline(list_t **pl, int *x, int *y, int dir)
 	if(dir < 0)
 		--*y;
 
-	l = list_seek(*pl, *y, true);
+	/* list_seekp() to create if necessary,
+	 * and make that creation available in *pl */
+	l = *list_seekp(pl, *y, true);
 
 	save = l->next;
 	l->next = list_new(l);
@@ -832,6 +839,91 @@ list_t *list_last(list_t *l, int *py)
 		return NULL;
 	for(; l->next; l = l->next, ++*py);
 	return l;
+}
+
+char *list_word_at(list_t *l, point_t const *pt)
+{
+	l = list_seek(l, pt->y, false);
+	if(!l)
+		return NULL;
+
+	const bool bigwords = false;
+
+	/* forwards until we hit a word */
+	point_t found = *pt;
+	l = word_seek(l, +1, &found, W_KEYWORD, bigwords);
+	if(!l || found.y != pt->y)
+		return NULL;
+
+	/* back until the start of the word */
+	word_seek_to_end(l, -1, &found, bigwords);
+
+	/* forwards until the end of the word */
+	point_t end = found;
+	word_seek_to_end(l, +1, &end, bigwords);
+
+	return ustrdup_len(l->line + found.x, end.x - found.x + 1);
+}
+
+static bool isfnamechar(char c)
+{
+	switch(c){
+		case 'a' ... 'z':
+		case 'A' ... 'Z':
+		case '0' ... '9':
+			return true;
+	}
+
+	const char *fname_chars = "/.-_+,#$%~=";
+	return strchr(fname_chars, c);
+}
+
+char *list_fname_at(list_t *l, point_t const *pt)
+{
+	l = list_seek(l, pt->y, false);
+	if(!l)
+		return NULL;
+
+	if((unsigned)pt->x >= l->len_line)
+		return NULL;
+
+	int start = pt->x;
+	if(isfnamechar(l->line[start])){
+		/* look backwards for the start */
+		for(; start >= 0 && isfnamechar(l->line[start]); start--)
+			;
+
+		if(start < 0)
+			start = 0;
+		else /* !isfnamechar(line[start]) */
+			start++;
+
+	}else{
+		/* look forwards for the beginning */
+		for(; !isfnamechar(l->line[start]) && (unsigned)start < l->len_line; start++)
+			;
+
+		if((unsigned)start == l->len_line)
+			return NULL;
+	}
+
+
+	int end = start;
+	for(; (unsigned)end < l->len_line && isfnamechar(l->line[end]); end++)
+		;
+
+	/* end is either at the end of the line or not a fnamechar,
+	 * either way: */
+	end--;
+
+	/* avoid '.' at the end */
+	if(end > 0 && l->line[end] == '.')
+		end--;
+
+	if(end <= start)
+		return NULL;
+
+	return ustrdup_len(&l->line[start], end - start + 1);
 }
 
 void list_clear_flag(list_t *l)
