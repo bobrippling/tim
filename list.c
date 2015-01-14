@@ -908,7 +908,7 @@ char *list_fname_at(list_t *l, point_t const *pt)
 	if(end > 0 && l->line[end] == '.')
 		end--;
 
-	if(end <= start)
+	if(end < start)
 		return NULL;
 
 	return ustrdup_len(&l->line[start], end - start + 1);
