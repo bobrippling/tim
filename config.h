@@ -44,6 +44,7 @@ const motionkey_t motion_keys[] = {
 
 	{ "0",            { m_goto, { .pos = { 0, -1 } }, M_EXCLUSIVE } },
 	{ "^",            { m_sol,  MOTION_ARG_NONE,      M_EXCLUSIVE } },
+	{ "|",            { m_col, MOTION_ARG_NONE, M_NONE } },
 	{ "$",            { m_eol,  { 0 }, M_NONE } },
 	{ "g_",           { m_eol,  { 1 }, M_NONE } },
 

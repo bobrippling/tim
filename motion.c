@@ -132,6 +132,15 @@ int m_sol(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 	return MOTION_SUCCESS;
 }
 
+int m_col(motion_arg const *m, unsigned repeat, window *win, point_t *to)
+{
+	if(repeat == 0)
+		to->x = 0;
+	else
+		to->x = repeat - 1;
+	return MOTION_SUCCESS;
+}
+
 static int m_linesearch(
 		motion_arg const *arg, unsigned repeat, window *win, point_t *to,
 		list_t *sfn(motion_arg const *, list_t *, int *, const void *),
