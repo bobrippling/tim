@@ -990,29 +990,23 @@ void word_gofile(const char *fname, const bool new_window)
 		const char *err;
 		buffer_new_fname(&new, expanded, &err);
 
-		if(err){
+		if(err)
 			ui_err("%s: %s", expanded, err);
-		}else{
-			success = true;
-		}
 
-		if(success){
-			window *wnew = window_new(new);
+		/* open a window there anyway */
+		window *wnew = window_new(new);
 
-			window_add_neighbour(windows_cur(), neighbour_up, wnew);
-			buffer_release(new);
+		window_add_neighbour(windows_cur(), neighbour_up, wnew);
+		buffer_release(new);
 
-			windows_set_cur(wnew);
-		}
+		windows_set_cur(wnew);
 
 	}else{
-		success = edit_common(expanded, false);
+		edit_common(expanded, false);
 	}
 
-	if(success){
-		ui_redraw();
-		ui_cur_changed();
-	}
+	ui_redraw();
+	ui_cur_changed();
 
 	if(free_expanded)
 		free(expanded);
