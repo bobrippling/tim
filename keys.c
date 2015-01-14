@@ -977,14 +977,21 @@ void word_gofile(const char *fname, const bool new_window)
 		return;
 	}
 
-	bool success = false;
+	/* just expand ~ */
+	bool free_expanded = true;
+	char *expanded = expand_tilde(fname);
+	if(!expanded){
+		expanded = (char *)fname;
+		free_expanded = false;
+	}
+
 	if(new_window){
 		buffer_t *new;
 		const char *err;
-		buffer_new_fname(&new, fname, &err);
+		buffer_new_fname(&new, expanded, &err);
 
 		if(err){
-			ui_err("%s: %s", fname, err);
+			ui_err("%s: %s", expanded, err);
 		}else{
 			success = true;
 		}
@@ -999,13 +1006,16 @@ void word_gofile(const char *fname, const bool new_window)
 		}
 
 	}else{
-		success = edit_common(fname, false);
+		success = edit_common(expanded, false);
 	}
 
 	if(success){
 		ui_redraw();
 		ui_cur_changed();
 	}
+
+	if(free_expanded)
+		free(expanded);
 }
 
 void k_normal1(const keyarg_u *a, unsigned repeat, const int from_ch)

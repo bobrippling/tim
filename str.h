@@ -24,4 +24,6 @@ char *tim_strstr(
 		size_t len,
 		const char *restrict needle);
 
+char *expand_tilde(const char *);
+
 #endif

@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "str.h"
+#include "mem.h"
 
 char *strchr_rev(const char *s, int ch, const char *start)
 {
@@ -119,4 +121,36 @@ void str_rtrim(char *s, size_t *pl)
 	}
 
 	*pl = i;
+}
+
+char *expand_tilde(const char *in)
+{
+	if(*in != '~')
+		return NULL;
+
+	const char *user = in + 1;
+
+	if(isalpha(*user)){
+		const char *user_end;
+
+		for(user_end = user; isalnum(*user_end); user_end++);
+		/* TODO */
+
+		return NULL;
+	}else{
+		/* plain ~ */
+		const char *home = getenv("HOME");
+		if(!home)
+			return NULL;
+
+		size_t homelen = strlen(home);
+		size_t userlen = strlen(user);
+		size_t len = homelen + userlen + 1;
+		char *ret = umalloc(len);
+
+		memcpy(ret, home, homelen);
+		memcpy(ret + homelen, user, userlen);
+		ret[homelen + userlen] = '\0';
+		return ret;
+	}
 }
