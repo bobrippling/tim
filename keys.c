@@ -468,7 +468,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 	}else{
 		/* single char */
 		bool raw;
-		int ch = io_getch(IO_NOMAP, &raw, true);
+		int ch = io_getch(IO_NOMAP | IO_MAPRAW, &raw, true);
 
 		if(!raw && ch == K_ESC)
 			return;
@@ -498,10 +498,13 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 		 */
 		const bool ins_nl = r.type == REGION_CHAR
 			&& r.begin.y == r.end.y
-			&& (!raw && ch == '\r');
+			&& !raw
+			&& isnewline(ch);
 
 		if(ins_nl)
 			ch = '\n';
+		else if(ch == '\n')
+			ch = '\r'; /* not an explicit newline - force ^M / \r */
 
 		buffer_t *const buf = win->buf;
 
