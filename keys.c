@@ -254,10 +254,15 @@ void k_scroll(const keyarg_u *a, unsigned repeat, const int from_ch)
 	if(win->ui_start.y < 0)
 		win->ui_start.y = 0;
 
-	if(win->ui_pos->y < win->ui_start.y)
+	if(win->ui_pos->y < win->ui_start.y){
 		win->ui_pos->y = win->ui_start.y;
-	else if(win->ui_pos->y >= win->ui_start.y + win->screen_coord.h)
-		win->ui_pos->y = win->ui_start.y + win->screen_coord.h - 1;
+	}else{
+		const int lw = window_visible_linewrap(win);
+		const int bottom = win->ui_start.y + win->screen_coord.h - lw - 1;
+
+		if(win->ui_pos->y > bottom)
+			win->ui_pos->y = bottom;
+	}
 
 	ui_redraw();
 	ui_cur_changed();
