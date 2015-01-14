@@ -147,6 +147,12 @@ bool edit_common(const char *fname, bool const force)
 		ret = true;
 	}else{
 		ui_err("%s: %s", fname, err);
+		if(!reload){
+			/* wipe the buffer, e.g. :e /root/hi */
+			buffer_t *empty = buffer_new();
+			window_replace_buffer(win, empty);
+			buffer_release(empty);
+		}
 	}
 
 	buffer_set_fname(buffers_cur(), fname);
