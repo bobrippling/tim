@@ -317,9 +317,8 @@ point_t window_toscreen(const window *win, point_t const *pt)
 
 		if(coord.y > wrapped_y){
 			point_t clamped = {
-				/* add one to x - this puts it in the '\\' zone, making it more
-				 * obvious that it's not actually on the screen */
-				.x = screen_w,
+				/* add one to screen_w to compensate for wrapped lines, as above */
+				.x = screen_w - (n_wrapped_lines_this ? 0 : 1),
 				.y = wrapped_y,
 			};
 
