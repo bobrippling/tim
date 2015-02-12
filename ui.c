@@ -229,9 +229,11 @@ int ui_main()
 		if(win->ui_mode & UI_VISUAL_ANY){
 			point_t *alt = window_uipos_alt(win);
 
-			ui_rstatus("%d,%d - %d,%d",
+			ui_rstatus("%d,%d - %d,%d %dx%d",
 					win->ui_pos->y, win->ui_pos->x,
-					alt->y, alt->x);
+					alt->y, alt->x,
+					1 + abs(win->ui_pos->x - alt->x),
+					1 + abs(win->ui_pos->y - alt->y));
 		}
 
 		const enum io io_mode = bufmode_to_iomap(win->ui_mode);
