@@ -645,8 +645,10 @@ int list_filter(
 {
 	pl = list_seekp(pl, region->begin.y, false);
 
-	if(!pl)
+	if(!pl){
+		errno = EINVAL;
 		return -1;
+	}
 
 	int child_in[2], child_out[2];
 	if(pipe(child_in))
