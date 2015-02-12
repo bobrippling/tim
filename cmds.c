@@ -31,11 +31,11 @@
 		return false;                        \
 	}
 
-#define RANGE_DEFAULT(range, store, y) \
-	if(!range){                          \
-		store.start = store.end = y;       \
-		range = &store;                    \
-	}                                    \
+#define RANGE_DEFAULT(range, store, win)           \
+	if(!range){                                      \
+		store.start = store.end = win->ui_pos->y;      \
+		range = &store;                                \
+	}                                                \
 	range_sort(range)
 
 #define ARGV_NO()               \
@@ -454,7 +454,7 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	buffer_t *const b = win->buf;
 
 	struct range rng;
-	RANGE_DEFAULT(range, rng, win->ui_pos->y);
+	RANGE_DEFAULT(range, rng, win);
 
 	*win->ui_pos = (point_t){ .y = range->start };
 
@@ -629,7 +629,7 @@ bool c_p(int argc, char **argv, bool force, struct range *range)
 	window *win = windows_cur();
 
 	struct range rng;
-	RANGE_DEFAULT(range, rng, win->ui_pos->y);
+	RANGE_DEFAULT(range, rng, win);
 
 	buffer_t *const b = win->buf;
 
@@ -651,7 +651,7 @@ static void command_bufaction(
 	window *win = windows_cur();
 
 	struct range range_store;
-	RANGE_DEFAULT(range, range_store, win->ui_pos->y);
+	RANGE_DEFAULT(range, range_store, win);
 
 	range->end += end_add;
 
@@ -694,7 +694,7 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 	window *win = windows_cur();
 
 	struct range range_store;
-	RANGE_DEFAULT(range, range_store, win->ui_pos->y);
+	RANGE_DEFAULT(range, range_store, win);
 
 	if(range->start <= lno && lno <= range->end){
 		ui_err("can't move lines into themselves");
@@ -941,7 +941,7 @@ bool c_norm(char *cmd, char *normcmd, bool force, struct range *range)
 	window *win = windows_cur();
 
 	struct range rng;
-	RANGE_DEFAULT(range, rng, win->ui_pos->y);
+	RANGE_DEFAULT(range, rng, win);
 
 	size_t normcmdlen = strlen(normcmd);
 
