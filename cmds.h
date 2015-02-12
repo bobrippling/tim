@@ -32,7 +32,7 @@ cmd_f_argv c_only;
 cmd_f_argv c_p;
 cmd_f_argv c_j;
 cmd_f_argv c_d;
-cmd_f_argv c_m;
+cmd_f_argv c_m, c_t;
 
 cmd_f_argv c_n;
 

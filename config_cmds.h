@@ -28,6 +28,8 @@ const cmd_t cmds[] = {
 	{ "d",   .f_argv = c_d   },
 	{ "m",   .f_argv = c_m   },
 
+	{ "t",   .f_argv = c_t   },
+
 	{ "g",   .f_arg1 = c_g, .single_arg = true, .skipglob = true },
 	{ "v",   .f_arg1 = c_g, .single_arg = true, .inverse = true, .skipglob = true },
 

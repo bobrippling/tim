@@ -775,6 +775,75 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
+bool c_t(int argc, char **argv, bool force, struct range *range)
+{
+	if(argc != 2){
+		ui_err("Usage: %s address", *argv);
+		return false;
+	}
+
+	struct range range_store;
+	int lno;
+	if(!copy_move_common(argc, argv, &range, &range_store, &lno))
+		return false;
+
+	buffer_t *const b = windows_cur()->buf;
+
+	list_t *landing = list_seek(b->head, lno, false);
+	if(!landing)
+		NO_LINE(lno);
+
+	/* copy the range */
+	list_t *start = list_seek(b->head, range->start, false);
+	if(!start)
+		NO_LINE(range->start);
+
+	list_t *end = list_seek(b->head, range->end, false);
+	if(!end)
+		NO_LINE(range->end);
+
+	list_t *copied;
+	/* break the bottom link temporarily for the copy */
+	{
+		list_t *after = end->next;
+		end->next = NULL;
+
+		copied = list_copy_deep(start, NULL);
+		end->next = after;
+	}
+
+	if(lno == -1){
+		/* special case - head */
+		list_t *head = b->head;
+
+		b->head = copied;
+		list_t *i;
+		for(i = b->head; i->next; i = i->next);
+
+		i->next = head;
+		if(head)
+			head->prev = i;
+
+	}else{
+		list_t *next = landing->next;
+		landing->next = copied;
+		copied->prev = landing;
+
+		list_t *i;
+		for(i = landing; i->next; i = i->next);
+		i->next = next;
+		if(next)
+			next->prev = i;
+	}
+
+	b->modified = true;
+
+	ui_redraw();
+	ui_cur_changed();
+
+	return true;
+}
+
 bool c_d(int argc, char **argv, bool force, struct range *range)
 {
 	ARGV_NO();

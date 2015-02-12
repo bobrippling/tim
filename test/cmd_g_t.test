@@ -1,0 +1,19 @@
+:g/this/t$
+__IN__
+1
+2 this
+3
+4 this
+5 this
+6 this
+__OUT__
+1
+2 this
+3
+4 this
+5 this
+6 this
+2 this
+4 this
+5 this
+6 this
