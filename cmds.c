@@ -458,11 +458,25 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 
 	*win->ui_pos = (point_t){ .y = range->start };
 
-	int streamerr;
-	FILE *stream;
-	int (*stream_close)(FILE *);
+	list_t *lines = NULL;
 
-	if(!via_shell){
+	if(via_shell){
+		lines = list_new(NULL);
+		int err = list_filter(
+				&lines,
+				&(region_t){ .type = REGION_LINE, },
+				rest);
+
+		const int eno = errno;
+
+		ui_redraw();
+
+		if(err){
+			ui_err("read process: %s", strerror(eno));
+			return false;
+		}
+
+	}else{
 		int argc = 0;
 		char **argv = NULL;
 		parse_cmd(rest, &argc, &argv, /*shell glob*/true);
@@ -473,24 +487,18 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 			return false;
 		}
 
-		stream = fopen(argv[0], "r");
-		streamerr = errno;
-		stream_close = &fclose;
+		FILE *stream = fopen(argv[0], "r");
+
+		if(!stream){
+			ui_err("%s: %s", rest, strerror(errno));
+			return false;
+		}
 
 		free_argv(argv, argc);
-	}else{
-		stream = popen(rest, "r");
-		streamerr = errno;
-		stream_close = &pclose;
-	}
 
-	if(!stream){
-		ui_err("%s: %s", rest, strerror(streamerr));
-		return false;
+		lines = list_new_file(stream, /*eol:*/&(bool){ false });
+		fclose(stream);
 	}
-
-	list_t *lines = list_new_file(stream, /*eol:*/&(bool){ false });
-	(*stream_close)(stream);
 
 	b->head = list_append(b->head, window_current_line(win, true), lines);
 
