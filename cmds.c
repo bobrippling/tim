@@ -33,7 +33,7 @@
 
 #define RANGE_DEFAULT(range, store, win)           \
 	if(!range){                                      \
-		store.start = store.end = win->ui_pos->y;      \
+		(store).start = (store).end = win->ui_pos->y;      \
 		range = &store;                                \
 	}                                                \
 	range_sort(range)
@@ -672,6 +672,30 @@ static void command_bufaction(
 	ui_cur_changed();
 }
 
+static bool copy_move_common(
+		int argc, char **argv,
+		struct range **const range,
+		struct range *const range_store,
+		int *const out_addr)
+{
+	if(argc != 2){
+		ui_err("Usage: %s address", *argv);
+		return false;
+	}
+
+	char *addr_end;
+	if(!parse_range_1(argv[1], &addr_end, out_addr) || *addr_end){
+		ui_err("bad address: \"%s\"", argv[1]);
+		return false;
+	}
+
+	window *win = windows_cur();
+
+	RANGE_DEFAULT(*range, *range_store, win);
+
+	return true;
+}
+
 bool c_m(int argc, char **argv, bool force, struct range *range)
 {
 #define NO_LINE(ln) do{             \
@@ -679,29 +703,17 @@ bool c_m(int argc, char **argv, bool force, struct range *range)
 		return false;                   \
 	}while(0)
 
-	if(argc != 2){
-		ui_err("Usage: %s address", *argv);
-		return false;
-	}
-
-	int lno;
-	char *addr_end;
-	if(!parse_range_1(argv[1], &addr_end, &lno) || *addr_end){
-		ui_err("bad address: \"%s\"", argv[1]);
-		return false;
-	}
-
-	window *win = windows_cur();
-
 	struct range range_store;
-	RANGE_DEFAULT(range, range_store, win);
+	int lno;
+	if(!copy_move_common(argc, argv, &range, &range_store, &lno))
+		return false;
 
 	if(range->start <= lno && lno <= range->end){
 		ui_err("can't move lines into themselves");
 		return false;
 	}
 
-	buffer_t *const b = win->buf;
+	buffer_t *const b = windows_cur()->buf;
 
 	list_t *landing = list_seek(b->head, lno, false);
 	if(!landing)
