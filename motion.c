@@ -25,12 +25,24 @@ enum
 	MOTION_SUCCESS = 1
 };
 
+static void start_of_line_given(list_t *l, point_t *to)
+{
+	if(l){
+		unsigned i;
+		for(i = 0; i < l->len_line && isspace(l->line[i]); i++);
+
+		to->x = i < l->len_line ? i : 0;
+	}else{
+		to->x = 0;
+	}
+}
+
 void start_of_line(point_t *pt, window *w)
 {
 	if(!pt)
 		pt = w->ui_pos;
 
-	m_sol(NULL, 0, w, pt);
+	start_of_line_given(list_seek(w->buf->head, pt->y, false), pt);
 }
 
 static int m_line_goto(point_t *const pt, unsigned repeat, bool end, window *win)
@@ -135,15 +147,8 @@ int m_sof(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 int m_sol(motion_arg const *m, unsigned repeat, window *win, point_t *to)
 {
 	list_t *l = window_current_line(win, false);
-	unsigned int i;
 
-	if(l){
-		for(i = 0; i < l->len_line && isspace(l->line[i]); i++);
-
-		to->x = i < l->len_line ? i : 0;
-	}else{
-		to->x = 0;
-	}
+	start_of_line_given(l, to);
 	return MOTION_SUCCESS;
 }
 
