@@ -340,17 +340,22 @@ bool c_wa(int argc, char **argv, bool force, struct range *range)
 
 bool c_x(int argc, char **argv, bool force, struct range *range)
 {
-	buffer_t *buf = buffers_cur();
-
 	RANGE_NO();
+
+	if(argc > 2){
+		ui_err("usage: %s [filename]", *argv);
+		return false;
+	}
+
+	buffer_t *buf = buffers_cur();
 
 	/* if no modifications, don't try to write
 	 * this is done in vi and helps ZZ */
-	if(buf->fname && !buf->modified)
+	if(argc == 1 && buf->fname && !buf->modified)
 		return c_q(argc, argv, false, range);
 
-	return c_w("w", (char []){ "" }, false, range)
-		&& c_q(1, (char *[]){ *argv, NULL }, false, NULL);
+	return c_w("w", argc > 1 ? argv[1] : "", false, range)
+		&& c_q(1, (char *[]){ "" }, false, NULL);
 }
 
 bool c_xa(int argc, char **argv, bool force, struct range *range)
