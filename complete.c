@@ -114,8 +114,10 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 	}
 }
 
-void complete_filter(struct complete_ctx *c, int newch)
+void complete_filter(struct complete_ctx *c, int newch, bool *const cancel)
 {
+	*cancel = false;
+
 	switch(newch){
 		case_BACKSPACE:
 			if(c->current_word_len){
@@ -130,7 +132,8 @@ void complete_filter(struct complete_ctx *c, int newch)
 				for(; (ent = hash_ent(c->ents, i)); i++)
 					ent->hidden = false;
 			}else{
-				/* TODO - cancel */
+				*cancel = true;
+				return;
 			}
 			break;
 

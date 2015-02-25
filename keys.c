@@ -808,9 +808,12 @@ handle_sel:
 			default:
 			{
 				if(isalnum(ch) || ch == '_'){
+					bool cancel;
 			case_BACKSPACE:
-					complete_filter(&ctx, ch);
+					complete_filter(&ctx, ch, &cancel);
 					buffer_inschar(buf, ch);
+					if(cancel)
+						sel = END_OTHERCHAR;
 				}else{
 					sel = END_OTHERCHAR;
 					io_ungetch(ch); /* TODO: needs to be re-read as raw */
