@@ -370,7 +370,7 @@ static void ui_complete_line(
 	for(; s[i] && i < xmax; i++)
 		nc_addch(s[i]);
 
-	for(; i < longest; i++)
+	for(; i < longest && i < xmax; i++)
 		nc_addch(' ');
 
 	nc_highlight(false);
