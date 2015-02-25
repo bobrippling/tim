@@ -8,7 +8,7 @@
 #define case_BACKSPACE     \
 			case CTRL_AND('?'):  \
 			case CTRL_AND('H'):  \
-			case 263:            \
 			case 127
+/* (char)263 == 7 */
 
 #endif
