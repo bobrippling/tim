@@ -179,3 +179,53 @@ void *complete_hash_ent(struct hash *h, size_t i)
 		return ent;
 	}
 }
+
+void complete_to_longest_common(
+		struct complete_ctx *ctx,
+		size_t *const n_to_insert)
+{
+	*n_to_insert = 0;
+
+	void *first = complete_hash_ent(ctx->ents, 0);
+	if(!first)
+		return;
+
+	char *longest = ustrdup(complete_1_getstr(first));
+	size_t longest_len = strlen(longest);
+
+	void *ent;
+	for(size_t ient = 1; (ent = complete_hash_ent(ctx->ents, ient)); ient++){
+		const char *const this = complete_1_getstr(ent);
+
+		if(!*this)
+			continue;
+
+		/* first char at which they differ */
+		size_t i;
+		for(i = 0; i < longest_len && this[i]; i++)
+			if(this[i] != longest[i])
+				break;
+
+		if(i < longest_len){
+			/* they are different - truncate longest_len */
+			longest_len = i;
+		}
+	}
+
+	if(longest_len == 0)
+		goto out;
+	if(longest_len <= ctx->current_word_len)
+		goto out;
+
+	longest[longest_len] = '\0';
+
+	*n_to_insert = longest_len - ctx->current_word_len;
+
+	free(ctx->current_word);
+	ctx->current_word = longest;
+	longest = NULL;
+	ctx->current_word_len = longest_len;
+
+out:
+	free(longest);
+}

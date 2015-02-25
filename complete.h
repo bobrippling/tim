@@ -15,6 +15,10 @@ bool complete_init(struct complete_ctx *, char *line, unsigned len, int x);
 void complete_gather(char *line, size_t, void *ctx);
 void complete_teardown(struct complete_ctx *);
 
+void complete_to_longest_common(
+		struct complete_ctx *ctx,
+		size_t *const n_to_insert);
+
 void complete_filter(
 		struct complete_ctx *, int newch,
 		bool *const cancel, bool *const recalc);

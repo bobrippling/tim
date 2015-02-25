@@ -740,8 +740,7 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	const int x_anchor = buf->ui_pos->x - ctx.current_word_len;
 	bool recalc = true;
-
-	/* TODO: need to advance up to longest common subsequence */
+	bool initial = true;
 
 	int sel = 0;
 	while(sel >= 0){
@@ -755,6 +754,20 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 					LIST_ITER_WHOLE_LINE, complete_gather, &ctx);
 
 			recalc = false;
+
+			if(initial){
+				size_t to_insert;
+				complete_to_longest_common(&ctx, &to_insert);
+
+				if(to_insert){
+					char *start = ctx.current_word + ctx.current_word_len - to_insert;
+					buffer_insstr(buf, start, to_insert);
+					ui_redraw();
+					ui_cur_changed();
+				}
+
+				initial = false;
+			}
 		}
 
 		ui_draw_completion(
