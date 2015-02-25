@@ -169,9 +169,7 @@ const char *buffer_fname(const buffer_t *b)
 void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 {
 	switch(ch){
-		case CTRL_AND('?'):
-		case CTRL_AND('H'):
-		case 127:
+		case_BACKSPACE:
 			if(*x > 0)
 				buffer_delchar(buf, x, y);
 			break;
