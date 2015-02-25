@@ -773,7 +773,7 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 		ui_draw_completion(
 				ctx.ents,
-				sel,
+				sel - 1,
 				&(point_t){ .y = buf->ui_pos->y - buf->ui_start.y, .x = x_anchor },
 				&complete_1_ishidden,
 				&complete_1_getstr);

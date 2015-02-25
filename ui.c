@@ -363,6 +363,9 @@ static void ui_complete_line(
 		const size_t longest)
 {
 	nc_highlight(true);
+	if(selected)
+		nc_style(ATTR_BOLD);
+
 	nc_set_yx(at->y, at->x);
 
 	const unsigned xmax = nc_COLS();
@@ -374,6 +377,7 @@ static void ui_complete_line(
 		nc_addch(' ');
 
 	nc_highlight(false);
+	nc_style(0);
 }
 
 #define COMPL_MAX 10
