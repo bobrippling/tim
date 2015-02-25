@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <assert.h>
 
 #include "hash.h"
 
@@ -357,17 +358,19 @@ void ui_clear(void)
 
 static void ui_complete_line(
 		const point_t *at,
-		const char *s, bool selected,
-		size_t padding)
+		const char *s,
+		bool selected,
+		const size_t longest)
 {
 	nc_highlight(true);
 	nc_set_yx(at->y, at->x);
 
-	const int xmax = nc_COLS();
-	for(int i = 0; s[i] && i < xmax; i++, padding--)
+	const unsigned xmax = nc_COLS();
+	size_t i = 0;
+	for(; s[i] && i < xmax; i++)
 		nc_addch(s[i]);
 
-	while(padding --> 0)
+	for(; i < longest; i++)
 		nc_addch(' ');
 
 	nc_highlight(false);
@@ -377,9 +380,7 @@ static void ui_complete_line(
 void ui_draw_completion(
 		struct hash *ents, const int sel,
 		point_t const *at,
-		const size_t len,
-		bool is_hidden(void *),
-		char *get_str(void *))
+		bool is_hidden(const void *), char *get_str(const void *))
 {
 	point_t nc_orig;
 	nc_get_yx(&nc_orig.y, &nc_orig.x);
@@ -400,12 +401,14 @@ void ui_draw_completion(
 	}
 
 	const int lastline = nc_LINES() - 1;
-	int count = 0;
 
-	for(int i = start; (p = hash_ent(ents, i)); i++){
+	for(int i = start, count = 0;
+			count < COMPL_MAX && (p = hash_ent(ents, i));
+			i++)
+	{
 		const char *ent_str = get_str(p);
 
-		if(is_hidden(p) || strlen(ent_str) <= len)
+		if(is_hidden(p))
 			continue;
 
 		point_t where = {
@@ -413,13 +416,13 @@ void ui_draw_completion(
 			.x = at->x
 		};
 
-		if(count == COMPL_MAX || where.y == lastline){
-			ui_complete_line(&where, "...", false, longest - len);
+		if(count == COMPL_MAX - 1 || where.y == lastline){
+			ui_complete_line(&where, "[more...]", false, longest);
+			count = COMPL_MAX;
 		}else{
-			ui_complete_line(&where, ent_str + len, i == sel, longest - len);
+			ui_complete_line(&where, ent_str, i == sel, longest);
+			count++;
 		}
-
-		count++;
 	}
 
 	nc_set_yx(nc_orig.y, nc_orig.x);

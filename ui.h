@@ -33,9 +33,7 @@ extern enum ui_ec
 void ui_draw_completion(
 		struct hash *ents, const int sel,
 		point_t const *at,
-		size_t len,
-		bool (void *),
-		char *(void *));
+		bool (const void *), char *(const void *));
 #endif
 
 #endif
