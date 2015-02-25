@@ -727,89 +727,103 @@ void k_ins_colcopy(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	buffer_t *b = buffers_cur();
-	region_t r = {
-		.type = REGION_LINE,
-		.end.y = buffer_nlines(b) + 1
-	};
+	enum { END_OTHERCHAR = -2, END_ESC = -1 };
+	buffer_t *buf = buffers_cur();
 
-	list_t *l = buffer_current_line(b);
-
-	if(!l)
-		return;
+	list_t *l = buffer_current_line(buf);
 
 	struct complete_ctx ctx;
-	if(!complete_init(&ctx, l->line, l->len_line, b->ui_pos->x)){
+	if(!l || !complete_init(&ctx, l->line, l->len_line, buf->ui_pos->x)){
 		ui_err("can't complete");
 		return;
 	}
 
-	size_t const first_len = ctx.current_len;
+	region_t entire_buffer = {
+		.type = REGION_LINE,
+		.end.y = buffer_nlines(buf) + 1
+	};
+	list_iter_region(buf->head, &entire_buffer,
+			LIST_ITER_WHOLE_LINE, complete_gather, &ctx);
 
-	list_iter_region(b->head, &r, LIST_ITER_WHOLE_LINE,
-			complete_gather, &ctx);
+	const int x_anchor = buf->ui_pos->x - ctx.current_word_len;
+
+	/* TODO: need to advance up to longest common subsequence */
 
 	int sel = 0;
-	for(;;){
-		ui_draw_completion(ctx.ents, sel, b->ui_pos, ctx.current_len,
-				&complete_1_ishidden, &complete_1_getstr);
-
-		/* TODO: need to advance up to longest common subsequence */
+	while(sel >= 0){
+		ui_draw_completion(
+				ctx.ents,
+				sel,
+				&(point_t){ .y = buf->ui_pos->y, .x = x_anchor },
+				&complete_1_ishidden,
+				&complete_1_getstr);
 
 		int ch = io_getch(IO_NOMAP, NULL);
+		const int old_sel = sel;
 		switch(ch){
 			case K_ESC:
-				sel = -1;
+				sel = END_ESC;
 				goto cancel;
+
 			case CTRL_AND('n'): sel++; goto handle_sel;
 			case CTRL_AND('p'): sel--; goto handle_sel;
 handle_sel:
 			{
-				sel %= hash_cnt(ctx.ents);
+				const size_t filtered_count = /*1-indexed*/1 +
+					hash_cnt_filter(ctx.ents, complete_1_isvisible);
+
+				if(sel < 0)
+					sel = filtered_count + sel;
+
+				sel %= filtered_count;
 
 				/* delete back to start*/
-				for(; ctx.current_len >= first_len; ctx.current_len--)
-					buffer_delchar(b, &b->ui_pos->x, &b->ui_pos->y);
+				size_t n_delete;
+				if(old_sel > 0){
+					n_delete = strlen(
+							complete_1_getstr(
+								complete_hash_ent(ctx.ents, old_sel - 1)));
+				}else{
+					n_delete = ctx.current_word_len;
+				}
+				for(size_t i = 0; i < n_delete; i++)
+					buffer_delchar(buf, &buf->ui_pos->x, &buf->ui_pos->y);
 
 				if(sel > 0){
-					size_t ent_i = sel - 1;
-					void *ent;
-
-					for(;;){
-						ent = hash_ent(ctx.ents, ent_i);
-						if(complete_1_ishidden(ent)){
-							ent_i++;
-							continue;
-						}
-						break;
-					}
+					void *ent = complete_hash_ent(ctx.ents, sel - 1);
 
 					char *str = complete_1_getstr(ent);
 					assert(str);
 
-					size_t entlen = strlen(str);
-					if(ctx.current_len < entlen){
-						free(ctx.current);
-						ctx.current = ustrdup(str);
+					buffer_insstr(buf, str, strlen(str));
 
-						for(char *p = str; *p; p++, ctx.current_len++)
-							buffer_inschar(b, *p);
-					}
+					ui_status("[%d]: %s\n", sel, str);
+				}else{
+					buffer_insstr(buf, ctx.current_word, ctx.current_word_len);
+					ui_status("[%d]: [orig] %s\n", sel, ctx.current_word);
 				}
-				/* TODO: need to filter */
 				break;
 			}
+
 			default:
-				complete_filter(&ctx, ch);
-				buffer_inschar(b, ch);
+			{
+				if(isalnum(ch) || ch == '_'){
+			case_BACKSPACE:
+					complete_filter(&ctx, ch);
+					buffer_inschar(buf, ch);
+				}else{
+					sel = END_OTHERCHAR;
+					io_ungetch(ch); /* TODO: needs to be re-read as raw */
+				}
+			}
 		}
 		ui_cur_changed();
 		ui_redraw();
 	}
 
 cancel:
-	if(sel == -1)
-		ui_set_bufmode(UI_NORMAL);
+	if(sel == END_ESC)
+		k_escape(NULL, 0, 0);
 
 	complete_teardown(&ctx);
 }

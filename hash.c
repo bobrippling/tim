@@ -117,13 +117,22 @@ void *hash_ent(struct hash *h, unsigned i)
 	}
 }
 
-size_t hash_cnt(struct hash *h)
+size_t hash_cnt_filter(struct hash *h, bool include(const void *))
 {
 	size_t n = 0;
 	size_t hidx;
 
-	for(hidx = 0; hidx < HASH_CNT; hidx++)
-		for(struct ent *e = &h->ents[hidx]; e && e->p; e = e->next, n++);
+	for(hidx = 0; hidx < HASH_CNT; hidx++){
+		for(struct ent *e = &h->ents[hidx]; e && e->p; e = e->next){
+			if(!include || include(e->p))
+				n++;
+		}
+	}
 
 	return n;
+}
+
+size_t hash_cnt(struct hash *h)
+{
+	return hash_cnt_filter(h, NULL);
 }
