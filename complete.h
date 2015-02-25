@@ -8,12 +8,16 @@ struct complete_ctx
 	struct hash *ents;
 	char *current_word;
 	size_t current_word_len;
+	size_t recalc_len;
 };
 
 bool complete_init(struct complete_ctx *, char *line, unsigned len, int x);
 void complete_gather(char *line, size_t, void *ctx);
 void complete_teardown(struct complete_ctx *);
-void complete_filter(struct complete_ctx *, int newch, bool *const cancel);
+
+void complete_filter(
+		struct complete_ctx *, int newch,
+		bool *const cancel, bool *const recalc);
 
 void *complete_hash_ent(struct hash *, size_t sel);
 

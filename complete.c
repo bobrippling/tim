@@ -61,6 +61,7 @@ bool complete_init(struct complete_ctx *ctx, char *line, unsigned len, int x)
 
 	ctx->current_word = word_before(line, x);
 	ctx->current_word_len = strlen(ctx->current_word);
+	ctx->recalc_len = ctx->current_word_len;
 
 	ctx->ents = hash_new(
 			(hash_fn *)&hash_str_ent,
@@ -114,9 +115,14 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 	}
 }
 
-void complete_filter(struct complete_ctx *c, int newch, bool *const cancel)
+void complete_filter(
+		struct complete_ctx *c,
+		int newch,
+		bool *const cancel,
+		bool *const recalc)
 {
 	*cancel = false;
+	*recalc = false;
 
 	switch(newch){
 		case_BACKSPACE:
@@ -124,8 +130,9 @@ void complete_filter(struct complete_ctx *c, int newch, bool *const cancel)
 				c->current_word_len--;
 				c->current_word[c->current_word_len] = '\0';
 
-				/* TODO: if c->current_word_len <= c->recalc_len,
-				 * then recalculate words for the new word */
+				if(c->current_word_len <= c->recalc_len){
+					*recalc = true;
+				}
 
 				struct hash_str_ent *ent;
 				size_t i = 0;

@@ -738,19 +738,25 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 		return;
 	}
 
-	region_t entire_buffer = {
-		.type = REGION_LINE,
-		.end.y = buffer_nlines(buf) + 1
-	};
-	list_iter_region(buf->head, &entire_buffer,
-			LIST_ITER_WHOLE_LINE, complete_gather, &ctx);
-
 	const int x_anchor = buf->ui_pos->x - ctx.current_word_len;
+	bool recalc = true;
 
 	/* TODO: need to advance up to longest common subsequence */
 
 	int sel = 0;
 	while(sel >= 0){
+		if(recalc){
+			region_t entire_buffer = {
+				.type = REGION_LINE,
+				.end.y = buffer_nlines(buf) + 1
+			};
+
+			list_iter_region(buf->head, &entire_buffer,
+					LIST_ITER_WHOLE_LINE, complete_gather, &ctx);
+
+			recalc = false;
+		}
+
 		ui_draw_completion(
 				ctx.ents,
 				sel,
@@ -810,7 +816,7 @@ handle_sel:
 				if(isalnum(ch) || ch == '_'){
 					bool cancel;
 			case_BACKSPACE:
-					complete_filter(&ctx, ch, &cancel);
+					complete_filter(&ctx, ch, &cancel, &recalc);
 					buffer_inschar(buf, ch);
 					if(cancel)
 						sel = END_OTHERCHAR;
