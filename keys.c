@@ -817,10 +817,10 @@ handle_sel:
 
 					buffer_insstr(buf, str, strlen(str));
 
-					ui_status("[%d]: %s\n", sel, str);
+					ui_status("[%d/%lu]", sel, (long)(filtered_count - 1));
 				}else{
 					buffer_insstr(buf, ctx.current_word, ctx.current_word_len);
-					ui_status("[%d]: [orig] %s\n", sel, ctx.current_word);
+					ui_status("[orig]");
 				}
 				break;
 			}
