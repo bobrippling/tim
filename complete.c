@@ -93,11 +93,11 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 
 		char *end;
 		for(end = found + ctx->current_word_len;
-				end < line_end && isalnum(*end);
+				end < line_end && iswordchar(*end);
 				end++);
 
 		/* make sure it's a word start */
-		if(found > line && isalnum(found[-1])){
+		if(found > line && iswordchar(found[-1])){
 			/* substring of another word, ignore */
 		}else if((size_t)(end - found) <= ctx->current_word_len){
 			/* too short */

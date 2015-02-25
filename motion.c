@@ -180,7 +180,7 @@ static enum word_state word_state(
 			return W_SPACE;
 		else if(big_words)
 			return W_KEYWORD;
-		else if(isalnum(ch) || ch == '_')
+		else if(iswordchar(ch))
 			return W_KEYWORD;
 		return W_NON_KWORD;
 	}

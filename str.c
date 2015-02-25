@@ -120,11 +120,16 @@ void str_rtrim(char *s, size_t *pl)
 		s[i + 1] = '\0';
 }
 
+int iswordchar(char c)
+{
+	return isalnum(c) || c == '_';
+}
+
 char *word_before(char *line, int x)
 {
 	int start;
 	for(start = x - 1; start > 0;)
-		if(isalnum(line[start - 1]))
+		if(iswordchar(line[start - 1]))
 			start--;
 		else
 			break;

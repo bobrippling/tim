@@ -24,4 +24,6 @@ char *tim_strstr(
 
 char *word_before(char *line, int x);
 
+int iswordchar(char);
+
 #endif

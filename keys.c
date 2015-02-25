@@ -16,6 +16,7 @@
 #include "list.h"
 #include "buffer.h"
 #include "yank.h"
+#include "str.h"
 
 #include "ui.h"
 #include "motion.h"
@@ -826,7 +827,7 @@ handle_sel:
 
 			default:
 			{
-				if(isalnum(ch) || ch == '_'){
+				if(iswordchar(ch)){
 					bool cancel;
 			case_BACKSPACE:
 					complete_filter(&ctx, ch, &cancel, &recalc);
