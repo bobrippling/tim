@@ -16,7 +16,7 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 SRC = ${OBJ:.o=.c}
 
 tim: ${OBJ}
-	${CC} -o $@ ${OBJ} -lncurses
+	${CC} -o $@ ${OBJ} -lncurses -g
 
 check: tim
 	cd test && ./run.pl
