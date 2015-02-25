@@ -74,6 +74,8 @@ void buffer_inschar_at(buffer_t *, char ch, int *x, int *y);
 /* TODO: remove arg 2 and 3 */
 void buffer_delchar(buffer_t *, int *x, int *y);
 
+void buffer_insstr(buffer_t *, const char *, size_t);
+
 typedef void buffer_action_f(
 		buffer_t *, const region_t *, point_t *out);
 

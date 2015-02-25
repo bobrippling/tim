@@ -212,6 +212,12 @@ void buffer_inschar(buffer_t *buf, char ch)
 	}
 }
 
+void buffer_insstr(buffer_t *buf, const char *str, size_t len)
+{
+	for(; len > 0; len--, str++)
+		buffer_inschar(buf, *str);
+}
+
 void buffer_delchar(buffer_t *buf, int *x, int *y)
 {
 	list_delchar(buf->head, x, y);
