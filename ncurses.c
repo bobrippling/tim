@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <signal.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "ncurses.h"
 #include "macros.h"
@@ -112,7 +113,10 @@ int nc_getch(bool mapraw, bool *wasraw)
 	bool ctrl_v = false;
 	int ch;
 restart:
+	errno = 0;
 	ch = getch();
+	if(ch < 0 && errno == EINTR)
+		goto restart;
 
 	if(ctrl_v)
 		return ch;
