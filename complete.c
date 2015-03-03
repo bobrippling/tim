@@ -8,6 +8,7 @@
 #include "complete.h"
 #include "hash.h"
 #include "keymacros.h" /* case_BACKSPACE */
+#include "macros.h"
 
 #include "ui.h"
 
@@ -241,28 +242,24 @@ static void completion_calc_counts(
 			int *const start, int *const num_to_show,
 			bool *const show_more)
 {
-	*num_to_show = 0;
-	*show_more = false;
+	const size_t total = hash_cnt_filter(ents, complete_1_isvisible);
+	const bool too_many = (total > COMPL_MAX);
 
-	*start = sel_or_minus1 + 1;
+	if(too_many){
+		*start = sel_or_minus1 - COMPL_MAX / 2;
 
-	for(int i = *start; ; i++){
-		void *ent = complete_hash_ent(ents, i);
+		if(*start < 0)
+			*start = 0;
 
-		if(!ent)
-			break; /* end */
+		*num_to_show = COMPL_MAX;
 
-		(*num_to_show)++;
-		if(*num_to_show == COMPL_MAX + 1){
-			*show_more = true;
-			break;
-		}
-	}
+		*show_more = ((size_t)(*start + *num_to_show) < total);
 
-	*start -= *num_to_show / 2;
-
-	if(*start < 0)
+	}else{
 		*start = 0;
+		*num_to_show = total;
+		*show_more = false;
+	}
 }
 
 void complete_draw_menu(
@@ -281,15 +278,19 @@ void complete_draw_menu(
 
 	char **entries = umalloc(num_to_show * sizeof *entries);
 
-	for(int i = start_i; i < num_to_show; i++){
-		void *ent = complete_hash_ent(ents, i);
-		entries[i - start_i] = complete_1_getstr(ent);
+	for(int i = 0; i < num_to_show; i++){
+		void *ent = complete_hash_ent(ents, i + start_i);
 
-		if(!entries[i - start_i])
-			num_to_show = i; /* changing start has altered the count */
+		if(!ent){
+			/* changing start has altered the count */
+			num_to_show = i;
+			break;
+		}
+
+		entries[i] = complete_1_getstr(ent);
 	}
 
-	ui_draw_menu(at, entries, num_to_show, sel_or_minus1, show_more);
+	ui_draw_menu(at, entries, num_to_show, sel_or_minus1 - start_i, show_more);
 
 	free(entries);
 }
