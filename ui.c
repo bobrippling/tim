@@ -405,22 +405,21 @@ void ui_draw_menu(
 	point_t nc_orig;
 	nc_get_yx(&nc_orig.y, &nc_orig.x);
 
-	const size_t longest = longest_entry(entries, num_entries);
+	const size_t menu_size = num_entries + show_more;
+	const unsigned lastline = nc_LINES() - /*status*/1;
 	point_t at_iter = *at;
 
-#if 0
-	*start_y = suggested_start_y;
-
 	/* decide whether to put the menu above or below the cursor */
-	if(/*  room above? */ *start_y > menu_count
-	&& /* !room below? */ *start_y + menu_count > lastline)
+	if(/*  room above? */ (size_t)at_iter.y > menu_size
+	&& /* !room below? */ (size_t)at_iter.y + menu_size > lastline)
 	{
 		/* show above */
-		*start_y = suggested_start_y - menu_count - 1;
+		at_iter.y = at->y - menu_size;
 	}else{
-		++*start_y;
+		at_iter.y++;
 	}
-#endif
+
+	const size_t longest = longest_entry(entries, num_entries);
 
 	for(long i = 0; (size_t)i < num_entries; i++, at_iter.y++){
 		ui_draw_menu_1(&at_iter, entries[i], selected == i, longest);
