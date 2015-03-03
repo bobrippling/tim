@@ -4,22 +4,11 @@
 window *windows_cur(void);
 void windows_set_cur(window *);
 
-#define ITER_WINDOWS(win)                             \
-	win = window_topleftmost(windows_cur());            \
+#define ITER_WINDOWS_FROM(win, from)                  \
+	win = window_topleftmost(from);                     \
 	for(window *h = win; h; h = h->neighbours.right)    \
 		for(win = h; win; win = win->neighbours.below)
 
-/* argument list */
-char *windows_next_fname(bool pop);
-
-enum windows_init_args
-{
-	WIN_NONE = 0,
-	WIN_VALL,
-	WIN_HALL
-};
-
-void windows_init(enum windows_init_args a, unsigned off);
-void windows_term(void);
+#define ITER_WINDOWS(win) ITER_WINDOWS_FROM(win, windows_cur())
 
 #endif

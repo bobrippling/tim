@@ -1,124 +1,26 @@
 #include <stdio.h>
 #include <stddef.h>
-#include <string.h>
-#include <errno.h>
+#include <assert.h>
 
 #include "pos.h"
 #include "region.h"
 #include "list.h"
 #include "buffer.h"
+
 #include "window.h"
 #include "windows.h"
-#include "main.h"
 
-#include "ui.h"
-
-static window *win_sel;
-static char **remaining_fnames;
-
-char *windows_next_fname(bool pop)
-{
-	char *fname = remaining_fnames ? *remaining_fnames : NULL;
-	if(pop && fname)
-		remaining_fnames++;
-	return fname;
-}
+#include "tab.h"
+#include "tabs.h"
 
 window *windows_cur()
 {
-	return win_sel;
+	tab *t = tabs_cur();
+
+	return t ? t->win : NULL;
 }
 
 void windows_set_cur(window *new)
 {
-	win_sel = new;
-}
-
-static void win_add_splitright(window *cur, window *new)
-{
-	window_add_neighbour(cur, neighbour_right, new);
-}
-
-static void win_add_splittop(window *cur, window *new)
-{
-	window_add_neighbour(cur, neighbour_down, new);
-}
-
-static void load_argv(void onload(window *cur, window *new))
-{
-	window *prev_win = win_sel;
-	char *next;
-
-	while((next = args_next_fname(true))){
-		buffer_t *buf;
-		const char *err;
-
-		buffer_new_fname(&buf, next, &err);
-
-		window *w = window_new(buf);
-
-		buffer_release(buf);
-
-		onload(prev_win, w);
-
-		prev_win = w;
-	}
-}
-
-void windows_init(enum windows_init_args init_args, unsigned off)
-{
-	char *next = args_next_fname(true);
-
-	if(next){
-		const char *err = NULL;
-		buffer_t *buf;
-
-		if(!strcmp(next, "-")){
-			buf = buffer_new_file_nofind(stdin);
-			buf->modified = true; /* editing a stream */
-			/* no filename */
-
-			if(ferror(stdin))
-				err = strerror(errno);
-
-			freopen("/dev/tty", "r", stdin);
-			/* if we can't open it we'll exit soon anyway */
-
-		}else{
-			buffer_new_fname(&buf, next, &err);
-		}
-
-		if(err)
-			ui_err("\"%s\": %s", next, err);
-
-		win_sel = window_new(buf);
-		buffer_release(buf);
-
-		switch(init_args){
-			case WIN_NONE:
-				break;
-
-			case WIN_VALL:
-				load_argv(win_add_splitright);
-				break;
-
-			case WIN_HALL:
-				load_argv(win_add_splittop);
-				break;
-		}
-
-	}else{
-		buffer_t *empty = buffer_new();
-		win_sel = window_new(empty);
-		buffer_release(empty);
-	}
-
-	if(off)
-		win_sel->ui_pos->y = off;
-}
-
-void windows_term(void)
-{
-	if(win_sel)
-		window_free(win_sel), win_sel = NULL;
+	tab_set_focus(tabs_cur(), new);
 }

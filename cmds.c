@@ -23,6 +23,9 @@
 #include "ncurses.h"
 #include "window.h"
 #include "windows.h"
+#include "main.h"
+#include "tab.h"
+#include "tabs.h"
 
 #define RANGE_NO()                       \
 	if(range){                             \
@@ -70,20 +73,32 @@ static bool quit_common(
 		window *focus = window_next(win);
 
 		/* check remaining buffers */
-		if(!force && !focus && windows_next_fname(false)){
+		if(!force && !focus && args_next_fname(false)){
 			ui_err("more files to edit");
 			return false;
 		}
 
 		window_evict(win);
-		window_free(win), win = NULL;
-
+		window_free(win);
 		windows_set_cur(focus);
+
 		if(focus){
 			ui_redraw();
 			ui_cur_changed();
 		}else{
-			ui_run = UI_EXIT_0;
+			/* fallback to another tab? */
+			tab *current = tabs_cur();
+			tab *tabfocus = current->next;
+
+			if(tabfocus == current){
+				/* no more tabs */
+				ui_run = UI_EXIT_0;
+				tabfocus = NULL;
+			}
+
+			tabs_set_cur(tabfocus);
+			tab_evict(current);
+			tab_free(current);
 		}
 	}
 
@@ -173,7 +188,7 @@ bool c_n(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	char *fname = windows_next_fname(true);
+	char *fname = args_next_fname(true);
 	if(!fname){
 		ui_err("no more files");
 		return false;
@@ -625,12 +640,12 @@ bool c_all(int argc, char **argv, bool force, struct range *range)
 		return false;
 	}
 
-	if(!windows_next_fname(false))
+	if(!args_next_fname(false))
 		ui_status("no remaining buffers");
 
 	window *cur = windows_cur();
 	for(;;){
-		const char *fname = windows_next_fname(true);
+		const char *fname = args_next_fname(true);
 		if(!fname)
 			break;
 

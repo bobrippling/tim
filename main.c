@@ -8,20 +8,31 @@
 #include "buffer.h"
 #include "ui.h"
 #include "window.h"
-#include "windows.h"
+#include "tab.h"
+#include "tabs.h"
 #include "main.h"
+
+static char **remaining_fnames;
+
+char *args_next_fname(bool pop)
+{
+	char *fname = remaining_fnames ? *remaining_fnames : NULL;
+	if(pop && fname)
+		remaining_fnames++;
+	return fname;
+}
 
 int main(int argc, char **argv)
 {
 	int i;
 	unsigned offset = 0;
-	enum windows_init_args initargs = WIN_NONE;
+	enum init_args initargs = INIT_NONE;
 
 	for(i = 1; i < argc; i++){
 		if(!strcmp(argv[i], "-O")){
-			initargs = WIN_VALL;
+			initargs = INIT_VALL;
 		}else if(!strcmp(argv[i], "-o")){
-			initargs = WIN_HALL;
+			initargs = INIT_HALL;
 		}else if(*argv[i] == '+'){
 			char *p = argv[i] + 1;
 
@@ -43,12 +54,12 @@ int main(int argc, char **argv)
 
 	ui_init(); /* must be before buffers_init() */
 
-	windows_init(initargs, offset);
+	tabs_init(initargs, offset);
 
 	int r = ui_main();
 	ui_term();
 
-	windows_term();
+	tabs_term();
 
 	return r;
 }
