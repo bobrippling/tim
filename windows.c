@@ -13,15 +13,6 @@
 #include "ui.h"
 
 static window *win_sel;
-static char **remaining_fnames;
-
-char *windows_next_fname(bool pop)
-{
-	char *fname = remaining_fnames ? *remaining_fnames : NULL;
-	if(pop && fname)
-		remaining_fnames++;
-	return fname;
-}
 
 window *windows_cur()
 {

@@ -10,6 +10,16 @@
 #include "window.h"
 #include "windows.h"
 
+static char **remaining_fnames;
+
+char *args_next_fname(bool pop)
+{
+	char *fname = remaining_fnames ? *remaining_fnames : NULL;
+	if(pop && fname)
+		remaining_fnames++;
+	return fname;
+}
+
 int main(int argc, char **argv)
 {
 	int i;
