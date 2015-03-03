@@ -42,6 +42,7 @@ cmd_f_arg1 c_r, c_w;
 
 cmd_f_argv c_vs, c_vnew;
 cmd_f_argv c_sp, c_new;
+cmd_f_argv c_all;
 
 cmd_f_arg1 c_run;
 

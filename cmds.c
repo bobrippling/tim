@@ -598,6 +598,40 @@ bool c_new(int argc, char **argv, bool force, struct range *range)
 	return c_split(neighbour_up, false, argc, argv, force, range);
 }
 
+bool c_all(int argc, char **argv, bool force, struct range *range)
+{
+	ARGV_NO();
+	if(force){
+		ui_err("usage: %s", *argv);
+		return false;
+	}
+
+	if(!windows_next_fname(false))
+		ui_status("no remaining buffers");
+
+	window *cur = windows_cur();
+	for(;;){
+		const char *fname = windows_next_fname(true);
+		if(!fname)
+			break;
+
+		buffer_t *buf;
+		const char *err;
+		buffer_new_fname(&buf, fname, &err);
+
+		window *w = window_new(buf);
+		buffer_release(buf);
+
+		window_add_neighbour(cur, neighbour_down, w);
+
+		cur = w;
+	}
+
+	ui_redraw();
+
+	return true;
+}
+
 bool c_run(char *cmd, char *rest, bool force, struct range *range)
 {
 	if(range){
