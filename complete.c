@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 
 #include <stdio.h>
@@ -46,7 +47,7 @@ static unsigned hash_str_ent(const struct hash_str_ent *e)
 	char *s = e->str;
 
 	for(; *s; s++)
-		hash = *s + (hash << 6) + (hash << 16) - hash;
+		hash = tolower(*s) + (hash << 6) + (hash << 16) - hash;
 
 	return hash;
 }
@@ -55,7 +56,7 @@ static bool cmp_str_ent(
 		const struct hash_str_ent *a,
 		const struct hash_str_ent *b)
 {
-	return !strcmp(a->str, b->str);
+	return !strcasecmp(a->str, b->str);
 }
 
 bool complete_init(struct complete_ctx *ctx, char *line, unsigned len, int x)
@@ -94,7 +95,7 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 
 	char *const line_end = line + line_len;
 
-	char *found = tim_strstr(line, line_len, ctx->current_word);
+	char *found = tim_strcasestr(line, line_len, ctx->current_word);
 	while(found){
 
 		char *end;
@@ -117,7 +118,7 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 			}
 		}
 
-		found = tim_strstr(end, line_len - (end - line), ctx->current_word);
+		found = tim_strcasestr(end, line_len - (end - line), ctx->current_word);
 	}
 }
 
@@ -162,7 +163,7 @@ void complete_filter(
 
 	for(; (ent = hash_ent(c->ents, i)); i++){
 		if(!ent->hidden
-		&& strncmp(ent->str, c->current_word, c->current_word_len))
+		&& strncasecmp(ent->str, c->current_word, c->current_word_len))
 		{
 			ent->hidden = true;
 		}

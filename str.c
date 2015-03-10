@@ -30,17 +30,19 @@ char *tim_strrevstr(char *restrict haystack, unsigned off, const char *restrict 
 	return NULL;
 }
 
-char *tim_strstr(char *restrict haystack, size_t len, const char *restrict needle)
+static char *tim_strstr_mask(
+		char *restrict haystack, size_t len, const char *restrict needle,
+		int mask(int))
 {
 	if(!*needle)
 		return NULL;
 
 	/* memstr */
 	for(size_t h = 0; h < len; h++)
-		if(haystack[h] == *needle)
+		if(mask(haystack[h]) == mask(*needle))
 			/* can assume needle is 0-terminated */
 			for(size_t n = 0; n < len - h;){
-				if(haystack[h + n] != needle[n])
+				if(mask(haystack[h + n]) != mask(needle[n]))
 					break;
 				n++;
 				if(!needle[n])
@@ -48,6 +50,24 @@ char *tim_strstr(char *restrict haystack, size_t len, const char *restrict needl
 			}
 
 	return NULL;
+}
+
+static int identity(int x)
+{
+	return x;
+}
+
+char *tim_strstr(char *restrict haystack, size_t len, const char *restrict needle)
+{
+	return tim_strstr_mask(haystack, len, needle, identity);
+}
+
+char *tim_strcasestr(
+		char *restrict haystack,
+		size_t len,
+		const char *restrict needle)
+{
+	return tim_strstr_mask(haystack, len, needle, tolower);
 }
 
 bool isallspace(const char *s)

@@ -22,6 +22,11 @@ char *tim_strstr(
 		size_t len,
 		const char *restrict needle);
 
+char *tim_strcasestr(
+		char *restrict haystack,
+		size_t len,
+		const char *restrict needle);
+
 char *word_before(char *line, int x);
 
 int iswordchar(char);
