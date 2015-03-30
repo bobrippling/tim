@@ -2,6 +2,7 @@
 #define KEYMACROS_H
 
 #define K_ESC '\033'
+#define K_BACKSPACE 127
 
 #define CTRL_AND(c)  ((c) & 037)
 

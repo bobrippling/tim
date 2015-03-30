@@ -808,7 +808,7 @@ handle_sel:
 					n_delete = ctx.current_word_len;
 				}
 				for(size_t i = 0; i < n_delete; i++)
-					buffer_delchar(buf, &buf->ui_pos->x, &buf->ui_pos->y);
+					buffer_inschar(buf, K_BACKSPACE); /* this handles column-deletion */
 
 				if(sel > 0){
 					void *ent = complete_hash_ent(ctx.ents, sel - 1);
