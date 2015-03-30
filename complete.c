@@ -170,20 +170,25 @@ void complete_filter(
 	}
 }
 
-void *complete_hash_ent(struct hash *h, size_t i)
+void *complete_hash_ent(struct hash *h, size_t req)
 {
+	size_t i = 0;
+
 	for(;;){
 		void *ent = hash_ent(h, i);
+		i++;
 
 		if(!ent)
 			return NULL;
 
-		if(complete_1_ishidden(ent)){
-			i++;
-			continue;
-		}
+		if(complete_1_ishidden(ent))
+			continue; /* retry */
 
-		return ent;
+		/* found one */
+		if(req == 0)
+			return ent;
+
+		req--;
 	}
 }
 
