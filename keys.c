@@ -4,6 +4,7 @@
 #include <stddef.h> /* offsetof() */
 #include <ctype.h>
 #include <errno.h>
+#include <unistd.h> /* access() */
 
 #include "pos.h"
 #include "region.h"
@@ -970,6 +971,41 @@ void word_man(const char *word, bool flag)
 	free(cmd);
 }
 
+static bool attempt_relative_fname(
+		char **const pfname,
+		bool *const free_expanded)
+{
+	char *fname = *pfname;
+
+	if(*fname == '/')
+		return false;
+
+	buffer_t *buf = buffers_cur();
+	const char *buf_fname = buffer_fname(buf);
+	if(!buf_fname)
+		return false;
+
+	if(!strchr(buf_fname, '/'))
+		return false;
+
+	char *fname_dup = ustrdup(buf_fname);
+
+	char *last_slash = strrchr(fname_dup, '/');
+	/* nonnull because of above check */
+	last_slash[1] = '\0';
+
+	char *joined = join("", (char *[]){ fname_dup, fname }, 2);
+
+	free(fname_dup), fname_dup = NULL;
+
+	if(*free_expanded)
+		free(*pfname);
+	*pfname = joined;
+	*free_expanded = true;
+
+	return true;
+}
+
 void word_gofile(const char *fname, const bool new_window)
 {
 	if(!new_window && buffers_modified_single(buffers_cur())){
@@ -983,6 +1019,13 @@ void word_gofile(const char *fname, const bool new_window)
 	if(!expanded){
 		expanded = (char *)fname;
 		free_expanded = false;
+	}
+
+	/* race condition testing existence, then opening,
+	 * but this isn't race-important code / the race condition can't cause
+	 * unexpected behaviour */
+	if(access(expanded, F_OK) && errno == ENOENT){
+		attempt_relative_fname(&expanded, &free_expanded);
 	}
 
 	if(new_window){
