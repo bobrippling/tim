@@ -781,8 +781,8 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 				ctx.ents,
 				sel - 1,
 				&(point_t){
-					.x = x_anchor,
-					.y = buf->ui_pos->y - buf->ui_start.y,
+					.x = x_anchor + buf->screen_coord.x,
+					.y = buf->ui_pos->y - buf->ui_start.y + buf->screen_coord.y,
 				});
 
 		int ch = io_getch(IO_NOMAP, NULL);
