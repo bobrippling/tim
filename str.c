@@ -159,3 +159,9 @@ char *word_before(char *line, int x)
 
 	return ustrdup_len(line + start, x - start);
 }
+
+char *line_start(char *line, int x)
+{
+	(void)x;
+	return ustrdup(line);
+}

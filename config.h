@@ -65,7 +65,8 @@ const nkey_t nkeys[] = {
 
 	{ "i",            k_set_mode,   { UI_INSERT }, UI_NORMAL },
 
-	{ K_STR(CTRL_AND('n')), k_complete, KEY_ARG_NONE, UI_INSERT_ANY },
+	{ K_STR(CTRL_AND('n')), k_complete, { 0 }, UI_INSERT_ANY },
+	{ (char[]){ CTRL_AND('x'), CTRL_AND('l'), 0 }, k_complete, { 1 }, UI_INSERT_ANY },
 
 	{ "V",            k_set_mode,   { UI_VISUAL_LN }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "v",            k_set_mode,   { UI_VISUAL_CHAR }, UI_NORMAL | UI_VISUAL_ANY },

@@ -28,6 +28,7 @@ char *tim_strcasestr(
 		const char *restrict needle);
 
 char *word_before(char *line, int x);
+char *line_start(char *line, int x);
 
 int iswordchar(char);
 

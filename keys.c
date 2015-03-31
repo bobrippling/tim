@@ -733,8 +733,20 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	list_t *l = buffer_current_line(buf);
 
+	char *(*getter_word)(char *, int) = word_before;
+	char *(*getter_end)(char *, char *, char *, struct complete_ctx *)
+		= complete_get_end_of_word;
+
+	if(a->i){
+		getter_word = line_start;
+		getter_end = complete_get_end_of_line;
+	}
+
 	struct complete_ctx ctx;
-	if(!l || !complete_init(&ctx, l->line, l->len_line, buf->ui_pos->x)){
+	if(!l || !complete_init(
+				&ctx, l->line, l->len_line, buf->ui_pos->x,
+				getter_word, getter_end))
+	{
 		ui_err("can't complete");
 		return;
 	}
@@ -828,6 +840,7 @@ handle_sel:
 
 			default:
 			{
+				/* FIXME: ctrl-x ctrl-l */
 				if(iswordchar(ch)){
 					bool cancel;
 			case_BACKSPACE:

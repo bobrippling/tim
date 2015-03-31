@@ -59,16 +59,22 @@ static bool cmp_str_ent(
 	return !strcasecmp(a->str, b->str);
 }
 
-bool complete_init(struct complete_ctx *ctx, char *line, unsigned len, int x)
+bool complete_init(
+		struct complete_ctx *ctx,
+		char *line, unsigned len, int x,
+		char *getter_word(char *line, int x),
+		char *getter_end(char *, char *, char *, struct complete_ctx *))
 {
 	memset(ctx, 0, sizeof *ctx);
 
 	if((unsigned)x > len)
 		return false;
 
-	ctx->current_word = word_before(line, x);
+	ctx->current_word = getter_word(line, x);
 	ctx->current_word_len = strlen(ctx->current_word);
 	ctx->recalc_len = ctx->current_word_len;
+	ctx->get_word = getter_word;
+	ctx->get_end = getter_end;
 
 	ctx->ents = hash_new(
 			(hash_fn *)&hash_str_ent,
@@ -88,6 +94,26 @@ void complete_teardown(struct complete_ctx *c)
 	hash_free(c->ents, (void (*)(void *))&hash_ent_free);
 }
 
+char *complete_get_end_of_word(
+		char *line, char *found, char *line_end,
+		struct complete_ctx *ctx)
+{
+	char *end;
+
+	for(end = found + ctx->current_word_len;
+			end < line_end && iswordchar(*end);
+			end++);
+
+	return end;
+}
+
+char *complete_get_end_of_line(
+		char *line, char *found, char *line_end,
+		struct complete_ctx *ctx)
+{
+	return line_end;
+}
+
 void complete_gather(char *const line, size_t const line_len, void *c)
 {
 	/* XXX: lines with nuls in are ignored after the nul */
@@ -98,10 +124,7 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 	char *found = tim_strcasestr(line, line_len, ctx->current_word);
 	while(found){
 
-		char *end;
-		for(end = found + ctx->current_word_len;
-				end < line_end && iswordchar(*end);
-				end++);
+		char *end = ctx->get_end(line, found, line_end, ctx);
 
 		/* make sure it's a word start */
 		if(found > line && iswordchar(found[-1])){
