@@ -758,13 +758,7 @@ void k_complete(const keyarg_u *a, unsigned repeat, const int from_ch)
 	int sel = 0;
 	while(sel >= 0){
 		if(recalc){
-			region_t entire_buffer = {
-				.type = REGION_LINE,
-				.end.y = buffer_nlines(buf) + 1
-			};
-
-			list_iter_region(buf->head, &entire_buffer,
-					LIST_ITER_WHOLE_LINE, complete_gather, &ctx);
+			complete_gather_all(&ctx);
 
 			recalc = false;
 

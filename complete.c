@@ -6,10 +6,14 @@
 #include <stdio.h>
 
 #include "pos.h"
+#include "region.h"
 #include "complete.h"
 #include "hash.h"
 #include "keymacros.h" /* case_BACKSPACE */
 #include "macros.h"
+#include "list.h"
+#include "buffer.h"
+#include "buffers.h"
 
 #include "ui.h"
 
@@ -142,6 +146,30 @@ void complete_gather(char *const line, size_t const line_len, void *c)
 		}
 
 		found = tim_strcasestr(end, line_len - (end - line), ctx->current_word);
+	}
+}
+
+void complete_gather_all(struct complete_ctx *ctx)
+{
+	buffer_t *first;
+	for(first = buffers_cur();
+			first->neighbours[BUF_UP];
+			first = first->neighbours[BUF_UP]);
+
+	for(;
+			first->neighbours[BUF_LEFT];
+			first = first->neighbours[BUF_LEFT]);
+
+	for(buffer_t *col = first; col; col = col->neighbours[BUF_RIGHT]){
+		for(buffer_t *buf = col; buf; buf = buf->neighbours[BUF_DOWN]){
+			region_t entire_buffer = {
+				.type = REGION_LINE,
+				.end.y = buffer_nlines(buf) + 1
+			};
+
+			list_iter_region(buf->head, &entire_buffer,
+					LIST_ITER_WHOLE_LINE, complete_gather, ctx);
+		}
 	}
 }
 

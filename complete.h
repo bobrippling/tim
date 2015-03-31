@@ -19,6 +19,8 @@ bool complete_init(
 		char *getter_word(char *line, int x),
 		char *getter_end(char *, char *, char *, struct complete_ctx *));
 
+void complete_gather_all(struct complete_ctx *);
+
 void complete_gather(char *line, size_t, void *ctx);
 void complete_teardown(struct complete_ctx *);
 
