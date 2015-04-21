@@ -1041,6 +1041,12 @@ void k_inc_dec(const keyarg_u *a, unsigned repeat, const int from_ch)
 	if(pos == line->len_line)
 		return;
 
+	if(pos == (size_t)win->ui_pos->x){
+		/* rewind if possible */
+		while(pos > 0 && isdigit_or_minus(line->line[pos - 1]))
+			pos--;
+	}
+
 	char *end;
 	long long num = strtoll(&line->line[pos], &end, 0);
 	if(end == &line->line[pos])
