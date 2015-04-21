@@ -5,6 +5,7 @@
 
 char *strchr_rev(const char *s, int ch, const char *start);
 bool isallspace(const char *);
+bool isdigit_or_minus(char);
 bool paren_match(char c, char *other);
 bool paren_left(char);
 char paren_opposite(char);

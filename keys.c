@@ -1036,7 +1036,7 @@ void k_inc_dec(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	size_t pos = win->ui_pos->x;
 	for(; pos < line->len_line; pos++)
-		if(isdigit(line->line[pos]) || line->line[pos] == '-')
+		if(isdigit_or_minus(line->line[pos]))
 			break;
 	if(pos == line->len_line)
 		return;

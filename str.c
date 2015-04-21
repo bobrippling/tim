@@ -57,6 +57,11 @@ bool isallspace(const char *s)
 	return !*s;
 }
 
+bool isdigit_or_minus(char c)
+{
+	return isdigit(c) || c == '-';
+}
+
 char *skipspace(const char *in)
 {
 	for(; isspace(*in); in++);
