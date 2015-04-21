@@ -1081,5 +1081,8 @@ void k_inc_dec(const keyarg_u *a, unsigned repeat, const int from_ch)
 	line->len_line += change;
 	win->buf->modified = true;
 
+	win->ui_pos->x = pos + numbuflen_new - 1;
+
+	ui_cur_changed();
 	ui_redraw();
 }
