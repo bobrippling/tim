@@ -2,6 +2,7 @@
 #define LIST_H
 
 #include <stdbool.h>
+#include <dirent.h>
 
 typedef struct list_ list_t;
 
@@ -17,6 +18,7 @@ struct list_
 
 list_t *list_new(list_t *prev);
 list_t *list_new_file(FILE *, bool *eol);
+list_t *list_from_dir(DIR *d);
 int list_write_file(list_t *l, int n, FILE *f, bool eol);
 
 list_t *list_copy_deep(const list_t *const l, list_t *prev);

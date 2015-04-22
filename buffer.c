@@ -36,6 +36,12 @@ buffer_t *buffer_new()
 	return b;
 }
 
+static void buffer_replace_list(buffer_t *b, list_t *l)
+{
+	list_free(b->head);
+	b->head = l;
+}
+
 static int buffer_replace_file(buffer_t *b, FILE *f)
 {
 	list_t *l = list_new_file(f, &b->eol);
@@ -43,8 +49,7 @@ static int buffer_replace_file(buffer_t *b, FILE *f)
 	if(!l)
 		return 0;
 
-	list_free(b->head);
-	b->head = l;
+	buffer_replace_list(b, l);
 
 	b->mtime = time(NULL);
 
@@ -111,8 +116,27 @@ got_err:
 	b = buffer_new_file_nofind(f);
 	fclose(f);
 
-	if(!b)
-		goto got_err;
+	if(!b){
+		if(errno == EISDIR){
+			DIR *d = opendir(fname);
+			if(!d)
+				goto got_err;
+
+			list_t *l = list_from_dir(d);
+
+			const int save_errno = errno;
+			closedir(d);
+			errno = save_errno;
+
+			if(!l)
+				goto got_err;
+
+			b = buffer_new();
+			buffer_replace_list(b, l);
+		}else{
+			goto got_err;
+		}
+	}
 
 fin:
 	buffer_set_fname(b, fname);

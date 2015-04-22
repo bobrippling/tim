@@ -171,6 +171,40 @@ list_t *list_new_file(FILE *f, bool *eol)
 #endif
 }
 
+list_t *list_from_dir(DIR *d)
+{
+	list_t *head = list_new(NULL), *prev = NULL;
+
+	struct dirent *dent;
+	while((errno = 0, dent = readdir(d))){
+		const size_t len = strlen(dent->d_name);
+		char *dup = ustrdup_len(dent->d_name, len);
+
+		list_t *l;
+
+		if(!head->line){
+			l = head;
+		}else{
+			assert(prev);
+			l = list_new(prev);
+			prev->next = l;
+		}
+		prev = l;
+
+		l->line = dup;
+		l->len_line = len;
+	}
+
+	if(errno){
+		int save = errno;
+		list_free(head);
+		head = NULL;
+		errno = save;
+	}
+
+	return head;
+}
+
 static int list_write_fd(list_t *l, int n, int fd, bool eol)
 {
 	for(; l && (n == -1 || n --> 0); l = l->next){
