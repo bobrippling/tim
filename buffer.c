@@ -109,7 +109,7 @@ void buffer_new_fname(
 got_err:
 		*err = strerror(errno);
 		b = buffer_new();
-		b->modified = true; /* editing a non-existant file, etc */
+		b->modified = false; /* editing a non-existant file, etc */
 		goto fin;
 	}
 
