@@ -1,0 +1,35 @@
+=G
+__IN__
+static int term_canon(int on)
+{
+struct termios this;
+
+if(tcgetattr(0, &this)){
+return 0;
+}
+
+if(on){
+this.c_lflag |=  ICANON;
+}else{
+this.c_lflag &= ~ICANON;
+}
+
+return 0 == tcsetattr(0, 0, &this);
+}
+__OUT__
+static int term_canon(int on)
+{
+	struct termios this;
+
+	if(tcgetattr(0, &this)){
+		return 0;
+	}
+
+	if(on){
+		this.c_lflag |=  ICANON;
+	}else{
+		this.c_lflag &= ~ICANON;
+	}
+
+	return 0 == tcsetattr(0, 0, &this);
+}
