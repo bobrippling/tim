@@ -625,7 +625,7 @@ int motion_apply_win(const motion *m, unsigned repeat, window *win)
 }
 
 bool motion_to_region(
-		const motion *m, unsigned repeat, bool always_linewise,
+		const motion *m, unsigned repeat,
 		window *win, region_t *out)
 {
 	region_t r = {

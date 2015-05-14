@@ -492,7 +492,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 
 		region_t r;
-		if(!motion_to_region(mchosen, 1, false, win, &r))
+		if(!motion_to_region(mchosen, 1, win, &r))
 			return;
 
 		/* special case - single _line_ replace
@@ -589,7 +589,7 @@ static bool around_motion(
 		window *win = windows_cur();
 
 		region_t r;
-		if(!motion_to_region(m, repeat, always_linewise, win, &r))
+		if(!motion_to_region(m, repeat, win, &r))
 			return false;
 
 		if(used_region)
@@ -752,7 +752,7 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 		unsigned mrepeat;
 		const motion *m = motion_read_or_visual(&mrepeat, false);
 
-		if(!motion_to_region(m, mrepeat, false, win, &r))
+		if(!motion_to_region(m, mrepeat, win, &r))
 			return;
 
 		/* necessary so we insert at the right place later on */

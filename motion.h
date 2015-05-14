@@ -74,7 +74,7 @@ int motion_apply_win_dry(
 		window *, point_t *to);
 
 bool motion_to_region(
-		const motion *m, unsigned repeat, bool always_linewise,
+		const motion *m, unsigned repeat,
 		window *, region_t *out);
 
 void start_of_line(point_t *, window *w);
