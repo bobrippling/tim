@@ -1146,3 +1146,38 @@ void k_inc_dec(const keyarg_u *a, unsigned repeat, const int from_ch)
 	ui_cur_changed();
 	ui_redraw();
 }
+
+static void reindent_cb(
+		buffer_t *buf, const region_t *region,
+		point_t *out, struct around_motion *ctx)
+{
+	for(int y = region->begin.y; y <= region->end.y; y++){
+		int requested_indent;
+		buffer_smartindent(buf, &requested_indent, y);
+
+		list_t *line = list_seek(buf->head, y, false);
+		if(!line)
+			break;
+
+		while(requested_indent > 0){
+			list_inschar(line, &(int){ 0 }, &(int){ 0 }, '\t', /*autogap*/'\0');
+			requested_indent--;
+		}
+	}
+
+	*out = region->begin;
+
+	buf->modified = true;
+
+	ui_cur_changed();
+	ui_redraw();
+}
+
+void k_reindent(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	struct around_motion around = {
+		.fn = reindent_cb,
+	};
+
+	around_motion(repeat, from_ch, /*always_linewise:*/true, &around, NULL);
+}

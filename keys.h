@@ -80,6 +80,7 @@ key_func k_ins_colcopy;
 key_func k_on_word, k_on_fname;
 key_func k_normal1;
 key_func k_inc_dec;
+key_func k_reindent;
 
 key_func k_vtoggle;
 key_func k_go_visual;
