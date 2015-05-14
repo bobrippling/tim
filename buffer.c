@@ -205,8 +205,10 @@ static int list_count_indent(list_t *l)
 void buffer_smartindent(buffer_t *buf, int *const x, int y)
 {
 	list_t *l = buffer_last_indent_line(buf, y);
-	if(!l)
+	if(!l){
+		*x = 0;
 		return;
+	}
 	int indent = list_count_indent(l);
 
 	/* don't insert space, just move */
