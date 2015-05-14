@@ -6,6 +6,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <ncurses.h>
+
 #include "pos.h"
 #include "ncurses.h"
 #include "region.h"
@@ -283,7 +285,7 @@ void ui_cur_changed()
 		ui_redraw();
 
 	point_t cursor = window_toscreen(win, win->ui_pos);
-	nc_set_yx(cursor.y, cursor.x);
+	nc_set_yx(cursor.y, cursor.x + 6);
 }
 
 static
@@ -339,6 +341,17 @@ void ui_draw_win_1(window *win)
 
 		nc_set_yx(win->screen_coord.y + y, win->screen_coord.x);
 		nc_clrtoeol();
+
+		char buf[32];
+		int x;
+		buffer_smartindent(win->buf, &x, win->ui_start.y + y);
+		snprintf(buf, 32, "[d=%d] ", x);
+		attron(A_DIM);
+		nc_style(COL_BROWN);
+		for(char *p = buf; *p; p++)
+			nc_addch(*p);
+		attroff(A_DIM);
+		nc_style(0);
 
 		for(int x = 0; x < lim; x++){
 			int offhl = 0;
