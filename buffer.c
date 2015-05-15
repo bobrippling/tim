@@ -17,6 +17,7 @@
 #include "str.h"
 #include "retain.h"
 #include "buffers.h"
+#include "indent.h"
 
 void buffer_free(buffer_t *b)
 {
@@ -186,56 +187,16 @@ static list_t *buffer_last_indent_line(buffer_t *buf, int y)
 	return NULL;
 }
 
-static void adjust_brace_indent(char ch, int *const indent)
-{
-	switch(ch){
-		case '{': (*indent)++; break;
-		case '}': (*indent)--; break;
-		case '(': (*indent) += 2; break;
-		case ')': (*indent) -= 2; break;
-	}
-}
-
-static void list_adjust_indent(list_t *l, unsigned xlim, int *const indent)
-{
-	if((unsigned)xlim > l->len_line)
-		xlim = l->len_line;
-
-	for(unsigned i = 0; i < xlim; i++)
-		adjust_brace_indent(l->line[i], indent);
-}
-
-static int list_count_indent(list_t *l)
-{
-	int indent = 0;
-	bool on_whitespace = true;
-
-	/* count indent */
-	for(unsigned i = 0; i < l->len_line; i++){
-		if(on_whitespace){
-			if(isspace(l->line[i]))
-				indent++;
-			else
-				on_whitespace = false;
-		}
-
-		if(!on_whitespace)
-			adjust_brace_indent(l->line[i], &indent);
-	}
-
-	return indent;
-}
-
 void buffer_smartindent(buffer_t *buf, int *const x, int y)
 {
 	list_t *l = buffer_last_indent_line(buf, y);
 	if(!l)
 		return;
 
-	int indent = list_count_indent(l);
+	int indent = indent_count(l, true);
 
 	if(l->next) /* current line */
-		list_adjust_indent(l->next, *x, &indent);
+		indent_adjust(l->next, *x, &indent);
 
 	if(indent < 0)
 		indent = 0;
@@ -250,7 +211,7 @@ static void buffer_unindent_empty(buffer_t *buf, int *const x, int y)
 	list_t *l = buffer_last_indent_line(buf, y);
 	if(!l)
 		return;
-	int indent = list_count_indent(l);
+	int indent = indent_count(l, true);
 
 	if(indent == 0)
 		return;

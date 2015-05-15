@@ -30,6 +30,7 @@
 #include "external.h"
 #include "ctags.h"
 #include "parse_cmd.h"
+#include "indent.h"
 
 #include "buffers.h"
 
