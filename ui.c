@@ -285,7 +285,7 @@ void ui_cur_changed()
 		ui_redraw();
 
 	point_t cursor = window_toscreen(win, win->ui_pos);
-	nc_set_yx(cursor.y, cursor.x + 6);
+	nc_set_yx(cursor.y, cursor.x + 12);
 }
 
 static
@@ -319,6 +319,8 @@ static enum region_type ui_mode_to_region(enum buf_mode m)
 	return REGION_CHAR; /* doesn't matter */
 }
 
+#include "indent.h"
+
 static
 void ui_draw_win_1(window *win)
 {
@@ -343,11 +345,16 @@ void ui_draw_win_1(window *win)
 		nc_clrtoeol();
 
 		char buf[32];
-		int x;
-		buffer_smartindent(win->buf, &x, win->ui_start.y + y);
-		snprintf(buf, 32, "[d=%d] ", x);
+		int desired;
+		const int actual = indent_count(
+					list_seek(win->buf->head, win->ui_start.y + y, false),
+					false);
+		buffer_smartindent(win->buf, &desired, win->ui_start.y + y);
+		snprintf(buf, 32, "[d=% 2d c=% 2d] ",
+				desired,
+				actual);
 		attron(A_DIM);
-		nc_style(COL_BROWN);
+		nc_style(desired == actual ? COL_BROWN : COL_BLUE);
 		for(char *p = buf; *p; p++)
 			nc_addch(*p);
 		attroff(A_DIM);
