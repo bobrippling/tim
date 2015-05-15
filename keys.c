@@ -1160,9 +1160,15 @@ static void reindent_cb(
 		if(!line)
 			break;
 
-		while(requested_indent > 0){
-			list_inschar(line, &(int){ 0 }, &(int){ 0 }, '\t', /*autogap*/'\0');
-			requested_indent--;
+		const int this_indent = indent_count(line, false);
+
+		if(this_indent < requested_indent){
+			int difference = requested_indent - this_indent;
+
+			while(difference > 0){
+				list_inschar(line, &(int){ 0 }, &(int){ 0 }, '\t', /*autogap*/'\0');
+				difference--;
+			}
 		}
 	}
 

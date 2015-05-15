@@ -195,8 +195,9 @@ void buffer_smartindent(buffer_t *buf, int *const x, int y)
 
 	int indent = indent_count(l, true);
 
-	if(l->next) /* current line */
-		indent_adjust(l->next, *x, &indent);
+	list_t *current = list_seek(buf->head, y, false);
+	if(current)
+		indent_adjust(current, *x, &indent);
 
 	if(indent < 0)
 		indent = 0;
