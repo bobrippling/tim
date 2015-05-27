@@ -234,10 +234,18 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 			break;
 
 		case '}':
-			/* if we've just started a new line, this unindents */
-			buffer_unindent_empty(buf, x, *y);
-			indent = false;
+		{
+			list_t *l = list_seek(buf->head, *y, false);
+
+			/* if we've just started a new line,
+			 * or it's all space before us, this unindents
+			 */
+			if(!l || isallspace(l->line, *x)){
+				buffer_unindent_empty(buf, x, *y);
+				indent = false;
+			}
 			break;
+		}
 
 		case '\n':
 			indent = true;
