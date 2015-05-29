@@ -214,7 +214,7 @@ static void buffer_unindent_empty(buffer_t *buf, int *const x, int y)
 		return;
 	int indent = indent_count(l, true);
 
-	if(indent == 0)
+	if(indent <= 0)
 		return;
 
 	*x = indent - 1;
