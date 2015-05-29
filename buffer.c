@@ -241,7 +241,7 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 			/* if we've just started a new line,
 			 * or it's all space before us, this unindents
 			 */
-			if(!l || isallspace(l->line, *x)){
+			if(!l || !l->line || isallspace(l->line, *x)){
 				buffer_unindent_empty(buf, x, *y);
 				indent = false;
 			}
