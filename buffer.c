@@ -243,7 +243,8 @@ void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 			 */
 			if(!l
 			|| !l->len_line
-			|| isallspace(l->line, MIN((unsigned)*x, l->len_line)))
+			|| x == 0
+			|| isallspace(l->line, MIN((unsigned)*x - 1, l->len_line)))
 			{
 				buffer_unindent_empty(buf, x, *y);
 				indent = false;
