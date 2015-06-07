@@ -377,3 +377,8 @@ bool window_reload_buffer(window *win, const char **const err)
 
 	return !*err;
 }
+
+void window_smartindent(window *win)
+{
+	buffer_smartindent(win->buf, &win->ui_pos->x, win->ui_pos->y);
+}

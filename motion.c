@@ -196,11 +196,11 @@ static list_t *m_search_para(
 		int *pn, const void *ctx)
 {
 	/* while in space, find non-space */
-	for(; l && (!l->line || isallspace(l->line));
+	for(; l && (!l->line || isallspace(l->line, l->len_line));
 			l = list_advance_y(l, a->dir, pn, NULL));
 
 	/* while in non-space, find space */
-	for(; l && (l->line && !isallspace(l->line));
+	for(; l && (l->line && !isallspace(l->line, l->len_line));
 			l = list_advance_y(l, a->dir, pn, NULL));
 
 	return l;

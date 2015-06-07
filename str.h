@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 char *strchr_rev(const char *s, int ch, const char *start);
-bool isallspace(const char *);
+bool isallspace(const char *, size_t);
 bool isdigit_or_minus(char);
 bool paren_match(char c, char *other);
 bool paren_left(char);

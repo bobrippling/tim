@@ -62,6 +62,8 @@ void window_calc_rects(
 		const unsigned screenwidth,
 		const unsigned screenheight);
 
+void window_smartindent(window *win);
+
 window *window_new(buffer_t *);
 void window_free(window *);
 

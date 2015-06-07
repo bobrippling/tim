@@ -451,6 +451,8 @@ void k_open(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	window *win = windows_cur();
 	buffer_insline(win->buf, a->i, win->ui_pos);
+	window_smartindent(win);
+
 	ui_set_bufmode(UI_INSERT);
 	ui_redraw();
 	ui_cur_changed();
@@ -662,7 +664,8 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 	region_t r;
 
 	if(around_motion_bufaction(repeat, from_ch, &buffer_delregion, &r)){
-		buffer_t *buf = buffers_cur();
+		window *win = windows_cur();
+		buffer_t *buf = win->buf;
 
 		switch(r.type){
 			case REGION_COL:
@@ -674,6 +677,14 @@ void k_change(const keyarg_u *a, unsigned repeat, const int from_ch)
 				break;
 			case REGION_CHAR:
 				ui_set_bufmode(UI_INSERT);
+				/* handle S / 0c$ */
+				list_t *curline;
+				if(r.begin.x == 0
+				&& (curline = window_current_line(win, false))
+				&& (unsigned)r.end.x >= curline->len_line)
+				{
+					window_smartindent(win);
+				}
 				break;
 		}
 	}

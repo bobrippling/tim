@@ -49,7 +49,7 @@ const yank *yank_top()
 
 static void charwise_put(
 		const yank *ynk, list_t *head,
-		int *px, int *py, bool prepend)
+		int *px, bool prepend)
 {
 	/* first line */
 	const list_t *ins_iter = ynk->list;
@@ -60,7 +60,7 @@ static void charwise_put(
 		list_inschar(head,
 				px,
 				&(int){ 0 },
-				ins_iter->line[i]);
+				ins_iter->line[i], /*autogap*/0);
 
 	int final_x = *px - 1;
 
@@ -115,7 +115,7 @@ void yank_put_in_list(
 {
 	switch(ynk->as){
 		case REGION_CHAR:
-			charwise_put(ynk, *phead, px, py, prepend);
+			charwise_put(ynk, *phead, px, prepend);
 			break;
 
 		case REGION_LINE:
@@ -158,7 +158,7 @@ void yank_put_in_list(
 					list_inschar(head,
 							&(int){ *px + !prepend + i },
 							&(int){ y },
-							l->line[i]);
+							l->line[i], /* force spaces to fill in for now */' ');
 			}
 
 			if(!prepend)

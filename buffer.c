@@ -169,20 +169,96 @@ const char *buffer_fname(const buffer_t *b)
 	return b->fname;
 }
 
+static list_t *buffer_last_indent_line(buffer_t *buf, int y)
+{
+	list_t *l = list_seek(buf->head, y, false);
+
+	if(!l)
+		return NULL;
+
+	/* scan backwards until we hit a non-empty line */
+	while(l->prev){
+		l = l->prev;
+		if(!isallspace(l->line, l->len_line))
+			return l;
+	}
+
+	return NULL;
+}
+
+static int list_count_indent(list_t *l)
+{
+	int indent = 0;
+
+	/* count indent */
+	for(unsigned i = 0; i < l->len_line; i++, indent++)
+		if(!isspace(l->line[i]))
+			break;
+
+	/* if it ends with a '{', increase indent */
+	if(l->len_line > 0 && l->line[l->len_line - 1] == '{')
+		indent++;
+
+	return indent;
+}
+
+void buffer_smartindent(buffer_t *buf, int *const x, int y)
+{
+	list_t *l = buffer_last_indent_line(buf, y);
+	if(!l)
+		return;
+	int indent = list_count_indent(l);
+
+	/* don't insert space, just move */
+	*x = indent;
+}
+
+static void buffer_unindent_empty(buffer_t *buf, int *const x, int y)
+{
+	if(y == 0)
+		return;
+
+	list_t *l = buffer_last_indent_line(buf, y);
+	if(!l)
+		return;
+	int indent = list_count_indent(l);
+
+	if(indent == 0)
+		return;
+
+	*x = indent - 1;
+}
+
 void buffer_inschar_at(buffer_t *buf, char ch, int *x, int *y)
 {
+	bool indent = false;
+	bool inschar = true;
+
 	switch(ch){
 		case CTRL_AND('?'):
 		case CTRL_AND('H'):
 		case 127:
 			if(*x > 0)
 				buffer_delchar(buf, x, y);
+			inschar = false;
 			break;
 
-		default:
-			list_inschar(buf->head, x, y, ch);
+		case '}':
+			/* if we've just started a new line, this unindents */
+			buffer_unindent_empty(buf, x, *y);
+			indent = false;
 			break;
+
+		case '\n':
+			indent = true;
 	}
+
+	if(inschar){
+		list_inschar(buf->head, x, y, ch, /*autogap*/0);
+		if(indent)
+			buffer_smartindent(buf, x, *y);
+	}
+
 	buf->modified = true;
 }
 
@@ -257,9 +333,10 @@ void buffer_insyank(
 		bool prepend, bool modify)
 {
 	yank_put_in_list(y,
-			list_seekp(&buf->head, ui_pos->y, true),
+			&buf->head,
 			prepend,
-			&ui_pos->y, &ui_pos->x);
+			&ui_pos->y,
+			&ui_pos->x);
 
 	if(modify)
 		buf->modified = true;

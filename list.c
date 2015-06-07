@@ -22,6 +22,8 @@
 #include "macros.h"
 #include "word.h"
 
+#define JOIN_CHAR ' '
+
 list_t *list_new(list_t *prev)
 {
 	list_t *l = umalloc(sizeof *l);
@@ -90,14 +92,14 @@ static list_t *list_new_fd_read(int fd, bool *eol)
 	int r;
 	while((r = read(fd, &ch, 1)) == 1){
 		if(nl){
-			list_inschar(l, &x, &y, '\n');
+			list_inschar(l, &x, &y, '\n', /*gap*/' ');
 			nl = false;
 		}
 
 		if(ch == '\n')
 			nl = true;
 		else
-			list_inschar(l, &x, &y, ch);
+			list_inschar(l, &x, &y, ch, /*gap*/' ');
 
 		empty = false;
 	}
@@ -309,7 +311,9 @@ int list_evalnewlines1(list_t *l)
 	return r;
 }
 
-void list_inschar(list_t *l, int *x, int *y, char ch)
+void list_inschar(
+		list_t *l, int *x, int *y,
+		char ch, char gapchar)
 {
 	l = list_seek(l, *y, true);
 
@@ -326,8 +330,23 @@ void list_inschar(list_t *l, int *x, int *y, char ch)
 		memmove(l->line + *x + 1, l->line + *x, l->len_malloc - *x - 1);
 	}
 
+	if(!gapchar){
+		/* autogap */
+		for(int i = 0; i < *x && (unsigned)i < l->len_line; i++){
+			if(!isspace(l->line[i])){
+				gapchar = ' ';
+				break;
+			}
+		}
+
+		if(!gapchar){
+			/* all space, go with a tab */
+			gapchar = '\t';
+		}
+	}
+
 	for(int i = l->len_line; i < *x; i++){
-		l->line[i] = ' ';
+		l->line[i] = gapchar;
 		l->len_line++;
 	}
 
@@ -611,7 +630,7 @@ void list_joinregion(list_t **pl, const region_t *region)
 
 		str_ltrim(l->line, &l->len_line);
 
-		/* + 1 for \0, +1 for ' ' */
+		/* + 1 for \0, +1 for JOIN_CHAR */
 		const size_t target = start->len_line + l->len_line + 2;
 
 		if(start->len_malloc < target)
@@ -621,7 +640,7 @@ void list_joinregion(list_t **pl, const region_t *region)
 				start->line,
 				start->len_malloc);
 
-		start->line[start->len_line++] = ' ';
+		start->line[start->len_line++] = JOIN_CHAR;
 
 		memcpy(start->line + start->len_line,
 				l->line,
