@@ -4,12 +4,17 @@
 
 #include <stdio.h>
 
+#include "pos.h"
 #include "complete.h"
 #include "hash.h"
 #include "keymacros.h" /* case_BACKSPACE */
 
+#include "ui.h"
+
 #include "str.h"
 #include "mem.h"
+
+#define COMPL_MAX 10
 
 struct hash_str_ent
 {
@@ -228,4 +233,63 @@ void complete_to_longest_common(
 
 out:
 	free(longest);
+}
+
+static void completion_calc_counts(
+			struct hash *const ents,
+			const int sel_or_minus1,
+			int *const start, int *const num_to_show,
+			bool *const show_more)
+{
+	*num_to_show = 0;
+	*show_more = false;
+
+	*start = sel_or_minus1 + 1;
+
+	for(int i = *start; ; i++){
+		void *ent = complete_hash_ent(ents, i);
+
+		if(!ent)
+			break; /* end */
+
+		(*num_to_show)++;
+		if(*num_to_show == COMPL_MAX + 1){
+			*show_more = true;
+			break;
+		}
+	}
+
+	*start -= *num_to_show / 2;
+
+	if(*start < 0)
+		*start = 0;
+}
+
+void complete_draw_menu(
+		struct hash *ents,
+		int sel_or_minus1,
+		point_t const *const at)
+{
+	int start_i;
+	int num_to_show;
+	bool show_more;
+
+	completion_calc_counts(
+			ents,
+			sel_or_minus1,
+			&start_i, &num_to_show, &show_more);
+
+	char **entries = umalloc(num_to_show * sizeof *entries);
+
+	for(int i = start_i; i < num_to_show; i++){
+		void *ent = complete_hash_ent(ents, i);
+		entries[i - start_i] = complete_1_getstr(ent);
+
+		if(!entries[i - start_i])
+			num_to_show = i; /* changing start has altered the count */
+	}
+
+	ui_draw_menu(at, entries, num_to_show, sel_or_minus1, show_more);
+
+	free(entries);
 }

@@ -29,11 +29,13 @@ extern enum ui_ec
 	UI_EXIT_1
 } ui_run;
 
-#ifdef HASH_H
-void ui_draw_completion(
-		struct hash *ents, const int sel,
+#ifdef RECT_H
+void ui_draw_menu(
 		point_t const *at,
-		bool (const void *), char *(const void *));
+		char *entries[],
+		size_t num_entries,
+		long selected /* -1 for none */,
+		bool show_more);
 #endif
 
 #endif

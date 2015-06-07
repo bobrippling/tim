@@ -25,8 +25,6 @@
 
 #define UI_MODE() buffers_cur()->ui_mode
 
-#define COMPL_MAX 10
-
 enum ui_ec ui_run = UI_RUNNING;
 
 static const char *ui_bufmode_str(enum buf_mode m)
@@ -359,10 +357,10 @@ void ui_clear(void)
 	nc_clearall();
 }
 
-static void ui_complete_line(
+static void ui_draw_menu_1(
 		const point_t *at,
 		const char *s,
-		bool selected,
+		const bool selected,
 		const size_t longest)
 {
 	nc_highlight(true);
@@ -383,50 +381,34 @@ static void ui_complete_line(
 	nc_style(0);
 }
 
-static void ui_completion_calc_counts(
-			struct hash *const ents, bool is_hidden(void const *),
-			const int sel_or_minus1,
-			int *const start, int *const num_to_show,
-			bool *const show_more)
+static size_t longest_entry(char *entries[], size_t n)
 {
-	*num_to_show = 0;
-	*show_more = false;
+	size_t longest = 0;
 
-	for(int i = sel_or_minus1 + 1; ; i++){
-		void *ent = hash_ent(ents, i);
+	for(; n > 0; n--, entries++){
+		size_t l = strlen(*entries);
 
-		if(!ent)
-			break; /* end */
-
-		if(is_hidden(ent))
-			continue;
-
-		(*num_to_show)++;
-		if(*num_to_show == COMPL_MAX + 1){
-			*show_more = true;
-			break;
-		}
+		if(l > longest)
+			longest = l;
 	}
 
-	*start = sel_or_minus1 + 1;
-
-	if(*show_more){
-		*start -= *num_to_show / 2;
-
-		if(*start < 0)
-			*start = 0;
-	}
+	return longest;
 }
 
-static void ui_completion_calc_location(
-		struct hash *ents, bool is_hidden(void const *),
-		int const start_i, int const num_to_show,
-		bool show_more, int const suggested_start_y,
-		const int lastline,
-		int *const start_y)
+void ui_draw_menu(
+		point_t const *at,
+		char *entries[const],
+		size_t num_entries,
+		long selected /* -1 for none */,
+		bool show_more)
 {
-	const int menu_count = num_to_show + show_more;
+	point_t nc_orig;
+	nc_get_yx(&nc_orig.y, &nc_orig.x);
 
+	const size_t longest = longest_entry(entries, num_entries);
+	point_t at_iter = *at;
+
+#if 0
 	*start_y = suggested_start_y;
 
 	/* decide whether to put the menu above or below the cursor */
@@ -438,84 +420,14 @@ static void ui_completion_calc_location(
 	}else{
 		++*start_y;
 	}
-}
+#endif
 
-static size_t longest_entry(
-		struct hash *ents,
-		const int start, const int end,
-		bool is_hidden(const void *), char *get_str(const void *))
-{
-	size_t longest = 0;
-
-	for(int i = start; i < end; i++){
-		void *ent = hash_ent(ents, i);
-
-		if(!ent)
-			break;
-		if(is_hidden(ent))
-			continue;
-
-		size_t l = strlen(get_str(ent));
-		if(l > longest)
-			longest = l;
+	for(long i = 0; (size_t)i < num_entries; i++, at_iter.y++){
+		ui_draw_menu_1(&at_iter, entries[i], selected == i, longest);
 	}
 
-	return longest;
-}
-
-void ui_draw_completion(
-		struct hash *ents, const int sel_or_minus1,
-		point_t const *at_suggested,
-		bool is_hidden(const void *), char *get_str(const void *))
-{
-	void *ent;
-	point_t nc_orig;
-	nc_get_yx(&nc_orig.y, &nc_orig.x);
-
-	int start_i;
-	int num_to_show;
-	bool show_more;
-
-	ui_completion_calc_counts(
-			ents, is_hidden,
-			sel_or_minus1,
-			&start_i, &num_to_show, &show_more);
-
-	const int lastline = nc_LINES() - 1 /*status:*/-1;
-	int start_y;
-
-	ui_completion_calc_location(
-			ents, is_hidden,
-			start_i, num_to_show, show_more,
-			at_suggested->y, lastline,
-			&start_y);
-
-	size_t longest = longest_entry(
-			ents, start_i, num_to_show,
-			is_hidden, get_str);
-
-	for(int i = start_i, count = 0;
-			count <= num_to_show && (ent = hash_ent(ents, i));
-			i++)
-	{
-		if(is_hidden(ent))
-			continue;
-
-		point_t where = {
-			.x = at_suggested->x,
-			.y = start_y + count,
-		};
-
-		if(count == num_to_show || where.y == lastline){
-			ui_complete_line(&where, "[more...]", false, longest);
-			break;
-		}else{
-			const char *ent_str = get_str(ent);
-
-			ui_complete_line(&where, ent_str, i == sel_or_minus1, longest);
-			count++;
-		}
-	}
+	if(show_more)
+		ui_draw_menu_1(&at_iter, "[more...]", false, longest);
 
 	nc_set_yx(nc_orig.y, nc_orig.x);
 }

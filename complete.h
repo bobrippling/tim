@@ -29,4 +29,8 @@ bool complete_1_ishidden(const void *);
 bool complete_1_isvisible(const void *);
 char *complete_1_getstr(const void *);
 
+#ifdef RECT_H
+void complete_draw_menu(struct hash *, int sel, point_t const *);
+#endif
+
 #endif
