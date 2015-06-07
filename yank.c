@@ -86,22 +86,34 @@ static void charwise_put(
 		}
 
 		/* append ins_iter - 2 lines */
-		list_append(head, head, list_copy_deep(ins_iter, /*prev:*/head));
+		{
+			list_t *copy = list_copy_deep(ins_iter, NULL);
+
+			list_t *copy_tail = list_tail(copy);
+			list_t *after = head->next;
+			head->next = copy;
+			copy->prev = head;
+
+			copy_tail->next = after;
+			if(after)
+				after->prev = copy_tail;
+		}
 
 		if(append.str){
+			list_t *tail = head;
 			for(; ins_iter; ins_iter = ins_iter->next)
-				head = head->next;
+				tail = tail->next;
 
-			/* head is now the last inserted line */
-			unsigned len = head->len_line + append.len;
-			head->len_malloc = len + 1;
-			head->line = urealloc(head->line, head->len_malloc);
+			/* tail is now the last inserted line */
+			unsigned len = tail->len_line + append.len;
+			tail->len_malloc = len + 1;
+			tail->line = urealloc(tail->line, tail->len_malloc);
 
-			memcpy(head->line + head->len_line,
+			memcpy(tail->line + tail->len_line,
 					append.str,
 					append.len);
 
-			head->len_line += append.len;
+			tail->len_line += append.len;
 		}
 	}
 
@@ -109,29 +121,44 @@ static void charwise_put(
 }
 
 void yank_put_in_list(
-		const yank *ynk, list_t **phead,
+		const yank *ynk,
+		list_t **const phead,
 		const bool prepend,
 		int *py, int *px)
 {
 	switch(ynk->as){
 		case REGION_CHAR:
-			charwise_put(ynk, *phead, px, prepend);
+			charwise_put(ynk, list_seek(*phead, *py, true), px, prepend);
 			break;
 
 		case REGION_LINE:
 		{
 			list_t *copy = list_copy_deep(ynk->list, NULL);
 			list_t *copy_tail = list_tail(copy);
-			list_t *const head = *phead;
 
 			if(prepend){
-				copy->prev = head->prev;
-				*phead = copy;
+				if(*py == 0){
+					list_t *head = *phead;
 
-				copy_tail->next = head;
-				head->prev = copy_tail;
+					copy->prev = NULL;
+					*phead = copy;
 
+					copy_tail->next = head;
+					if(head)
+						head->prev = copy_tail;
+				}else{
+					list_t *before = list_seek(*phead, *py - 1, true);
+					list_t *after = before->next;
+
+					copy->prev = before;
+					before->next = copy;
+
+					copy_tail->next = after;
+					if(after)
+						after->prev = copy_tail;
+				}
 			}else{
+				list_t *const head = *list_seekp(phead, *py, true);
 				list_t *const after = head->next;
 
 				/* top link */
@@ -149,7 +176,8 @@ void yank_put_in_list(
 		}
 		case REGION_COL:
 		{
-			list_t *head = *phead;
+			list_t *head = *list_seekp(phead, *py, true);
+			assert(head);
 			int y = 0;
 			for(const list_t *l = ynk->list;
 			    l; l = l->next, y++)
