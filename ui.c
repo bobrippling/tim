@@ -147,8 +147,10 @@ static bool ui_match_paren(window *win)
 		.how = M_EXCLUSIVE
 	};
 	point_t loc;
-	if(!motion_apply_win_dry(&opposite, 0, win, &loc))
+	if(!motion_apply_win_dry(&opposite, 0, win, &loc)){
+		// beep?
 		goto out;
+	}
 
 	win->ui_paren = loc;
 	redraw = true;
@@ -187,6 +189,7 @@ static void ui_handle_next_ch(enum io io_mode, unsigned repeat)
 			ui_cur_changed();
 		}else if(ch != K_ESC){
 			ui_err("unknown key %c", ch); // TODO: queue?
+			ui_beep();
 		}
 	}
 }
@@ -199,11 +202,12 @@ void ui_normal_1(unsigned *repeat, enum io io_mode)
 	if(!ins){
 		const motion *m = motion_read(repeat, /*map:*/true);
 		if(m){
-			motion_apply_win(m, *repeat, win);
-
+			if(motion_apply_win(m, *repeat, win)
 			/* check if we're now on a paren */
-			if(ui_match_paren(win))
+			&& ui_match_paren(win))
+			{
 				ui_redraw();
+			}
 
 			return;
 		} /* else no motion */

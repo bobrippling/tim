@@ -507,8 +507,10 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 
 		region_t r;
-		if(!motion_to_region(mchosen, 1, win, &r))
+		if(!motion_to_region(mchosen, 1, win, &r)){
+			// beep?
 			return;
+		}
 
 		/* special case - single _line_ replace
 		 * we differ from vim in that multi-char-single-line
@@ -543,6 +545,7 @@ void k_replace(const keyarg_u *a, unsigned repeat, const int from_ch)
 void k_motion(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	motion_apply_win(&a->motion.m, a->motion.repeat, windows_cur());
+	// beep?
 }
 
 struct around_motion
@@ -604,8 +607,10 @@ static bool around_motion(
 		window *win = windows_cur();
 
 		region_t r;
-		if(!motion_to_region(m, repeat, win, &r))
+		if(!motion_to_region(m, repeat, win, &r)){
+			// beep?
 			return false;
+		}
 
 		if(used_region)
 			*used_region = r;
@@ -799,8 +804,10 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 		unsigned mrepeat;
 		const motion *m = motion_read_or_visual(&mrepeat, false);
 
-		if(!motion_to_region(m, mrepeat, win, &r))
+		if(!motion_to_region(m, mrepeat, win, &r)){
+			/* no beep - this shouldn't fail as we're in visual mode */
 			return;
+		}
 
 		/* necessary so we insert at the right place later on */
 		point_sort_full(&win->ui_npos, &win->ui_vpos);
@@ -957,7 +964,8 @@ void word_search(const char *word, bool backwards)
 		.how = M_EXCLUSIVE
 	};
 
-	motion_apply_win(&m_search, /*repeat:*/1, windows_cur());
+	if(motion_apply_win(&m_search, /*repeat:*/1, windows_cur()) == MOTION_FAILURE)
+		ui_beep();
 }
 
 void word_list(const char *word, bool flag)
