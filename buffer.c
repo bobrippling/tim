@@ -223,6 +223,8 @@ static void buffer_unindent_empty(buffer_t *buf, int *const x, int y)
 	list_t *l = buffer_last_indent_line(buf, y);
 	if(!l)
 		return;
+	if(!l->line || !isallspace(l->line, *x))
+		return;
 	int indent = list_count_indent(l);
 
 	if(indent == 0)
