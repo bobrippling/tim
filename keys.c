@@ -154,6 +154,30 @@ const motion *motion_read_or_visual(unsigned *repeat, bool apply_maps)
 	return motion_read(repeat, apply_maps);
 }
 
+static void prompt_finish(char *cmd)
+{
+	const cmd_t *cmd_f;
+	char **argv;
+	int argc;
+	bool force;
+	struct range rstore, *range = &rstore;
+
+	if(parse_ranged_cmd(
+			cmd,
+			&cmd_f,
+			&argv, &argc,
+			&force, &range))
+	{
+		cmd_dispatch(cmd_f, argc, argv, force, range);
+	}
+	else
+	{
+		ui_err("unknown command %s", cmd);
+	}
+
+	free_argv(argv, argc);
+}
+
 void k_prompt_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 {
 	char *initial = NULL;
@@ -181,26 +205,8 @@ void k_prompt_cmd(const keyarg_u *arg, unsigned repeat, const int from_ch)
 	if(!cmd)
 		goto cancel_cmd;
 
-	const cmd_t *cmd_f;
-	char **argv;
-	int argc;
-	bool force;
-	struct range rstore, *range = &rstore;
+	prompt_finish(cmd);
 
-	if(parse_ranged_cmd(
-			cmd,
-			&cmd_f,
-			&argv, &argc,
-			&force, &range))
-	{
-		cmd_dispatch(cmd_f, argc, argv, force, range);
-	}
-	else
-	{
-		ui_err("unknown command %s", cmd);
-	}
-
-	free_argv(argv, argc);
 cancel_cmd:
 	free(cmd);
 }
@@ -835,12 +841,24 @@ static void filter(
 		case FILTER_CMD:
 			cmd = pf->s;
 			if(!cmd){
-				cmd = prompt('!', NULL);
+				char initial[32];
+
+				snprintf(initial, sizeof initial, "%d,%d!",
+						region->begin.y,
+						region->end.y);
+
+				cmd = prompt(':', initial);
 				if(!cmd)
 					return;
-				free_cmd = true;
+
+				prompt_finish(cmd);
+
+				free(cmd);
+				return;
+			}else{
+				break;
 			}
-			break;
+
 		case FILTER_SELF:
 			cmd = "sh";
 	}
