@@ -341,7 +341,7 @@ void list_inschar(
 		memset(l->line + old_len, 0, l->len_malloc - old_len);
 	}else{
 		/* shift stuff up */
-		l->line = urealloc(l->line, ++l->len_malloc);
+		l->line = urealloc(l->line, ++l->len_malloc); // XXX: address 0x10001856a from asan crash
 		memmove(l->line + *x + 1, l->line + *x, l->len_malloc - *x - 1);
 	}
 

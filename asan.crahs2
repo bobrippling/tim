@@ -1,0 +1,45 @@
+#1 0x10078b683 in urealloc (/Users/rpilling/bin/tim+0x100005683)
+#2 0x10079e56a in list_inschar (/Users/rpilling/bin/tim+0x10001856a)
+#3 0x10079ad6b in buffer_inschar_at (/Users/rpilling/bin/tim+0x100014d6b)
+#4 0x10079afdf in buffer_inscolchar (/Users/rpilling/bin/tim+0x100014fdf)
+#5 0x1007b1f8e in window_inschar (/Users/rpilling/bin/tim+0x10002bf8e)
+#6 0x100789733 in ui_handle_next_ch (/Users/rpilling/bin/tim+0x100003733)
+#7 0x10078990f in ui_normal_1 (/Users/rpilling/bin/tim+0x10000390f)
+#8 0x100789d08 in ui_main (/Users/rpilling/bin/tim+0x100003d08)
+#9 0x100787a76 in main (/Users/rpilling/bin/tim+0x100001a76)
+#10 0x7fff976185c8 in start (/usr/lib/system/libdyld.dylib+0x35c8)
+#11 0x1  (<unknown module>)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow ??:0 ustrdup_len
+Shadow bytes around the buggy address:
+0x1c04000018b0: fa fa fd fd fa fa fd fa fa fa fd fd fa fa fd fa
+0x1c04000018c0: fa fa fd fd fa fa fd fa fa fa fd fd fa fa fd fa
+0x1c04000018d0: fa fa fd fd fa fa fd fa fa fa fd fd fa fa fd fd
+0x1c04000018e0: fa fa fd fa fa fa fd fa fa fa fd fa fa fa fd fa
+0x1c04000018f0: fa fa fd fa fa fa fd fa fa fa fd fa fa fa fd fa
+0x1c0400001900: fa fa fd fa fa fa fd fd fa fa fd fa fa fa[00]06
+0x1c0400001910: fa fa 00 06 fa fa 00 06 fa fa 00 06 fa fa fd fa
+0x1c0400001920: fa fa fd fd fa fa fd fd fa fa fd fa fa fa fd fa
+0x1c0400001930: fa fa fd fd fa fa fd fa fa fa fd fd fa fa fd fa
+0x1c0400001940: fa fa fd fa fa fa fd fd fa fa fd fa fa fa fd fd
+0x1c0400001950: fa fa fd fd fa fa fd fa fa fa fd fa fa fa fd fd
+Shadow byte legend (one shadow byte represents 8 application bytes):
+Addressable:           00
+Partially addressable: 01 02 03 04 05 06 07
+Heap left redzone:       fa
+Heap right redzone:      fb
+Freed heap region:       fd
+Stack left redzone:      f1
+Stack mid redzone:       f2
+Stack right redzone:     f3
+Stack partial redzone:   f4
+Stack after return:      f5
+Stack use after scope:   f8
+Global redzone:          f9
+Global init order:       f6
+Poisoned by user:        f7
+Container overflow:      fc
+Array cookie:            ac
+Intra object redzone:    bb
+ASan internal:           fe
+==70038==ABORTING

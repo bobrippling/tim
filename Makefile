@@ -18,6 +18,9 @@ SRC = ${OBJ:.o=.c}
 
 Q = @
 
+CFLAGS += -fsanitize=address
+LDFLAGS += -fsanitize=address
+
 tim: ${OBJ}
 	@echo link $@
 	$Q${CC} -o $@ ${OBJ} ${LDFLAGS}
