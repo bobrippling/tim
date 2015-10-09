@@ -451,8 +451,18 @@ bool c_only(int argc, char **argv, bool force, struct range *range)
 	windows_set_cur(window_next(anchor));
 	window_evict(anchor);
 
-	ITER_WINDOWS(iter)
-		window_free(iter);
+	/* must iterate manually to avoid accessing free'd memory */
+	iter = window_topleftmost(windows_cur());
+	window *next_right;
+	for(window *h = iter; h; h = next_right){
+		next_right = h->neighbours.right;
+
+		window *next_below;
+		for(iter = h; iter; iter = next_below){
+			next_below = iter->neighbours.below;
+			window_free(iter);
+		}
+	}
 
 	windows_set_cur(anchor);
 
