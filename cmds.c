@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "range.h"
 #include "cmds.h"
@@ -228,6 +229,71 @@ bool c_n(int argc, char **argv, bool force, struct range *range)
 	return edit_common(fname, force);
 }
 
+static bool write_buf_with_rename(buffer_t *buf, const char *fname)
+{
+	bool ret = false;
+	bool unlink_tmp = false;
+	int fd = -1;
+
+	size_t fname_tmp_len = strlen(fname) + 8 + 1;
+	char *fname_tmp = umalloc(fname_tmp_len);
+
+	int n_ideal = snprintf(fname_tmp, fname_tmp_len, "%s.%d", fname, getpid() ^ rand());
+
+	if(n_ideal < 0 || (unsigned)n_ideal >= fname_tmp_len){
+		errno = ENOMEM;
+		goto out;
+	}
+
+	fd = open(fname_tmp, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
+	if(fd < 0)
+		goto out;
+
+	unlink_tmp = true;
+
+	FILE *f = fdopen(fd, "w");
+
+	if(!f)
+		goto out;
+
+	fd = -1; /* ownership transferred */
+
+	if(buffer_write_file(buf, -1, f, buf->eol) != 0)
+		goto out;
+
+	if(fclose(f)){
+		f = NULL;
+		goto out;
+	}
+	f = NULL;
+
+	if(rename(fname_tmp, fname))
+		goto out;
+
+	unlink_tmp = false;
+	ret = true;
+
+out:;
+	const int save_errno = errno;
+
+	if(unlink_tmp){
+		unlink(fname_tmp);
+	}
+
+	if(f){
+		/* ignore result - already in error state */
+		assert(!ret);
+		fclose(f);
+	}
+
+	if(fd > -1) close(fd);
+
+	free(fname_tmp), fname_tmp = NULL;
+
+	errno = save_errno;
+	return ret;
+}
+
 static bool write_buf(
 		buffer_t *buf, bool const force, bool const newfname)
 {
@@ -255,22 +321,10 @@ static bool write_buf(
 		}
 	}
 
-	FILE *f = fopen(fname, "w");
-
-	if(!f){
-got_err:
+	errno = 0;
+	if(!write_buf_with_rename(buf, fname)){
 		ui_err("%s: %s", fname, strerror(errno));
-		if(f)
-			fclose(f);
 		return false;
-	}
-
-	if(buffer_write_file(buf, -1, f, buf->eol) != 0)
-		goto got_err; /* file cleanup handled */
-
-	if(fclose(f)){
-		f = NULL;
-		goto got_err;
 	}
 
 	return true;
