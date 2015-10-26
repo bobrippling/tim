@@ -345,20 +345,42 @@ void buffer_insyank(
 }
 
 static
-void buffer_joinregion_f(buffer_t *buf, const region_t *region, point_t *out)
+void buffer_joinregion_f(
+		buffer_t *buf,
+		const region_t *region,
+		point_t *out,
+		const bool space)
 {
 	/* could use 'how' here - columns and lines only make sense */
 	list_t *l = list_seek(buf->head, region->begin.y, 0);
 	const int mid = l ? l->len_line : 0;
 
-	list_joinregion(&buf->head, region);
+	list_joinregion(&buf->head, region, space);
 
 	if(l)
 		out->x = mid;
 	buf->modified = true;
 }
-struct buffer_action buffer_joinregion = {
-	.fn = buffer_joinregion_f,
+
+static
+void buffer_joinregion_space_f(buffer_t *buf, const region_t *region, point_t *out)
+{
+	buffer_joinregion_f(buf, region, out, true);
+}
+
+static
+void buffer_joinregion_nospace_f(buffer_t *buf, const region_t *region, point_t *out)
+{
+	buffer_joinregion_f(buf, region, out, false);
+}
+
+struct buffer_action buffer_joinregion_space = {
+	.fn = buffer_joinregion_space_f,
+	.always_linewise = true
+};
+
+struct buffer_action buffer_joinregion_nospace = {
+	.fn = buffer_joinregion_nospace_f,
 	.always_linewise = true
 };
 

@@ -86,7 +86,8 @@ const nkey_t nkeys[] = {
 	{ "p",            k_put, { false }, UI_NORMAL | UI_VISUAL_ANY },
 	{ "P",            k_put, { true }, UI_NORMAL | UI_VISUAL_ANY },
 
-	{ "J",            k_join,       KEY_ARG_NONE,  UI_NORMAL | UI_VISUAL_ANY },
+	{ "J",            k_join, { .b = true },  UI_NORMAL | UI_VISUAL_ANY },
+	{ "gJ",           k_join, { .b = false }, UI_NORMAL | UI_VISUAL_ANY },
 
 	{ ">",            k_indent,     { +1 },  UI_NORMAL | UI_VISUAL_ANY },
 	{ "<",            k_indent,     { -1 },  UI_NORMAL | UI_VISUAL_ANY },

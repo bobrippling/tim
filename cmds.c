@@ -929,7 +929,7 @@ bool c_j(int argc, char **argv, bool force, struct range *range)
 		range->end--;
 	}
 
-	command_bufaction(range, buffer_joinregion.fn, 1);
+	command_bufaction(range, buffer_joinregion_space.fn, 1);
 
 	return true;
 }

@@ -81,7 +81,9 @@ struct buffer_action
 };
 
 extern struct buffer_action
-	buffer_delregion, buffer_joinregion, buffer_yankregion,
+	buffer_delregion,
+	buffer_joinregion_space, buffer_joinregion_nospace,
+	buffer_yankregion,
 	buffer_indent, buffer_unindent;
 
 void buffer_smartindent(buffer_t *, int *x, int y);

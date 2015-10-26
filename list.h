@@ -38,7 +38,7 @@ char *list_word_at(list_t *l, point_t const *);
 char *list_fname_at(list_t *l, point_t const *);
 
 /* *pl isn't changed - ABI compat with list_delregion */
-void list_joinregion(list_t **pl, const region_t *);
+void list_joinregion(list_t **pl, const region_t *, bool space);
 
 int list_filter(
 		list_t **pl, const region_t *,

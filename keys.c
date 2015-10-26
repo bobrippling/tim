@@ -697,7 +697,13 @@ void k_yank(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 void k_join(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
-	around_motion_bufaction(repeat, from_ch, &buffer_joinregion, NULL);
+	const bool space = a->b;
+
+	around_motion_bufaction(
+			repeat,
+			from_ch,
+			space ? &buffer_joinregion_space : &buffer_joinregion_nospace,
+			NULL);
 }
 
 void k_indent(const keyarg_u *a, unsigned repeat, const int from_ch)

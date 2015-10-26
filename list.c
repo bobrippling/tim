@@ -604,7 +604,7 @@ list_t *list_delregion(list_t **pl, const region_t *region)
 	return deleted;
 }
 
-void list_joinregion(list_t **pl, const region_t *region)
+void list_joinregion(list_t **pl, const region_t *region, const bool space)
 {
 	if(region->begin.y == region->end.y)
 		return;
@@ -640,7 +640,8 @@ void list_joinregion(list_t **pl, const region_t *region)
 				start->line,
 				start->len_malloc);
 
-		start->line[start->len_line++] = JOIN_CHAR;
+		if(space)
+			start->line[start->len_line++] = JOIN_CHAR;
 
 		memcpy(start->line + start->len_line,
 				l->line,
