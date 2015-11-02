@@ -806,6 +806,8 @@ void k_put(const keyarg_u *a, unsigned repeat, const int from_ch)
 
 	win->ui_mode = UI_NORMAL; /* remove visual */
 
+	start_of_line(NULL, win);
+
 	ui_redraw();
 	ui_cur_changed();
 
