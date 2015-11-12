@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <unistd.h> /* access() */
+#include <sys/stat.h>
 
 #include "pos.h"
 #include "region.h"
@@ -1032,16 +1033,27 @@ static bool attempt_relative_fname(
 	if(!buf_fname)
 		return false;
 
-	if(!strchr(buf_fname, '/'))
-		return false;
+	/* if it's a directory, we don't basename() the path */
+	struct stat st;
+	const bool is_dir = (stat(buf_fname, &st) == 0 && S_ISDIR(st.st_mode));
 
-	char *fname_dup = ustrdup(buf_fname);
+	char *fname_dup = NULL;
+	if(!is_dir){
+		/* basename */
+		fname_dup = ustrdup(buf_fname);
+		char *last_slash = strrchr(fname_dup, '/');
 
-	char *last_slash = strrchr(fname_dup, '/');
-	/* nonnull because of above check */
-	last_slash[1] = '\0';
+		if(last_slash)
+			*last_slash = '\0';
+	}
 
-	char *joined = join("", (char *[]){ fname_dup, fname }, 2);
+	char *joined = join(
+			"/",
+			(char *[]){
+				fname_dup ? fname_dup : (char *)buf_fname,
+				fname
+			},
+			2);
 
 	free(fname_dup), fname_dup = NULL;
 
