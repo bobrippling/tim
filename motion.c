@@ -513,85 +513,73 @@ int m_paren(
 	if(!l)
 		return MOTION_FAILURE;
 
-	switch(arg->i){
-		default:
-			break;
+	if(arg->i == '%'){
+		/* look forward for a paren on this line, then match */
+		char paren = 0, opp;
+		unsigned x = win->ui_pos->x;
+		unsigned y = win->ui_pos->y;
 
-		case '%':
-		{
-			/* look forward for a paren on this line, then match */
-			char paren = 0, opp;
-			unsigned x = win->ui_pos->x;
-			unsigned y = win->ui_pos->y;
-
-			if(x >= l->len_line)
-				x = l->len_line - 1;
-			for(unsigned i = x; i < l->len_line; i++)
-				if(paren_match(l->line[i], &opp)){
-					paren = l->line[i];
-					x = i;
-					break;
-				}
-
-			if(!paren)
-				return MOTION_FAILURE;
-
-			const int dir = paren_left(paren) ? 1 : -1;
-			point_t pos = { .y = y, .x = x + dir };
-
-			if(find_unnested_paren(opp, paren, dir, &l, &pos)){
-				*to = pos;
-				return MOTION_SUCCESS;
-			}
-			break;
-		}
-
-		case '{':
-		case '(':
-		case '<':
-		case '}':
-		case ')':
-		case '>':
-		{
-			repeat = DEFAULT_REPEAT(repeat);
-
-			/* look for an unmatched `arg->i' */
-			char paren = arg->i, opp = paren_opposite(paren);
-
-			point_t pos = *win->ui_pos;
-
-			int dir = paren_left(paren) ? -1 : 1;
-			bool done_one = false;
-
-			for(; repeat > 0; repeat--){
-				const point_t before_move = pos;
-
-				if((unsigned)pos.x < l->len_line &&
-				(l->line[pos.x] == paren || l->line[pos.x] == opp))
-				{
-					/* "[{" while on a '{' - step out so we don't stay on it
-					 * or
-					 * "[{" while on a '}' - step in so we match the other paren
-					 */
-					l = list_advance_x(l, dir, &pos.y, &pos.x);
-				}
-
-				if(!find_unnested_paren(paren, opp,
-							dir, &l, &pos))
-				{
-					if(done_one){
-						pos = before_move;
-						break;
-					}
-					return MOTION_FAILURE;
-				}
-
-				done_one = true;
+		if(x >= l->len_line)
+			x = l->len_line - 1;
+		for(unsigned i = x; i < l->len_line; i++)
+			if(paren_match(l->line[i], &opp)){
+				paren = l->line[i];
+				x = i;
+				break;
 			}
 
+		if(!paren)
+			return MOTION_FAILURE;
+
+		const int dir = paren_left(paren) ? 1 : -1;
+		point_t pos = { .y = y, .x = x + dir };
+
+		if(find_unnested_paren(opp, paren, dir, &l, &pos)){
 			*to = pos;
 			return MOTION_SUCCESS;
 		}
+		return MOTION_FAILURE;
+	}
+
+	if(paren_match(arg->i, &(char){ 0 })){
+		repeat = DEFAULT_REPEAT(repeat);
+
+		/* look for an unmatched `arg->i' */
+		char paren = arg->i, opp = paren_opposite(paren);
+
+		point_t pos = *win->ui_pos;
+
+		int dir = paren_left(paren) ? -1 : 1;
+		bool done_one = false;
+
+		for(; repeat > 0; repeat--){
+			const point_t before_move = pos;
+
+			if((unsigned)pos.x < l->len_line &&
+			(l->line[pos.x] == paren || l->line[pos.x] == opp))
+			{
+				/* "[{" while on a '{' - step out so we don't stay on it
+				 * or
+				 * "[{" while on a '}' - step in so we match the other paren
+				 */
+				l = list_advance_x(l, dir, &pos.y, &pos.x);
+			}
+
+			if(!find_unnested_paren(paren, opp,
+						dir, &l, &pos))
+			{
+				if(done_one){
+					pos = before_move;
+					break;
+				}
+				return MOTION_FAILURE;
+			}
+
+			done_one = true;
+		}
+
+		*to = pos;
+		return MOTION_SUCCESS;
 	}
 
 	return MOTION_FAILURE;
