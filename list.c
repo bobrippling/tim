@@ -176,11 +176,25 @@ list_t *list_new_file(FILE *f, bool *eol)
 list_t *list_from_dir(DIR *d)
 {
 	list_t *head = list_new(NULL), *prev = NULL;
+	int dfd = dirfd(d);
 
 	struct dirent *dent;
 	while((errno = 0, dent = readdir(d))){
-		const size_t len = strlen(dent->d_name);
-		char *dup = ustrdup_len(dent->d_name, len);
+		size_t len = strlen(dent->d_name);
+		struct stat st;
+		const bool is_dir = (dfd != -1
+				&& fstatat(dfd, dent->d_name, &st, 0) == 0
+				&& S_ISDIR(st.st_mode));
+
+		char *line;
+		if(is_dir){
+			len++;
+			line = umalloc(len + 1);
+			snprintf(line, len + 1, "%s/", dent->d_name);
+
+		}else{
+			line = ustrdup_len(dent->d_name, len);
+		}
 
 		list_t *l;
 
@@ -193,8 +207,9 @@ list_t *list_from_dir(DIR *d)
 		}
 		prev = l;
 
-		l->line = dup;
+		l->line = line;
 		l->len_line = len;
+		l->len_malloc = len + 1;
 	}
 
 	if(errno){
