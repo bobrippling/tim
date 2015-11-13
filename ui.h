@@ -1,11 +1,7 @@
 #ifndef UI_H
 #define UI_H
 
-#ifdef __GNUC__
-#  define tim_printf(a, b) __attribute__((format(printf, a, b)))
-#else
-#  define tim_printf(a, b)
-#endif
+#include "compiler.h"
 
 void ui_init(void);
 int ui_main(void);
