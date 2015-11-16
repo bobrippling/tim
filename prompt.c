@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "prompt.h"
 
@@ -87,4 +88,23 @@ cancel:
 	nc_set_yx(y, x);
 	free(buf);
 	return NULL;
+}
+
+bool yesno(const char *fmt, ...)
+{
+	int y, x;
+	nc_get_yx(&y, &x);
+	nc_set_yx(nc_LINES() - 1, 0);
+
+	va_list l;
+	va_start(l, fmt);
+	nc_vprintf(fmt, l);
+	va_end(l);
+
+	bool wasraw;
+	int ch = io_getch(IO_NOMAP, &wasraw, /*domaps:*/true);
+
+	nc_set_yx(y, x);
+
+	return tolower(ch) == 'y';
 }
