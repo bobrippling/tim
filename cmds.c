@@ -459,17 +459,30 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 	}else if(argc == 2){
 		fname = argv[1];
 	}else{
+		if(buffers_modified_single(buffers_cur())){
+			ui_err("buffer modified");
+			return false;
+		}
+
 		if(!yesno("%d files given - open in vertical split? (y/N) ", argc - 1))
 			return false;
 
-		return c_split(
+		window *current = windows_cur();
+
+		bool ret = c_split(
 				neighbour_down,
-				/*replace current:*/true,
+				/*use current:*/true,
 				argc,
 				argv,
 				/*force*/false,
 				/*range*/NULL,
 				/*allow_many:*/true);
+
+		/* close current window */
+		windows_set_cur(current);
+		quit_common(false, 1, (char *[]){ "", NULL }, false, NULL);
+
+		return ret;
 	}
 
 	return edit_common(fname, force);
