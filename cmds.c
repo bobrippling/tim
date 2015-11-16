@@ -24,6 +24,7 @@
 #include "ncurses.h"
 #include "window.h"
 #include "windows.h"
+#include "prompt.h"
 #include "main.h"
 #include "tab.h"
 #include "tabs.h"
@@ -47,6 +48,14 @@
 		ui_err("usage: %s", *argv); \
 		return false;               \
 	}
+
+static
+bool c_split(
+		const enum neighbour dir,
+		bool const withcurrent,
+		int argc, char **argv,
+		bool force, struct range *range,
+		const bool allow_many);
 
 static bool quit_common(
 		bool qall,
@@ -450,8 +459,17 @@ bool c_e(int argc, char **argv, bool force, struct range *range)
 	}else if(argc == 2){
 		fname = argv[1];
 	}else{
-		ui_err("usage: %s [filename]", *argv);
-		return false;
+		if(!yesno("%d files given - open in vertical split? (y/N) ", argc - 1))
+			return false;
+
+		return c_split(
+				neighbour_down,
+				/*replace current:*/true,
+				argc,
+				argv,
+				/*force*/false,
+				/*range*/NULL,
+				/*allow_many:*/true);
 	}
 
 	return edit_common(fname, force);
@@ -614,37 +632,43 @@ bool c_split(
 		const enum neighbour dir,
 		bool const withcurrent,
 		int argc, char **argv,
-		bool force, struct range *range)
+		bool force, struct range *range,
+		const bool allow_many)
 {
 	RANGE_NO();
 
-	if(argc > 2){
+	if(!allow_many && argc > 2){
 		ui_err("usage: %s [filename]", *argv);
 		return false;
 	}
 
 	buffer_t *b;
-	window *copy_pos_from = NULL;
 
 	if(argc > 1){
-		const char *err;
-		buffer_new_fname(&b, argv[1], &err);
+		for(int i = 1; i < argc; i++){
+			const char *err;
+			buffer_new_fname(&b, argv[i], &err);
 
-		if(err){
-			ui_err("%s: %s", argv[1], err);
+			if(err){
+				ui_err("%s: %s", argv[i], err);
 
-			/* edit new file */
-			b = buffer_new();
-			buffer_set_fname(b, argv[1]);
+				/* edit new file */
+				b = buffer_new();
+				buffer_set_fname(b, argv[i]);
+			}
+
+			attach_buffer(b, dir, NULL);
 		}
+
 	}else if(withcurrent){
 		window *cur = windows_cur();
 		b = retain(cur->buf);
-		copy_pos_from = cur;
+		attach_buffer(b, dir, /*copy pos from:*/cur);
+
 	}else{
 		b = buffer_new();
+		attach_buffer(b, dir, NULL);
 	}
-	attach_buffer(b, dir, copy_pos_from);
 
 	ui_redraw();
 	ui_cur_changed();
@@ -652,24 +676,32 @@ bool c_split(
 	return true;
 }
 
+static bool split_multi(int argc)
+{
+	if(argc <= 2)
+		return false; /* doesn't matter - only one anyway */
+
+	return yesno("%d files given - open in split? (y/N) ", argc - 1);
+}
+
 bool c_vs(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(neighbour_left, true, argc, argv, force, range);
+	return c_split(neighbour_left, true, argc, argv, force, range, split_multi(argc));
 }
 
 bool c_vnew(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(neighbour_left, false, argc, argv, force, range);
+	return c_split(neighbour_left, false, argc, argv, force, range, split_multi(argc));
 }
 
 bool c_sp(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(neighbour_up, true, argc, argv, force, range);
+	return c_split(neighbour_up, true, argc, argv, force, range, split_multi(argc));
 }
 
 bool c_new(int argc, char **argv, bool force, struct range *range)
 {
-	return c_split(neighbour_up, false, argc, argv, force, range);
+	return c_split(neighbour_up, false, argc, argv, force, range, split_multi(argc));
 }
 
 bool c_all(int argc, char **argv, bool force, struct range *range)
