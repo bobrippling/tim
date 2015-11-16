@@ -585,6 +585,30 @@ bool c_r(char *argv0, char *rest, bool via_shell, struct range *range)
 	return true;
 }
 
+static void attach_buffer(
+		buffer_t *buf,
+		const enum neighbour dir,
+		window *const copy_pos_from)
+{
+	window *w = window_new(buf);
+	buffer_release(buf);
+
+	window_add_neighbour(windows_cur(), dir, w);
+	windows_set_cur(w);
+
+	if(copy_pos_from){
+		*w->ui_pos = *copy_pos_from->ui_pos;
+
+		w->ui_start = copy_pos_from->ui_start;
+		if(neighbour_is_vertical(dir)){
+			int diff = (w->ui_pos->y - w->ui_start.y) / 2;
+
+			copy_pos_from->ui_start.y += diff;
+			w->ui_start.y += diff;
+		}
+	}
+}
+
 static
 bool c_split(
 		const enum neighbour dir,
@@ -620,24 +644,7 @@ bool c_split(
 	}else{
 		b = buffer_new();
 	}
-
-	window *w = window_new(b);
-	buffer_release(b);
-
-	window_add_neighbour(windows_cur(), dir, w);
-	windows_set_cur(w);
-
-	if(copy_pos_from){
-		*w->ui_pos = *copy_pos_from->ui_pos;
-
-		w->ui_start = copy_pos_from->ui_start;
-		if(neighbour_is_vertical(dir)){
-			int diff = (w->ui_pos->y - w->ui_start.y) / 2;
-
-			copy_pos_from->ui_start.y += diff;
-			w->ui_start.y += diff;
-		}
-	}
+	attach_buffer(b, dir, copy_pos_from);
 
 	ui_redraw();
 	ui_cur_changed();
