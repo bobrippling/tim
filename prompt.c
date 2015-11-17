@@ -11,9 +11,9 @@
 
 char *prompt(char promp, const char *initial)
 {
-	int len;
+	size_t len;
 	char *buf;
-	int i;
+	size_t i;
 
 	if(initial){
 		len = strlen(initial) + 1;
@@ -34,7 +34,7 @@ char *prompt(char promp, const char *initial)
 	nc_set_yx(nc_LINES() - 1, 0);
 	nc_addch(promp);
 
-	for(int x = 0; x < i; x++)
+	for(size_t x = 0; x < i; x++)
 		nc_addch(buf[x]);
 
 	nc_clrtoeol();
