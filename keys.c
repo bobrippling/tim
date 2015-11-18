@@ -320,6 +320,12 @@ static enum neighbour pos2dir(const point_t *pos)
 	else return 0;
 }
 
+void k_winabsolute(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	windows_set_cur((a->pos.x < 0 ? window_topleftmost : window_bottomrightmost)(windows_cur()));
+	ui_cur_changed();
+}
+
 void k_winsel(const keyarg_u *a, unsigned repeat, const int from_ch)
 {
 	enum neighbour dir = pos2dir(&a->pos);

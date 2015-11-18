@@ -72,17 +72,25 @@ window *window_next(window *cur)
 	return NULL;
 }
 
+#define window_top_bottom_left_right(H, V)                         \
+	for(;;){                                                          \
+		int changed = 0;                                                 \
+		for(; win->neighbours.H;  changed = 1, win = win->neighbours.H); \
+		for(; win->neighbours.V; changed = 1, win = win->neighbours.V);  \
+		if(!changed)                                                     \
+			break;                                                          \
+	}                                                                 \
+																																																																			\
+	return win
+
 window *window_topleftmost(window *win)
 {
-	for(;;){
-		int changed = 0;
-		for(; win->neighbours.left;  changed = 1, win = win->neighbours.left);
-		for(; win->neighbours.above; changed = 1, win = win->neighbours.above);
-		if(!changed)
-			break;
-	}
+	window_top_bottom_left_right(left, above);
+}
 
-	return win;
+window *window_bottomrightmost(window *win)
+{
+	window_top_bottom_left_right(right, below);
 }
 
 void window_evict(window *const evictee)

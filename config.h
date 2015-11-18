@@ -150,6 +150,9 @@ const nkey_t nkeys[] = {
 	{ (char[]){ CTRL_AND('w'), 'J', 0 }, k_winmove, { .pos.y = +1 }, UI_NORMAL | UI_VISUAL_ANY },
 	{ (char[]){ CTRL_AND('w'), 'K', 0 }, k_winmove, { .pos.y = -1 }, UI_NORMAL | UI_VISUAL_ANY },
 
+	{ (char[]){ CTRL_AND('w'), 't', 0 }, k_winabsolute, { .pos.x = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ (char[]){ CTRL_AND('w'), 'b', 0 }, k_winabsolute, { .pos.x = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ K_STR(CTRL_AND('g')),  k_show,       KEY_ARG_NONE,             UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('y')), k_ins_colcopy, { -1 }, UI_INSERT_ANY },

@@ -31,6 +31,7 @@ enum neighbour
 bool neighbour_is_vertical(enum neighbour);
 
 window *window_topleftmost(window *b);
+window *window_bottomrightmost(window *b);
 window *window_next(window *);
 
 void window_add_neighbour(window *, enum neighbour dir, window *);
