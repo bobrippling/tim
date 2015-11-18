@@ -85,42 +85,85 @@ int shellout(const char *cmd)
 
 bool shellout_write(const char *cmd, list_t *seeked, int nlines)
 {
+	bool ret = false;
+
 	ui_term();
 
-	FILE *subp = popen(cmd, "w");
+	pid_t child = fork();
 
-	if(!subp){
-		fprintf(stderr, "fork/exec: %s", strerror(errno));
-		return false;
-	}
+	if(child == 0){
+		if(setsid() != 0)
+			fprintf(stderr, "setsid(): %s\n", strerror(errno));
 
-	int r = list_write_file(seeked, nlines, subp, /*eol*/true);
-	int errno_write = errno;
+		FILE *subp = popen(cmd, "w");
 
-	int waitret = pclose(subp);
-	int errno_wait = errno;
+		if(!subp){
+			fprintf(stderr, "fork/exec: %s\n", strerror(errno));
+			exit(127);
+		}
 
-	if(r){
-		fprintf(stderr, "write subprocess: %s", strerror(errno_write));
-		return false;
-	}
+		const int write_ret = list_write_file(seeked, nlines, subp, /*eol*/true);
+		const int errno_write = errno;
 
-	if(WIFEXITED(waitret)){
-		int ec = WEXITSTATUS(waitret);
+		const int waitret = pclose(subp);
+		const int errno_wait = errno;
 
-		if(ec)
-			fprintf(stderr, "command returned %d\n", ec);
+		if(write_ret){
+			fprintf(stderr, "write subprocess: %s", strerror(errno_write));
+			exit(127);
+		}
 
-	}else if(WIFSIGNALED(waitret)){
-		fprintf(stderr, "command signalled with %d\n", WTERMSIG(waitret));
-	}else if(WIFSTOPPED(waitret)){
-		fprintf(stderr, "command stopped with %d\n", WSTOPSIG(waitret));
+		if(waitret == -1){
+			fprintf(stderr, "wait(): %s\n", strerror(errno_wait));
+			exit(127);
+		}
+
+		if(WIFEXITED(waitret))
+			exit(WEXITSTATUS(waitret));
+		exit(127);
+
+	}else if(child == -1){
+		fprintf(stderr, "fork: %s\n", strerror(errno));
+		goto out;
+
 	}else{
-		fprintf(stderr, "unknown state from wait()/pclose(): %d: %s",
-				waitret, strerror(errno_wait));
+		/* wait on child */
+		int status;
+
+		const pid_t wait_status = waitpid(child, &status, 0);
+		const int errno_wait = errno;
+
+		if(wait_status != child){
+			if(wait_status == -1){
+				fprintf(stderr, "waitpid(): %s\n", strerror(errno));
+			}else{
+				fprintf(stderr,
+						"unexpected wait return %d: %s\n",
+						wait_status, strerror(errno));
+			}
+
+			/* carry on anyway */
+			status = 1;
+		}
+
+		if(WIFEXITED(status)){
+			int ec = WEXITSTATUS(status);
+
+			if(ec)
+				fprintf(stderr, "command returned %d\n", ec);
+
+		}else if(WIFSIGNALED(status)){
+			fprintf(stderr, "command signalled with %d\n", WTERMSIG(status));
+		}else if(WIFSTOPPED(status)){
+			fprintf(stderr, "command stopped with %d\n", WSTOPSIG(status));
+		}else{
+			fprintf(stderr, "unknown state from wait()/pclose(): %d: %s",
+					status, strerror(errno_wait));
+		}
 	}
 
+out:
 	shellout_wait_ret();
 
-	return true;
+	return ret;
 }
