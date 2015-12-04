@@ -21,6 +21,7 @@
 #include "mem.h"
 #include "macros.h"
 #include "word.h"
+#include "external.h"
 
 #define JOIN_CHAR ' '
 
@@ -719,62 +720,14 @@ int list_filter(
 		return -1;
 	}
 
-	int child_in[2], child_out[2];
-	if(pipe(child_in))
-		return -1;
-	if(pipe(child_out)){
-		const int e = errno;
-		close(child_in[0]);
-		close(child_in[1]);
-		errno = e;
-		return -1;
-	}
-
-	pid_t pid = fork();
-	switch(pid){
-		case -1:
-		{
-			const int e = errno;
-			close(child_out[0]);
-			close(child_out[1]);
-			errno = e;
-			return -1;
-		}
-		case 0:
-			dup2(child_in[0], 0);
-			dup2(child_out[1], 1);
-			dup2(child_out[1], 2); /* capture stderr too */
-			for(int i = 0; i < 2; i++)
-				close(child_in[i]), close(child_out[i]);
-
-			execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
-			exit(127);
-	}
-
-	/* parent */
-	close(child_in[0]), close(child_out[1]);
-
 	const unsigned region_height = region->end.y - region->begin.y + 1;
 
-	list_t **phead = pl;
-	list_t *tail = list_seek(*phead, region_height, false);
+	list_t *l_read;
+	if(!shellout_read_write(cmd, *pl, region_height, &l_read)){
+		return -1;
+	}
 
-	/* write our lines to child_in */
-	list_write_fd(
-			*pl, region_height,
-			child_in[1], /*eol:*/true);
-
-	/* writes done */
-	close(child_in[1]);
-
-	/* read from child_out */
-	bool eol;
-	list_t *l_read = list_new_fd(child_out[0], &eol);
-	close(child_out[0]);
-
-	/* reap */
-	(void)waitpid(pid, NULL, 0);
-
+	list_t *tail = list_tail(l_read);
 	list_t *const gone = *pl;
 
 	*pl = l_read;
