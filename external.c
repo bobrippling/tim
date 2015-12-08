@@ -93,7 +93,7 @@ bool shellout_write(const char *cmd, list_t *seeked, int nlines)
 
 	if(child == 0){
 		if(setsid() != 0)
-			fprintf(stderr, "setsid(): %s\n", strerror(errno));
+			fprintf(stderr, "warning: setsid(): %s\n", strerror(errno));
 
 		FILE *subp = popen(cmd, "w");
 
