@@ -9,6 +9,7 @@
 #include "buffer.h"
 #include "window.h"
 #include "windows.h"
+#include "main.h"
 
 #include "ui.h"
 
@@ -43,17 +44,16 @@ static void win_add_splittop(window *cur, window *new)
 	window_add_neighbour(cur, neighbour_down, new);
 }
 
-static void load_argv(
-		int argc, char **argv,
-		void onload(window *cur, window *new))
+static void load_argv(void onload(window *cur, window *new))
 {
 	window *prev_win = win_sel;
+	char *next;
 
-	for(int i = 1; i < argc; i++){
+	while((next = args_next_fname(true))){
 		buffer_t *buf;
 		const char *err;
 
-		buffer_new_fname(&buf, argv[i], &err);
+		buffer_new_fname(&buf, next, &err);
 
 		window *w = window_new(buf);
 
@@ -65,15 +65,15 @@ static void load_argv(
 	}
 }
 
-void windows_init(
-		int argc, char **argv,
-		enum windows_init_args init_args, unsigned off)
+void windows_init(enum windows_init_args init_args, unsigned off)
 {
-	if(argc){
+	char *next = args_next_fname(true);
+
+	if(next){
 		const char *err = NULL;
 		buffer_t *buf;
 
-		if(!strcmp(argv[0], "-")){
+		if(!strcmp(next, "-")){
 			buf = buffer_new_file_nofind(stdin);
 			buf->modified = true; /* editing a stream */
 			/* no filename */
@@ -85,27 +85,25 @@ void windows_init(
 			/* if we can't open it we'll exit soon anyway */
 
 		}else{
-			buffer_new_fname(&buf, argv[0], &err);
+			buffer_new_fname(&buf, next, &err);
 		}
 
 		if(err)
-			ui_err("\"%s\": %s", argv[0], err);
+			ui_err("\"%s\": %s", next, err);
 
 		win_sel = window_new(buf);
 		buffer_release(buf);
 
 		switch(init_args){
+			case WIN_NONE:
+				break;
+
 			case WIN_VALL:
-				load_argv(argc, argv, win_add_splitright);
+				load_argv(win_add_splitright);
 				break;
 
 			case WIN_HALL:
-				load_argv(argc, argv, win_add_splittop);
-				break;
-
-			default:
-				/* stash argv */
-				remaining_fnames = argv + 1;
+				load_argv(win_add_splittop);
 				break;
 		}
 

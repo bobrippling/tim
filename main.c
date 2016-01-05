@@ -9,6 +9,7 @@
 #include "ui.h"
 #include "window.h"
 #include "windows.h"
+#include "main.h"
 
 int main(int argc, char **argv)
 {
@@ -38,10 +39,11 @@ int main(int argc, char **argv)
 			break;
 		}
 	}
+	remaining_fnames = argv + i;
 
 	ui_init(); /* must be before buffers_init() */
 
-	windows_init(argc - i, argv + i, initargs, offset);
+	windows_init(initargs, offset);
 
 	int r = ui_main();
 	ui_term();

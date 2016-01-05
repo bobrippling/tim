@@ -19,7 +19,7 @@ enum windows_init_args
 	WIN_HALL
 };
 
-void windows_init(int argc, char **argv, enum windows_init_args a, unsigned off);
+void windows_init(enum windows_init_args a, unsigned off);
 void windows_term(void);
 
 #endif
