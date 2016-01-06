@@ -15,4 +15,6 @@ void tab_free(tab *);
 void tab_set_focus(tab *, struct window *);
 void tab_evict(tab *);
 
+tab *tab_next(tab *);
+
 #endif

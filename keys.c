@@ -764,7 +764,7 @@ void k_go_tab(const keyarg_u *a, unsigned repeat, const int from_ch)
 	}
 
 	while(nforward --> 0)
-		t = t->next;
+		t = tab_next(t);
 
 	tabs_set_cur(t);
 

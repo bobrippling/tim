@@ -41,19 +41,14 @@ void tabs_set_first(tab *t)
 
 bool tabs_single(void)
 {
-	return tabs_cur()->next == tabs_cur();
+	return tabs_count() == 1;
 }
 
 unsigned tabs_count(void)
 {
 	unsigned n = 0;
 
-	for(tab *t = tabs_cur(), *const begin = t;; t = t->next){
-		n++;
-
-		if(t->next == begin)
-			break;
-	}
+	for(tab *t = tabs_first(); t; t = t->next, n++);
 
 	return n;
 }
@@ -118,7 +113,6 @@ void tabs_init(enum init_args init_args, unsigned off)
 		tab *tab = tab_new(window_new(buf));
 		buffer_release(buf);
 
-		tab->next = tab;
 		tabs_set_cur(tab);
 
 		switch(init_args){

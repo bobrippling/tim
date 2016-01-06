@@ -420,7 +420,7 @@ static void ui_draw_tabs(void)
 	unsigned x = 0;
 	char *const buf = umalloc(tabspace + 1);
 
-	for(tab *t = tabs_first(), *const begin = t;; t = t->next){
+	for(tab *t = tabs_first(); t; t = t->next){
 		const char *fname = buffer_fname(t->win->buf);
 
 		if(!fname)
@@ -439,9 +439,6 @@ static void ui_draw_tabs(void)
 		x += printlen + 1;
 
 		if(x >= ncols)
-			break;
-
-		if(t->next == begin)
 			break;
 	}
 

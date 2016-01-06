@@ -18,6 +18,7 @@ tab *tab_new(window *win)
 {
 	tab *t = umalloc(sizeof *t);
 	t->win = win;
+	t->next = NULL;
 	return t;
 }
 
@@ -43,7 +44,7 @@ void tab_evict(tab *t)
 {
 	tab *i;
 
-	for(i = t->next; i != t; i = i->next){
+	for(i = tabs_first(); i; i = i->next){
 		if(i->next == t){
 			i->next = t->next;
 			break;
@@ -51,4 +52,9 @@ void tab_evict(tab *t)
 	}
 
 	t->next = NULL;
+}
+
+tab *tab_next(tab *t)
+{
+	return t->next ? t->next : tabs_first();
 }

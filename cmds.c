@@ -85,7 +85,7 @@ static bool quit_common(
 		if(!focus){
 			/* fallback to another tab? */
 			tab *current = tabs_cur();
-			tab *tabfocus = current->next;
+			tab *tabfocus = tab_next(current);
 
 			if(tabfocus == current){
 				/* no more tabs */
