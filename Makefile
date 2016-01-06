@@ -37,7 +37,7 @@ deps:
 	${CC} -MM ${SRC} > Makefile.dep
 
 tags:
-	ctags ${SRC}
+	-ctags ${SRC}
 
 include Makefile.dep
 .PHONY: check checkmem clean deps tags
