@@ -39,7 +39,7 @@ void window_calc_rects(
 			winwidth += winspace_v % nwins_h;
 
 		const unsigned nhlines = nwins_v - 1;
-		const unsigned winspace_h = screenheight - /*status*/1 - nhlines;
+		const unsigned winspace_h = screenheight - nhlines;
 		const unsigned winheight = winspace_h / nwins_v;
 
 		unsigned i_v;

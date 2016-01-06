@@ -384,15 +384,12 @@ void ui_draw_window_col(window *win)
 	}
 }
 
-void ui_redraw()
+static
+void ui_draw_windows(window *any, unsigned const screenheight, unsigned const screenwidth)
 {
-	int save_y, save_x;
-	nc_get_yx(&save_y, &save_x);
+	window *win = window_topleftmost(any);
 
-	window *win = window_topleftmost(windows_cur());
-
-	unsigned const screenheight = nc_LINES();
-	window_calc_rects(win, nc_COLS(), screenheight);
+	window_calc_rects(win, screenwidth, screenheight);
 
 	for(int i = 0; win; i++, win = win->neighbours.right){
 		if(i){
@@ -403,6 +400,14 @@ void ui_redraw()
 
 		ui_draw_window_col(win);
 	}
+}
+
+void ui_redraw()
+{
+	int save_y, save_x;
+	nc_get_yx(&save_y, &save_x);
+
+	ui_draw_windows(windows_cur(), nc_LINES() - 1, nc_COLS());
 
 	nc_set_yx(save_y, save_x);
 }
