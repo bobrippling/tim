@@ -342,18 +342,23 @@ bool c_wa(int argc, char **argv, bool force, struct range *range)
 	bool success = true;
 	bool done_write = false;
 
-	window *win;
-	ITER_WINDOWS(win){
-		buffer_t *buf = win->buf;
+	for(tab *tab = tabs_first(); tab; tab = tab->next){
+		window *win;
+		ITER_WINDOWS_FROM(win, tab->win){
+			buffer_t *buf = win->buf;
 
-		if(!force && !buf->modified)
-			continue;
+			if(!force && !buf->modified)
+				continue;
 
-		bool subforce = false;
-		if(!write_buf(buf, subforce, /*newfname:*/false))
-			success = false;
-		else
-			done_write = true;
+			bool subforce = false;
+			if(!write_buf(buf, subforce, /*newfname:*/false)){
+				tabs_set_cur(tab);
+				tab_set_focus(tab, win);
+				success = false;
+			}else{
+				done_write = true;
+			}
+		}
 	}
 
 	if(success){
@@ -394,14 +399,20 @@ bool c_xa(int argc, char **argv, bool force, struct range *range)
 	RANGE_NO();
 	ARGV_NO();
 
-	window *win;
-	ITER_WINDOWS(win){
-		buffer_t *buf = win->buf;
-		if(!buf->modified)
-			continue;
+	for(tab *tab = tabs_first(); tab; tab = tab->next){
+		window *win;
+		ITER_WINDOWS_FROM(win, tab->win){
+			buffer_t *buf = win->buf;
 
-		if(!write_buf(buf, force, false))
-			return false;
+			if(!buf->modified)
+				continue;
+
+			if(!write_buf(buf, force, false)){
+				tabs_set_cur(tab);
+				tab_set_focus(tab, win);
+				return false;
+			}
+		}
 	}
 
 	ui_run = UI_EXIT_0;
