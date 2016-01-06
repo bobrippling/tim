@@ -82,10 +82,7 @@ static bool quit_common(
 		window_free(win);
 		windows_set_cur(focus);
 
-		if(focus){
-			ui_redraw();
-			ui_cur_changed();
-		}else{
+		if(!focus){
 			/* fallback to another tab? */
 			tab *current = tabs_cur();
 			tab *tabfocus = current->next;
@@ -99,6 +96,16 @@ static bool quit_common(
 			tabs_set_cur(tabfocus);
 			tab_evict(current);
 			tab_free(current);
+		}
+
+		switch(ui_run){
+			case UI_EXIT_0:
+			case UI_EXIT_1:
+				break;
+			case UI_RUNNING:
+				ui_redraw();
+				ui_cur_changed();
+				break;
 		}
 	}
 
