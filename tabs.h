@@ -22,7 +22,4 @@ void tabs_term(void);
 bool tabs_single(void);
 unsigned tabs_count(void);
 
-#define tabs_iter(tab) \
-	for(tab *tab = tabs_cur(), *const begin = tab; tab->next != begin; tab = tab->next)
-
 #endif
