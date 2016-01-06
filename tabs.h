@@ -1,8 +1,13 @@
 #ifndef TABS_H
 #define TABS_H
 
+#include <stdbool.h>
+
 tab *tabs_cur(void);
 void tabs_set_cur(tab *);
+
+tab *tabs_first(void);
+void tabs_set_first(tab *);
 
 enum init_args
 {

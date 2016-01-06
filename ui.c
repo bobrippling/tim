@@ -408,6 +408,48 @@ void ui_draw_windows(
 	}
 }
 
+static void ui_draw_tabs(void)
+{
+	const unsigned ntabs = tabs_count();
+	const unsigned ncols = nc_COLS();
+	unsigned tabspace = ncols / ntabs;
+
+	if(tabspace < 2)
+		tabspace = 2;
+
+	unsigned x = 0;
+	char *const buf = umalloc(tabspace + 1);
+
+	for(tab *t = tabs_first(), *const begin = t;; t = t->next){
+		const char *fname = buffer_fname(t->win->buf);
+
+		if(!fname)
+			fname = "[No Name]";
+
+		int printlen = snprintf(buf, tabspace + 1, "%s", fname);
+
+		nc_set_yx(0, x);
+
+		if(t == tabs_cur())
+			nc_highlight(1);
+		nc_addstr(buf);
+		nc_highlight(0);
+		nc_addch('|');
+
+		x += printlen + 1;
+
+		if(x >= ncols)
+			break;
+
+		if(t->next == begin)
+			break;
+	}
+
+	nc_clrtoeol();
+
+	free(buf);
+}
+
 void ui_redraw()
 {
 	int save_y, save_x;
@@ -415,6 +457,9 @@ void ui_redraw()
 
 	int tabspace = tabs_single() ? 0 : 1;
 	ui_draw_windows(windows_cur(), tabspace, nc_LINES() - (1 + tabspace), nc_COLS());
+
+	if(tabspace)
+		ui_draw_tabs();
 
 	nc_set_yx(save_y, save_x);
 }

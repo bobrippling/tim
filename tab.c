@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "tab.h"
+#include "tabs.h"
 
 #include "mem.h"
 
@@ -26,6 +27,10 @@ void tab_free(tab *t)
 		window_free(t->win);
 		t->win = NULL;
 	}
+
+	if(t == tabs_first())
+		tabs_set_first(t->next);
+
 	free(t);
 }
 

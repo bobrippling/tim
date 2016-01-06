@@ -17,7 +17,7 @@
 
 #include "tabs.h"
 
-static tab *tab_sel;
+static tab *tab_sel, *tab_first;
 
 tab *tabs_cur()
 {
@@ -27,6 +27,16 @@ tab *tabs_cur()
 void tabs_set_cur(tab *new)
 {
 	tab_sel = new;
+}
+
+tab *tabs_first(void)
+{
+	return tab_first;
+}
+
+void tabs_set_first(tab *t)
+{
+	tab_first = t;
 }
 
 bool tabs_single(void)
@@ -134,6 +144,8 @@ void tabs_init(enum init_args init_args, unsigned off)
 
 		tabs_set_cur(tab);
 	}
+
+	tabs_set_first(tabs_cur());
 
 	windows_cur()->ui_pos->y = off;
 }
