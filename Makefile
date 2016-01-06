@@ -16,8 +16,15 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 
 SRC = ${OBJ:.o=.c}
 
+Q = @
+
 tim: ${OBJ}
-	${CC} -o $@ ${OBJ} ${LDFLAGS}
+	@echo link $@
+	$Q${CC} -o $@ ${OBJ} ${LDFLAGS}
+
+%.o: %.c
+	@echo compile $<
+	$Q${CC} -c -o $@ $< ${CFLAGS}
 
 tim.static: ${OBJ}
 	${CC} -o $@ ${OBJ} ${LDFLAGS_STATIC}
@@ -29,10 +36,12 @@ checkmem: tim
 	cd test && ./run.pl -v
 
 clean:
-	rm -f ${OBJ} tim
+	@echo clean
+	$Qrm -f ${OBJ} tim
 
 tags:
-	-ctags ${SRC}
+	@echo ctags
+	$Q-ctags ${SRC}
 
 .%.d: %.c
 	@echo depend $<
