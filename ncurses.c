@@ -176,7 +176,7 @@ void nc_style(enum nc_style s)
 	attrset(to_set);
 }
 
-void nc_addstr(char *s)
+void nc_addstr(const char *s)
 {
 	addstr(s);
 }

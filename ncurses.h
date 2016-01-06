@@ -10,7 +10,7 @@ void nc_term(void);
 void nc_clearall(void);
 
 void nc_addch(char);
-void nc_addstr(char *);
+void nc_addstr(const char *);
 void nc_vprintf(const char *, va_list);
 
 void nc_highlight(int on);
