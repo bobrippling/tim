@@ -56,9 +56,23 @@ static bool quit_common(
 	ARGV_NO();
 
 	if(!force){
-		bool modified = qall
-			? buffers_modified_excluding(NULL)
-			: buffers_modified_single(buffers_cur());
+		bool modified = false;
+
+		if(qall){
+			tab *modtab;
+			window *modwin = buffers_modified_excluding(NULL, &modtab);
+
+			if(modwin){
+				modified = true;
+
+				tabs_set_cur(modtab);
+				tab_set_focus(modtab, modwin);
+				ui_redraw();
+				ui_cur_changed();
+			}
+		}else{
+			modified = buffers_modified_single(buffers_cur());
+		}
 
 		if(modified){
 			ui_err("buffer modified");
@@ -467,7 +481,7 @@ bool c_only(int argc, char **argv, bool force, struct range *range)
 	RANGE_NO();
 	ARGV_NO();
 
-	if(!force && buffers_modified_excluding(buffers_cur())){
+	if(!force && buffers_modified_excluding(buffers_cur(), NULL)){
 		ui_err("another buffer has changes");
 		return false;
 	}

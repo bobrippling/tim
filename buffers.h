@@ -5,6 +5,8 @@
 buffer_t *buffers_find(const char *);
 
 bool buffers_modified_single(const buffer_t *);
-bool buffers_modified_excluding(buffer_t *excluding);
+
+struct tab;
+struct window *buffers_modified_excluding(buffer_t *excluding, struct tab **const ptab);
 
 #endif

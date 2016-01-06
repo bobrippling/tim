@@ -36,16 +36,22 @@ bool buffers_modified_single(const buffer_t *b)
 	return b->modified && buffer_opencount(b) == 1;
 }
 
-bool buffers_modified_excluding(buffer_t *excluding)
+window *buffers_modified_excluding(buffer_t *excluding, tab **const ptab)
 {
+	if(ptab)
+		*ptab = NULL;
+
 	for(tab *tab = tabs_first(); tab; tab = tab->next){
 		window *win;
 		ITER_WINDOWS_FROM(win, tab->win){
 			buffer_t *buf = win->buf;
-			if(buf != excluding && buf->modified)
-				return true;
+			if(buf != excluding && buf->modified){
+				if(ptab)
+					*ptab = tab;
+				return win;
+			}
 		}
 	}
 
-	return false;
+	return NULL;
 }
