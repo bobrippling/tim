@@ -30,6 +30,8 @@
 #include "external.h"
 #include "ctags.h"
 #include "parse_cmd.h"
+#include "tab.h"
+#include "tabs.h"
 
 #include "buffers.h"
 
@@ -741,6 +743,32 @@ void k_go_insert(const keyarg_u *a, unsigned repeat, const int from_ch)
 	*win->ui_pos = buf->prev_insert;
 	ui_set_bufmode(UI_INSERT);
 
+	ui_cur_changed();
+}
+
+void k_go_tab(const keyarg_u *a, unsigned repeat, const int from_ch)
+{
+	repeat = DEFAULT_REPEAT(repeat);
+
+	tab *t = tabs_cur();
+	unsigned nforward;
+
+	if(a->pos.x > 0){
+		nforward = repeat;
+	}else{
+		unsigned ntabs = tabs_count();
+		unsigned nback = -a->pos.x;
+
+		/* 5 tabs, go 2 back means go 5-2 forwards, i.e. 3 */
+		nforward = repeat * (ntabs - nback);
+	}
+
+	while(nforward --> 0)
+		t = t->next;
+
+	tabs_set_cur(t);
+
+	ui_redraw();
 	ui_cur_changed();
 }
 

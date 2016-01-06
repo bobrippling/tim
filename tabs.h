@@ -14,6 +14,8 @@ enum init_args
 void tabs_init(enum init_args, unsigned off);
 void tabs_term(void);
 
+unsigned tabs_count(void);
+
 #define tabs_iter(tab) \
 	for(tab *tab = tabs_cur(), *const begin = tab; tab->next != begin; tab = tab->next)
 

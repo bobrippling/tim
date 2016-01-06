@@ -29,6 +29,20 @@ void tabs_set_cur(tab *new)
 	tab_sel = new;
 }
 
+unsigned tabs_count(void)
+{
+	unsigned n = 0;
+
+	for(tab *t = tabs_cur(), *const begin = t;; t = t->next){
+		n++;
+
+		if(t->next == begin)
+			break;
+	}
+
+	return n;
+}
+
 static void win_add_splitright(window *cur, window *new)
 {
 	window_add_neighbour(cur, neighbour_right, new);

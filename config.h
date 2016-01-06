@@ -123,6 +123,9 @@ const nkey_t nkeys[] = {
 	{ "gf",                               k_on_fname, { .word_action = { word_gofile, false } }, UI_NORMAL | UI_VISUAL_ANY },
 	{ (char []){ CTRL_AND('w'), 'f', 0 }, k_on_fname, { .word_action = { word_gofile, true  } }, UI_NORMAL | UI_VISUAL_ANY },
 
+	{ "gt", k_go_tab, { .pos.x = +1 }, UI_NORMAL | UI_VISUAL_ANY },
+	{ "gT", k_go_tab, { .pos.x = -1 }, UI_NORMAL | UI_VISUAL_ANY },
+
 	{ K_STR(CTRL_AND('l')),  k_redraw,     KEY_ARG_NONE,            UI_NORMAL | UI_VISUAL_ANY },
 
 	{ K_STR(CTRL_AND('e')),  k_scroll,     { .pos = { 0,  2 } },     UI_NORMAL | UI_VISUAL_ANY },
