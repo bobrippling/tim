@@ -58,7 +58,7 @@ point_t *window_uipos_alt(window *);
 int window_setmode(window *, enum buf_mode m); /* 0 = success */
 
 void window_calc_rects(
-		window *topleft,//????
+		window *topleft,
 		const unsigned screenwidth,
 		const unsigned screenheight);
 
