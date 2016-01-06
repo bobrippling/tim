@@ -44,7 +44,7 @@ cmd_f_argv c_vs, c_vnew;
 cmd_f_argv c_sp, c_new;
 cmd_f_argv c_all;
 
-cmd_f_argv c_tabe;
+cmd_f_argv c_tabe, c_tabo;
 
 cmd_f_arg1 c_run;
 

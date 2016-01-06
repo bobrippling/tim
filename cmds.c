@@ -2,6 +2,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -726,6 +727,55 @@ bool c_tabe(int argc, char **argv, bool force, struct range *range)
 	ui_cur_changed();
 
 	return true;
+}
+
+bool c_tabo(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_NO();
+	ARGV_NO();
+
+	tab *const tab_current = tabs_cur();
+
+	if(!force){
+		for(tab *tab = tabs_first(); tab; tab = tab->next){
+			if(tab == tab_current)
+				continue;
+
+			window *win;
+			ITER_WINDOWS_FROM(win, tab->win){
+				buffer_t *buf = win->buf;
+
+				/* if we contain this buffer, then it's fine */
+				if(tab_contains_buffer(tab_current, buf))
+					continue;
+
+				if(buf->modified){
+					ui_err("other tab contains modified buffer");
+					return false;
+				}
+			}
+		}
+	}
+
+	tab_evict(tab_current);
+
+	tab *t = tabs_first();
+	while(t){
+		tab *next = t->next;
+
+		assert(t != tab_current);
+		tab_free(t);
+
+		t = next;
+	}
+
+	tabs_set_cur(tab_current);
+	tabs_set_first(tab_current);
+
+	ui_redraw();
+	ui_cur_changed();
+
+	return false;
 }
 
 bool c_run(char *cmd, char *rest, bool force, struct range *range)

@@ -1,6 +1,8 @@
 #ifndef TAB_H
 #define TAB_H
 
+#include <stdbool.h>
+
 typedef struct tab tab;
 
 struct tab
@@ -16,5 +18,8 @@ void tab_set_focus(tab *, struct window *);
 void tab_evict(tab *);
 
 tab *tab_next(tab *);
+
+struct buffer;
+bool tab_contains_buffer(tab *, struct buffer *);
 
 #endif

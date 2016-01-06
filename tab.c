@@ -58,3 +58,13 @@ tab *tab_next(tab *t)
 {
 	return t->next ? t->next : tabs_first();
 }
+
+bool tab_contains_buffer(tab *t, buffer_t *b)
+{
+	window *win;
+	ITER_WINDOWS_FROM(win, t->win)
+		if(win->buf == b)
+			return true;
+
+	return false;
+}
