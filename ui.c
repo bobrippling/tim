@@ -23,6 +23,8 @@
 #include "buffers.h"
 #include "mem.h"
 #include "str.h"
+#include "tab.h"
+#include "tabs.h"
 
 enum ui_ec ui_run = UI_RUNNING;
 
@@ -411,7 +413,8 @@ void ui_redraw()
 	int save_y, save_x;
 	nc_get_yx(&save_y, &save_x);
 
-	ui_draw_windows(windows_cur(), 0, nc_LINES() - (1 + 0), nc_COLS());
+	int tabspace = tabs_single() ? 0 : 1;
+	ui_draw_windows(windows_cur(), tabspace, nc_LINES() - (1 + tabspace), nc_COLS());
 
 	nc_set_yx(save_y, save_x);
 }

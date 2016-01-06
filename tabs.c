@@ -29,6 +29,11 @@ void tabs_set_cur(tab *new)
 	tab_sel = new;
 }
 
+bool tabs_single(void)
+{
+	return tabs_cur()->next == tabs_cur();
+}
+
 unsigned tabs_count(void)
 {
 	unsigned n = 0;
