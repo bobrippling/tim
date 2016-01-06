@@ -666,6 +666,36 @@ bool c_all(int argc, char **argv, bool force, struct range *range)
 	return true;
 }
 
+bool c_tabe(int argc, char **argv, bool force, struct range *range)
+{
+	if(argc > 2){
+		ui_err("usage: %s [path]", *argv);
+		return false;
+	}
+
+	buffer_t *buf = buffer_new();
+
+	window *win = window_new(buf);
+	tab *tab = tab_new(win);
+	buffer_release(buf);
+
+	tab->next = tabs_cur()->next;
+	tabs_cur()->next = tab;
+
+	tabs_set_cur(tab);
+
+	if(argc == 1){
+		/* empty tab - fine */
+	}else if(argc == 2){
+		return edit_common(argv[1], force);
+	}
+
+	ui_redraw();
+	ui_cur_changed();
+
+	return true;
+}
+
 bool c_run(char *cmd, char *rest, bool force, struct range *range)
 {
 	if(range){

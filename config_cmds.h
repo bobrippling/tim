@@ -22,6 +22,8 @@ const cmd_t cmds[] = {
 	{ "new", .f_argv = c_new },
 	{ "all", .f_argv = c_all },
 
+	{ "tabe", .f_argv = c_tabe },
+
 	{ "n", .f_argv = c_n },
 
 	{ "p",   .f_argv = c_p   },
