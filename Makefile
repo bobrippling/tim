@@ -31,11 +31,13 @@ checkmem: tim
 clean:
 	rm -f ${OBJ} tim
 
-deps:
-	${CC} -MM ${SRC} > Makefile.dep
-
 tags:
 	-ctags ${SRC}
 
-include Makefile.dep
-.PHONY: check checkmem clean deps tags
+.%.d: %.c
+	@echo depend $<
+	$Q${CC} -MM -o $@ $< ${CPPFLAGS}
+
+-include ${OBJ:%.o=.%.d}
+
+.PHONY: check checkmem clean tags
