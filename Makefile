@@ -14,8 +14,6 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	yank.o pos.o region.o retain.o range.o parse_cmd.o word.o \
 	buffers.o window.o windows.o ctags.o
 
-.PHONY: deps clean check checkmem
-
 SRC = ${OBJ:.o=.c}
 
 tim: ${OBJ}
