@@ -385,11 +385,15 @@ void ui_draw_window_col(window *win)
 }
 
 static
-void ui_draw_windows(window *any, unsigned const screenheight, unsigned const screenwidth)
+void ui_draw_windows(
+		window *any,
+		unsigned const screentop,
+		unsigned const screenheight,
+		unsigned const screenwidth)
 {
 	window *win = window_topleftmost(any);
 
-	window_calc_rects(win, screenwidth, screenheight);
+	window_calc_rects(win, screentop, screenwidth, screenheight);
 
 	for(int i = 0; win; i++, win = win->neighbours.right){
 		if(i){
@@ -407,7 +411,7 @@ void ui_redraw()
 	int save_y, save_x;
 	nc_get_yx(&save_y, &save_x);
 
-	ui_draw_windows(windows_cur(), nc_LINES() - 1, nc_COLS());
+	ui_draw_windows(windows_cur(), 0, nc_LINES() - (1 + 0), nc_COLS());
 
 	nc_set_yx(save_y, save_x);
 }

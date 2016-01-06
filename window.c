@@ -16,6 +16,7 @@
 
 void window_calc_rects(
 		window *topleft,
+		const unsigned screentop,
 		const unsigned screenwidth,
 		const unsigned screenheight)
 {
@@ -46,7 +47,7 @@ void window_calc_rects(
 		for(i_v = 0, win_v = win_h; win_v; win_v = win_v->neighbours.below, i_v++){
 			rect_t r = {
 				.x = i_h * (winwidth + 1),
-				.y = i_v * (winheight + 1),
+				.y = i_v * (winheight + 1) + screentop,
 				.w = winwidth,
 				.h = winheight,
 			};
