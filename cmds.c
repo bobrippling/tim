@@ -236,10 +236,15 @@ static bool write_buf_with_rename(buffer_t *buf, const char *fname)
 	int fd = -1;
 	FILE *f = NULL;
 
-	size_t fname_tmp_len = strlen(fname) + 8 + 1;
+	size_t fname_tmp_len = strlen(fname) + 32 + 1;
 	char *fname_tmp = umalloc(fname_tmp_len);
 
-	int n_ideal = snprintf(fname_tmp, fname_tmp_len, "%s.%d", fname, getpid() ^ rand());
+	int n_ideal = snprintf(
+			fname_tmp,
+			fname_tmp_len,
+			"%s.%d",
+			fname,
+			(unsigned short)(getpid() ^ rand()));
 
 	if(n_ideal < 0 || (unsigned)n_ideal >= fname_tmp_len){
 		errno = ENOMEM;
