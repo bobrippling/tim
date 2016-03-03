@@ -234,6 +234,7 @@ static bool write_buf_with_rename(buffer_t *buf, const char *fname)
 	bool ret = false;
 	bool unlink_tmp = false;
 	int fd = -1;
+	FILE *f = NULL;
 
 	size_t fname_tmp_len = strlen(fname) + 8 + 1;
 	char *fname_tmp = umalloc(fname_tmp_len);
@@ -251,7 +252,7 @@ static bool write_buf_with_rename(buffer_t *buf, const char *fname)
 
 	unlink_tmp = true;
 
-	FILE *f = fdopen(fd, "w");
+	f = fdopen(fd, "w");
 
 	if(!f)
 		goto out;
