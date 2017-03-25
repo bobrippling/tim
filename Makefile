@@ -6,6 +6,9 @@ CFLAGS_DEF = -D_XOPEN_SOURCE
 CFLAGS = -Wall -Wextra -g -std=c11 -fms-extensions -fno-common \
          ${CFLAGS_WARN} ${CFLAGS_DEF}
 
+LDFLAGS = -lncurses -g
+LDFLAGS_STATIC = -static ${LDFLAGS} -ltinfo -lgpm
+
 OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 	list.o motion.o external.o str.o prompt.o io.o \
 	yank.o pos.o region.o retain.o range.o parse_cmd.o word.o \
@@ -16,7 +19,10 @@ OBJ = main.o ncurses.o ui.o mem.o keys.o cmds.o buffer.o \
 SRC = ${OBJ:.o=.c}
 
 tim: ${OBJ}
-	${CC} -o $@ ${OBJ} -lncurses -g
+	${CC} -o $@ ${OBJ} ${LDFLAGS}
+
+tim.static: ${OBJ}
+	${CC} -o $@ ${OBJ} ${LDFLAGS_STATIC}
 
 check: tim
 	cd test && ./run.pl
