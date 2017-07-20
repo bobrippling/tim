@@ -51,6 +51,8 @@ void buffer_replace_fname(
 		buffer_t *, const char *fname,
 		const char **const err);
 
+void buffer_replace_list(buffer_t *, list_t *);
+
 buffer_t *buffer_new_file_nofind(FILE *f);
 
 int buffer_opencount(const buffer_t *);

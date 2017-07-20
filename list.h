@@ -83,4 +83,6 @@ struct range;
 void list_flag_range(list_t *, const struct range *, int);
 list_t *list_flagfind(list_t *, int flag, int *py);
 
+list_t *list_contains(list_t *, const char *);
+
 #endif

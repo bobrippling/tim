@@ -867,6 +867,44 @@ bool c_run(char *cmd, char *rest, bool force, struct range *range)
 	return true;
 }
 
+bool c_ls(int argc, char **argv, bool force, struct range *range)
+{
+	RANGE_NO();
+	ARGV_NO();
+
+	buffer_t *b = buffer_new();
+	attach_buffer(b, neighbour_down, NULL);
+
+	list_t *files = NULL, *latest = NULL;
+
+	for(tab *tab = tabs_first(); tab; tab = tab->next){
+		window *win;
+		ITER_WINDOWS_FROM(win, tab->win){
+			buffer_t *buf = win->buf;
+			const char *fname = buffer_fname(buf);
+			if(fname){
+				if(list_contains(files, fname))
+					continue;
+
+				list_t *new = list_new(NULL);
+				new->line = ustrdup(fname);
+				new->len_line = strlen(new->line);
+				new->len_malloc = new->len_line + 1;
+
+				files = list_append(files, latest, new);
+				latest = new;
+			}
+		}
+	}
+
+	buffer_replace_list(b, files);
+
+	ui_redraw();
+	ui_cur_changed();
+
+	return true;
+}
+
 bool c_p(int argc, char **argv, bool force, struct range *range)
 {
 	ARGV_NO();

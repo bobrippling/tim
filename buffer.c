@@ -36,7 +36,7 @@ buffer_t *buffer_new()
 	return b;
 }
 
-static void buffer_replace_list(buffer_t *b, list_t *l)
+void buffer_replace_list(buffer_t *b, list_t *l)
 {
 	list_free(b->head);
 	b->head = l;

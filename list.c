@@ -1010,3 +1010,11 @@ list_t *list_flagfind(list_t *l, int v, int *py)
 			return l;
 	return NULL;
 }
+
+list_t *list_contains(list_t *l, const char *str)
+{
+	for(; l; l = l->next)
+		if(!strcmp(l->line, str))
+			return l;
+	return NULL;
+}

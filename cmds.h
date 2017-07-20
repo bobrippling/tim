@@ -48,6 +48,8 @@ cmd_f_argv c_tabe, c_tabo;
 
 cmd_f_arg1 c_run;
 
+cmd_f_argv c_ls;
+
 bool cmd_dispatch(
 		const cmd_t *cmd_f,
 		int argc, char **argv,

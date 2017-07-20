@@ -41,6 +41,8 @@ const cmd_t cmds[] = {
 
 	{ "norm", .f_arg1 = c_norm, .single_arg = true, .skipglob = true },
 
+	{ "ls", .f_argv = c_ls, .skipglob = true },
+
 	{ NULL }
 };
 
