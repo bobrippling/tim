@@ -40,8 +40,8 @@ clean:
 	$Qrm -f ${OBJ} tim
 
 tags:
-	@echo ctags
-	$Q-ctags ${SRC}
+	@echo gen ctags
+	$Qctags -R --exclude='_*' .
 
 .%.d: %.c
 	@echo depend $<
