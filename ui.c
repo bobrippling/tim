@@ -53,6 +53,10 @@ void ui_set_bufmode(enum buf_mode m)
 		nc_style(COL_BROWN);
 		ui_status("%s", ui_bufmode_str(win->ui_mode));
 		nc_style(0);
+
+		nc_cursor(win->ui_mode & UI_INSERT_ANY
+			? NC_CURSOR_BAR
+			: NC_CURSOR_BLOCK);
 	}
 }
 
