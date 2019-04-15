@@ -2,9 +2,19 @@
 #include <signal.h>
 #include <ctype.h>
 #include <errno.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "ncurses.h"
 #include "macros.h"
+
+#define CURSOR_BLINKING_BLOCK      "\x1b[0 q"
+#define CURSOR_BLINKING_BLOCK_ALSO "\x1b[1 q"
+#define CURSOR_STEADY_BLOCK        "\x1b[2 q"
+#define CURSOR_BLINKING_UNDERLINE  "\x1b[3 q"
+#define CURSOR_STEADY_UNDERLINE    "\x1b[4 q"
+#define CURSOR_BLINKING_BAR        "\x1b[5 q"
+#define CURSOR_STEADY_BAR          "\x1b[6 q"
 
 void nc_init()
 {
@@ -174,6 +184,23 @@ void nc_style(enum nc_style s)
 		to_set |= A_BOLD;
 
 	attrset(to_set);
+}
+
+void nc_cursor(enum nc_cursor c)
+{
+	const char *s = NULL;
+
+	switch(c){
+		case NC_CURSOR_BAR:
+			s = CURSOR_STEADY_BAR;
+			break;
+		case NC_CURSOR_BLOCK:
+			s = CURSOR_STEADY_BLOCK;
+			break;
+	}
+
+	if(s)
+		write(1, s, strlen(s));
 }
 
 void nc_addstr(const char *s)

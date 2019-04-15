@@ -38,4 +38,11 @@ enum nc_style
 };
 void nc_style(enum nc_style);
 
+enum nc_cursor
+{
+	NC_CURSOR_BAR,
+	NC_CURSOR_BLOCK,
+};
+void nc_cursor(enum nc_cursor);
+
 #endif
